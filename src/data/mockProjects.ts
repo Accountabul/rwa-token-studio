@@ -13,6 +13,9 @@ export const initialProjects: TokenizationProject[] = [
     valuationDate: "2025-11-15",
     status: "METADATA_DRAFT",
     createdAt: "2025-11-20",
+    propertyAddress: "1234 Maple Ave, St. Louis, MO 63104",
+    ownerName: "James & Sarah Mitchell",
+    propertyNickname: "Maple Duplex",
     xls89Metadata: JSON.stringify(
       {
         t: "ABUL-MAPLE-01",
@@ -47,6 +50,9 @@ export const initialProjects: TokenizationProject[] = [
     valuationDate: "2025-12-01",
     status: "COMPLIANCE_APPROVED",
     createdAt: "2025-10-15",
+    propertyAddress: "500 5th Avenue, New York, NY 10110",
+    ownerName: "Urban Capital Partners LLC",
+    propertyNickname: "5th Ave Tower",
     xls89Metadata: JSON.stringify(
       {
         t: "ABUL-URBAN-02",
@@ -81,6 +87,9 @@ export const initialProjects: TokenizationProject[] = [
     valuationDate: "2025-11-28",
     status: "INTAKE_PENDING",
     createdAt: "2025-12-05",
+    propertyAddress: "8901 Commerce Blvd, Austin, TX 78701",
+    ownerName: "Retail Ventures Holdings",
+    propertyNickname: "Commerce Strip",
     xls89Metadata: "{}",
   },
 ];
