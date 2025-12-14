@@ -17,13 +17,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Plus, BookOpen, FileEdit } from "lucide-react";
+import { Search, Plus, BookOpen, FileEdit, ArrowLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 const roles: Role[] = ["SUPER_ADMIN", "TOKENIZATION_MANAGER", "COMPLIANCE_OFFICER", "CUSTODY_OFFICER", "VALUATION_OFFICER"];
 const categories: KBCategory[] = ["projects_assets", "asset_classification", "xls89_metadata", "investor_compliance", "permissiondex"];
 
 export function KnowledgeBaseApp() {
+  const navigate = useNavigate();
   const [role, setRole] = useState<Role>("TOKENIZATION_MANAGER");
   const [entries, setEntries] = useState<KBEntry[]>(mockKBEntries);
   const [proposals, setProposals] = useState<KBProposal[]>(mockKBProposals);
@@ -199,6 +201,14 @@ export function KnowledgeBaseApp() {
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => navigate("/")}
+                className="mr-1"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
               <BookOpen className="h-6 w-6 text-primary" />
               <div>
                 <h1 className="text-xl font-semibold">Knowledge Base</h1>
