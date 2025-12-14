@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { TokenizationProject, Role, statusOrder } from "@/types/tokenization";
+import { TokenizationProject, Role, statusOrder, assetClassLabel, realEstateSubclassLabel, AssetClass, RealEstateSubclass } from "@/types/tokenization";
 import { StatusBadge } from "./StatusBadge";
 import { StatusStepper } from "./StatusStepper";
 import { MetadataForm } from "./MetadataForm";
@@ -25,6 +25,13 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface ProjectDetailsProps {
   project: TokenizationProject;
@@ -56,6 +63,48 @@ const FieldRow: React.FC<FieldRowProps> = ({ label, value, onChange, type = "tex
     />
   </div>
 );
+
+interface SelectFieldRowProps {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: { value: string; label: string }[];
+  icon?: React.ReactNode;
+}
+
+const SelectFieldRow: React.FC<SelectFieldRowProps> = ({ label, value, onChange, options, icon }) => (
+  <div className="grid grid-cols-3 gap-3 items-center">
+    <label className="text-xs text-muted-foreground flex items-center gap-2">
+      {icon}
+      {label}
+    </label>
+    <div className="col-span-2">
+      <Select value={value} onValueChange={onChange}>
+        <SelectTrigger className="h-9 text-xs">
+          <SelectValue placeholder={`Select ${label.toLowerCase()}`} />
+        </SelectTrigger>
+        <SelectContent className="bg-popover">
+          {options.map((opt) => (
+            <SelectItem key={opt.value} value={opt.value} className="text-xs">
+              {opt.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  </div>
+);
+
+// Build options from the taxonomy
+const assetClassOptions = Object.entries(assetClassLabel).map(([value, label]) => ({
+  value,
+  label,
+}));
+
+const subclassOptions = Object.entries(realEstateSubclassLabel).map(([value, label]) => ({
+  value,
+  label,
+}));
 
 export const ProjectDetails: React.FC<ProjectDetailsProps> = ({
   project,
@@ -125,14 +174,14 @@ export const ProjectDetails: React.FC<ProjectDetailsProps> = ({
             <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground ml-7">
               <span className="flex items-center gap-1.5">
                 <Building className="w-3.5 h-3.5" />
-                {project.issuerName || "Issuer not set"}
+                {project.companyName || "Company not set"}
               </span>
               <span className="flex items-center gap-1.5">
                 <Home className="w-3.5 h-3.5" />
                 {project.jurisdiction}
               </span>
               <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide">
-                {project.assetClass}/{project.assetSubclass}
+                {realEstateSubclassLabel[project.assetSubclass] || project.assetSubclass}
               </span>
             </div>
 
@@ -205,9 +254,9 @@ export const ProjectDetails: React.FC<ProjectDetailsProps> = ({
               onChange={(v) => onUpdate({ assetId: v })}
             />
             <FieldRow
-              label="Issuer Name"
-              value={project.issuerName}
-              onChange={(v) => onUpdate({ issuerName: v })}
+              label="Company Name"
+              value={project.companyName}
+              onChange={(v) => onUpdate({ companyName: v })}
               icon={<Building className="w-3 h-3" />}
             />
             <FieldRow
@@ -215,15 +264,17 @@ export const ProjectDetails: React.FC<ProjectDetailsProps> = ({
               value={project.jurisdiction}
               onChange={(v) => onUpdate({ jurisdiction: v })}
             />
-            <FieldRow
+            <SelectFieldRow
               label="Asset Class"
               value={project.assetClass}
-              onChange={(v) => onUpdate({ assetClass: v })}
+              onChange={(v) => onUpdate({ assetClass: v as AssetClass })}
+              options={assetClassOptions}
             />
-            <FieldRow
+            <SelectFieldRow
               label="Subclass"
               value={project.assetSubclass}
-              onChange={(v) => onUpdate({ assetSubclass: v })}
+              onChange={(v) => onUpdate({ assetSubclass: v as RealEstateSubclass })}
+              options={subclassOptions}
             />
             <FieldRow
               label="Valuation (USD)"

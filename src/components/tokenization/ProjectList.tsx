@@ -27,7 +27,7 @@ export const ProjectList: React.FC<ProjectListProps> = ({
       project.propertyAddress?.toLowerCase().includes(query) ||
       project.ownerName?.toLowerCase().includes(query) ||
       project.propertyNickname?.toLowerCase().includes(query) ||
-      project.issuerName?.toLowerCase().includes(query) ||
+      project.companyName?.toLowerCase().includes(query) ||
       project.assetId?.toLowerCase().includes(query) ||
       project.name?.toLowerCase().includes(query)
     );
@@ -79,7 +79,7 @@ export const ProjectList: React.FC<ProjectListProps> = ({
                 <div className="flex items-center gap-2 pl-6">
                   <User className="w-3 h-3 text-muted-foreground flex-shrink-0" />
                   <span className="text-xs text-muted-foreground line-clamp-1">
-                    {project.ownerName || project.issuerName || "Owner not set"}
+                    {project.ownerName || project.companyName || "Owner not set"}
                   </span>
                 </div>
 
