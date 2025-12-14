@@ -8,6 +8,7 @@ import {
   Shield,
   ChevronDown,
   Hexagon,
+  BookOpen,
 } from "lucide-react";
 
 interface InvestorSidebarProps {
@@ -18,6 +19,7 @@ interface InvestorSidebarProps {
 const navItems = [
   { label: "Tokenization Projects", icon: LayoutDashboard, active: false, href: "/" },
   { label: "Investor Onboarding", icon: Users, active: true, href: "/investors" },
+  { label: "Knowledge Base", icon: BookOpen, active: false, href: "/knowledge-base" },
   { label: "Reporting & Logs", icon: FileText, disabled: true },
 ];
 

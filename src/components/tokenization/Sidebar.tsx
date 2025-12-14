@@ -7,7 +7,8 @@ import {
   FileText, 
   Shield, 
   ChevronDown,
-  Hexagon
+  Hexagon,
+  BookOpen
 } from "lucide-react";
 
 interface SidebarProps {
@@ -18,6 +19,7 @@ interface SidebarProps {
 const navItems = [
   { label: "Tokenization Projects", icon: LayoutDashboard, active: true, href: "/" },
   { label: "Investor Onboarding", icon: Users, active: false, href: "/investors" },
+  { label: "Knowledge Base", icon: BookOpen, active: false, href: "/knowledge-base" },
   { label: "Reporting & Logs", icon: FileText, disabled: true },
 ];
 
