@@ -8,6 +8,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { assetClassLabel, realEstateSubclassLabel, AssetClass, RealEstateSubclass } from "@/types/tokenization";
+import { Lock } from "lucide-react";
 
 interface XLS89Metadata {
   t: string;
@@ -37,9 +39,20 @@ interface FieldConfig {
   label: string;
   description: string;
   maxChars: number;
-  type: "text" | "textarea" | "select";
+  type: "text" | "textarea" | "select" | "readonly";
   options?: { value: string; label: string }[];
 }
+
+// Build options from the taxonomy
+const assetClassOptions = Object.entries(assetClassLabel).map(([value, label]) => ({
+  value,
+  label,
+}));
+
+const subclassOptions = Object.entries(realEstateSubclassLabel).map(([value, label]) => ({
+  value,
+  label,
+}));
 
 const fields: FieldConfig[] = [
   { key: "t", label: "Token Code", description: "Short ticker symbol (e.g., ABUL-MAPLE-01)", maxChars: 20, type: "text" },
@@ -52,27 +65,23 @@ const fields: FieldConfig[] = [
     description: "High-level asset category", 
     maxChars: 10, 
     type: "select",
-    options: [
-      { value: "rwa", label: "Real World Asset (rwa)" },
-      { value: "security", label: "Security" },
-      { value: "commodity", label: "Commodity" },
-    ]
+    options: assetClassOptions,
   },
   { 
     key: "as", 
     label: "Asset Subclass", 
-    description: "Specific asset type within the class", 
+    description: "Specific real estate type", 
     maxChars: 15, 
     type: "select",
-    options: [
-      { value: "res_re", label: "Residential Real Estate" },
-      { value: "com_re", label: "Commercial Real Estate" },
-      { value: "ret_re", label: "Retail Real Estate" },
-      { value: "infra", label: "Infrastructure" },
-      { value: "private_credit", label: "Private Credit" },
-    ]
+    options: subclassOptions,
   },
-  { key: "in", label: "Issuer Name", description: "Legal name of the token issuer", maxChars: 50, type: "text" },
+  { 
+    key: "in", 
+    label: "Token Issuer", 
+    description: "Accountabul issues all tokens on the XRPL", 
+    maxChars: 50, 
+    type: "readonly" 
+  },
 ];
 
 const MAX_TOTAL_BYTES = 1000;
@@ -86,14 +95,14 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({ metadata, onChange }
         n: obj.n || "",
         d: obj.d || "",
         i: obj.i || "",
-        ac: obj.ac || "",
+        ac: obj.ac || "rwa_re",
         as: obj.as || "",
-        in: obj.in || "",
+        in: obj.in || "Accountabul",
         us: obj.us || [],
         ai: obj.ai || {},
       };
     } catch {
-      return { t: "", n: "", d: "", i: "", ac: "", as: "", in: "", us: [], ai: {} };
+      return { t: "", n: "", d: "", i: "", ac: "rwa_re", as: "", in: "Accountabul", us: [], ai: {} };
     }
   }, [metadata]);
 
@@ -149,6 +158,7 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({ metadata, onChange }
                 <label className="text-xs font-medium text-foreground flex items-center gap-2">
                   <code className="text-[10px] bg-muted px-1.5 py-0.5 rounded text-muted-foreground">{field.key}</code>
                   {field.label}
+                  {field.type === "readonly" && <Lock className="w-3 h-3 text-muted-foreground" />}
                 </label>
                 <span className={cn(
                   "text-[10px] font-medium",
@@ -158,12 +168,17 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({ metadata, onChange }
                 </span>
               </div>
               
-              {field.type === "select" ? (
+              {field.type === "readonly" ? (
+                <div className="w-full rounded-lg border border-input bg-muted/50 px-3 py-2 text-xs text-muted-foreground flex items-center gap-2">
+                  <span className="font-medium text-foreground">{value || "Accountabul"}</span>
+                  <span className="text-[10px]">(fixed)</span>
+                </div>
+              ) : field.type === "select" ? (
                 <Select value={value} onValueChange={(v) => handleFieldChange(field.key, v)}>
                   <SelectTrigger className="h-9 text-xs">
                     <SelectValue placeholder={`Select ${field.label.toLowerCase()}`} />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-popover">
                     {field.options?.map((opt) => (
                       <SelectItem key={opt.value} value={opt.value} className="text-xs">
                         {opt.label}
@@ -194,15 +209,17 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({ metadata, onChange }
                 />
               )}
               
-              <div className="flex items-center gap-2">
-                <Progress 
-                  value={Math.min(charPercent, 100)} 
-                  className={cn(
-                    "h-1 flex-1",
-                    isOverLimit ? "[&>div]:bg-destructive" : charPercent > 80 ? "[&>div]:bg-yellow-500" : ""
-                  )} 
-                />
-              </div>
+              {field.type !== "readonly" && (
+                <div className="flex items-center gap-2">
+                  <Progress 
+                    value={Math.min(charPercent, 100)} 
+                    className={cn(
+                      "h-1 flex-1",
+                      isOverLimit ? "[&>div]:bg-destructive" : charPercent > 80 ? "[&>div]:bg-yellow-500" : ""
+                    )} 
+                  />
+                </div>
+              )}
               <p className="text-[10px] text-muted-foreground">{field.description}</p>
             </div>
           );

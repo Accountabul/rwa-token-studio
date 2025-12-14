@@ -14,14 +14,43 @@ export type ProjectStatus =
   | "CUSTODY_READY"
   | "MINTED";
 
+export type AssetClass = "rwa_re";
+
+export type RealEstateSubclass =
+  | "sfr"
+  | "mfr"
+  | "com_office"
+  | "com_retail"
+  | "com_industrial"
+  | "com_mixed"
+  | "hospitality"
+  | "land"
+  | "special";
+
+export const assetClassLabel: Record<AssetClass, string> = {
+  rwa_re: "Real Estate",
+};
+
+export const realEstateSubclassLabel: Record<RealEstateSubclass, string> = {
+  sfr: "Single Family Residential",
+  mfr: "Multi-Family Residential",
+  com_office: "Commercial Office",
+  com_retail: "Commercial Retail",
+  com_industrial: "Industrial",
+  com_mixed: "Mixed Use",
+  hospitality: "Hospitality",
+  land: "Land / Development",
+  special: "Special Purpose",
+};
+
 export interface TokenizationProject {
   id: string;
   name: string;
   assetId: string;
-  issuerName: string;
+  companyName: string; // Company/entity that holds the asset
   jurisdiction: string;
-  assetClass: string;
-  assetSubclass: string;
+  assetClass: AssetClass;
+  assetSubclass: RealEstateSubclass;
   valuationUsd: number;
   valuationDate: string;
   status: ProjectStatus;
