@@ -14,10 +14,52 @@ export interface Investor {
   id: string;
   fullName: string;
   email: string;
+  phone: string;
+  jurisdiction: string;
   createdAt: string;
   kycStatus: KycStatus;
   accreditationStatus: AccreditationStatus;
 }
+
+export type ApprovalLevel = "NOT_APPROVED" | "PARTIALLY_APPROVED" | "FULLY_APPROVED";
+
+export const approvalLevelLabel: Record<ApprovalLevel, string> = {
+  NOT_APPROVED: "Not Approved",
+  PARTIALLY_APPROVED: "In Progress",
+  FULLY_APPROVED: "Fully Approved",
+};
+
+export type InvestorFilter = 
+  | "ALL"
+  | "NOT_STARTED"
+  | "KYC_SUBMITTED"
+  | "KYC_APPROVED"
+  | "ACCREDITED"
+  | "FULLY_APPROVED";
+
+export const investorFilterLabel: Record<InvestorFilter, string> = {
+  ALL: "All Investors",
+  NOT_STARTED: "Not Started",
+  KYC_SUBMITTED: "KYC Submitted",
+  KYC_APPROVED: "KYC Approved",
+  ACCREDITED: "Accredited",
+  FULLY_APPROVED: "Can Trade",
+};
+
+export const getApprovalLevel = (
+  investor: Investor,
+  wallets: InvestorWallet[]
+): ApprovalLevel => {
+  const hasApprovedWallet = wallets.some(w => w.permissionDexStatus === "APPROVED");
+  
+  if (investor.kycStatus === "APPROVED" && hasApprovedWallet) {
+    return "FULLY_APPROVED";
+  }
+  if (investor.kycStatus === "APPROVED" || investor.kycStatus === "PENDING" || wallets.length > 0) {
+    return "PARTIALLY_APPROVED";
+  }
+  return "NOT_APPROVED";
+};
 
 export interface InvestorWallet {
   id: string;

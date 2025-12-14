@@ -5,11 +5,14 @@ import {
   AccreditationStatus,
   PermissionDexStatus,
   ApplicationStatus,
+  ApprovalLevel,
   kycStatusLabel,
   accreditationLabel,
   permissionDexLabel,
   applicationStatusLabel,
+  approvalLevelLabel,
 } from "@/types/investor";
+import { CheckCircle2, Clock, XCircle, MinusCircle } from "lucide-react";
 
 interface BadgeProps {
   className?: string;
@@ -107,4 +110,66 @@ export const ApplicationStatusBadge: React.FC<
       {applicationStatusLabel[status]}
     </span>
   );
+};
+
+// Approval Level Badge
+const approvalStyles: Record<ApprovalLevel, string> = {
+  FULLY_APPROVED: "bg-emerald-500/10 text-emerald-700 border-emerald-500/20",
+  PARTIALLY_APPROVED: "bg-amber-500/10 text-amber-700 border-amber-500/20",
+  NOT_APPROVED: "bg-red-500/10 text-red-700 border-red-500/20",
+};
+
+export const ApprovalLevelBadge: React.FC<BadgeProps & { level: ApprovalLevel }> = ({
+  level,
+  className,
+}) => (
+  <span
+    className={cn(
+      "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium border",
+      approvalStyles[level],
+      className
+    )}
+  >
+    {approvalLevelLabel[level]}
+  </span>
+);
+
+// Approval Level Icon (for table name column)
+export const ApprovalLevelIcon: React.FC<{ level: ApprovalLevel; className?: string }> = ({
+  level,
+  className,
+}) => {
+  switch (level) {
+    case "FULLY_APPROVED":
+      return <CheckCircle2 className={cn("w-4 h-4 text-emerald-500", className)} />;
+    case "PARTIALLY_APPROVED":
+      return <Clock className={cn("w-4 h-4 text-amber-500", className)} />;
+    case "NOT_APPROVED":
+      return <XCircle className={cn("w-4 h-4 text-red-500", className)} />;
+  }
+};
+
+// Compact status icons for table cells
+export const KycStatusIcon: React.FC<{ status: KycStatus }> = ({ status }) => {
+  switch (status) {
+    case "APPROVED":
+      return <CheckCircle2 className="w-4 h-4 text-emerald-500" />;
+    case "PENDING":
+      return <Clock className="w-4 h-4 text-amber-500" />;
+    case "REJECTED":
+      return <XCircle className="w-4 h-4 text-red-500" />;
+  }
+};
+
+export const PermissionDexIcon: React.FC<{ hasApproved: boolean; hasPending: boolean }> = ({
+  hasApproved,
+  hasPending,
+}) => {
+  if (hasApproved) {
+    return <CheckCircle2 className="w-4 h-4 text-emerald-500" />;
+  }
+  if (hasPending) {
+    return <Clock className="w-4 h-4 text-amber-500" />;
+  }
+  return <MinusCircle className="w-4 h-4 text-muted-foreground" />;
 };
