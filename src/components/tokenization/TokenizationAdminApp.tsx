@@ -13,6 +13,7 @@ export const TokenizationAdminApp: React.FC = () => {
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
     initialProjects[0]?.id ?? null
   );
+  const [searchQuery, setSearchQuery] = useState("");
 
   const selectedProject = projects.find((p) => p.id === selectedProjectId) ?? null;
 
@@ -55,7 +56,7 @@ export const TokenizationAdminApp: React.FC = () => {
     const id = `proj-${String(projects.length + 1).padStart(3, "0")}`;
     const newProject: TokenizationProject = {
       id,
-      name: "New Asset Tokenization",
+      name: "New Property",
       assetId: "",
       issuerName: "",
       jurisdiction: "US-MO",
@@ -66,6 +67,9 @@ export const TokenizationAdminApp: React.FC = () => {
       status: "INTAKE_PENDING",
       createdAt: new Date().toISOString(),
       xls89Metadata: "{}",
+      propertyAddress: "",
+      ownerName: "",
+      propertyNickname: "",
     };
     setProjects((prev) => [newProject, ...prev]);
     setSelectedProjectId(newProject.id);
@@ -83,6 +87,8 @@ export const TokenizationAdminApp: React.FC = () => {
             projects={projects}
             selectedId={selectedProjectId}
             onSelect={setSelectedProjectId}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
           />
 
           {selectedProject ? (

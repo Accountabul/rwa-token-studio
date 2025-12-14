@@ -27,6 +27,10 @@ export interface TokenizationProject {
   status: ProjectStatus;
   createdAt: string;
   xls89Metadata: string;
+  // Human-friendly fields
+  propertyAddress: string;
+  ownerName: string;
+  propertyNickname?: string;
 }
 
 export const statusLabel: Record<ProjectStatus, string> = {
