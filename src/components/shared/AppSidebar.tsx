@@ -15,7 +15,9 @@ import {
   Wallet,
   FileCheck,
   ArrowLeftRight,
-  Waves
+  Waves,
+  Code,
+  Layers
 } from "lucide-react";
 
 interface AppSidebarProps {
@@ -31,6 +33,8 @@ const navItems = [
   { label: "Checks", icon: FileCheck, href: "/checks" },
   { label: "Payment Channels", icon: ArrowLeftRight, href: "/channels" },
   { label: "AMM Pools", icon: Waves, href: "/amm" },
+  { label: "Smart Contracts", icon: Code, href: "/contracts" },
+  { label: "Batch Transactions", icon: Layers, href: "/batch" },
   { label: "Investor Onboarding", icon: Users, href: "/investors" },
   { label: "Knowledge Base", icon: BookOpen, href: "/knowledge-base" },
   { label: "Reporting & Logs", icon: FileText, disabled: true },
