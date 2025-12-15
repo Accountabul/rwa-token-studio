@@ -10,6 +10,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { mockPaymentChannels } from "@/data/mockPaymentChannels";
 import { format } from "date-fns";
 import { PaymentChannelStatus } from "@/types/paymentChannel";
+import { CreateChannelDialog } from "./CreateChannelDialog";
 
 const statusConfig: Record<PaymentChannelStatus, { label: string; className: string }> = {
   OPEN: { label: "Open", className: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" },
@@ -66,6 +67,7 @@ export function PaymentChannelDashboard() {
             <TabsTrigger value="CLOSED">Closed</TabsTrigger>
           </TabsList>
         </Tabs>
+        <CreateChannelDialog />
       </div>
 
       <Card>
