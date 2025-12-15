@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { TokenDraft } from "./TokenWizard";
 import { tokenStandardLabel } from "@/types/token";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 import { 
   CheckCircle, 
   XCircle, 
@@ -13,9 +14,11 @@ import {
   Shield, 
   Coins,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Flag
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { calculateFlagsValue, MPT_FLAG_INFO, MPTFlagsState } from "@/lib/mptFlags";
 
 interface Step5ReviewProps {
   draft: TokenDraft;
@@ -23,7 +26,21 @@ interface Step5ReviewProps {
 
 export const Step5Review: React.FC<Step5ReviewProps> = ({ draft }) => {
   const [confirmed, setConfirmed] = useState(false);
-  const [expandedSections, setExpandedSections] = useState<string[]>(["token", "wallet", "properties", "compliance"]);
+  const [expandedSections, setExpandedSections] = useState<string[]>(["token", "wallet", "properties", "flags", "compliance"]);
+
+  // Calculate MPT flags value for display
+  const mptFlagsValue = useMemo(() => {
+    if (draft.standard !== "MPT") return null;
+    const flagsState: MPTFlagsState = {
+      canLock: draft.canLock,
+      requireAuth: draft.requireAuth,
+      canEscrow: draft.canEscrow,
+      canTrade: draft.canTrade,
+      canTransfer: draft.canTransfer,
+      canClawback: draft.canClawback,
+    };
+    return calculateFlagsValue(flagsState);
+  }, [draft]);
 
   const toggleSection = (section: string) => {
     setExpandedSections((prev) =>
@@ -106,10 +123,9 @@ export const Step5Review: React.FC<Step5ReviewProps> = ({ draft }) => {
       >
         {draft.standard === "MPT" && (
           <div className="grid grid-cols-2 gap-3">
+            <ReviewItem label="Asset Scale" value={`${draft.decimals} decimals`} />
             <ReviewItem label="Max Supply" value={draft.maxSupply?.toLocaleString() || "Unlimited"} />
             <ReviewItem label="Transfer Fee" value={draft.transferFee ? `${draft.transferFee}%` : "None"} />
-            <ReviewItem label="Clawback Enabled" value={renderBool(draft.clawbackEnabled)} />
-            <ReviewItem label="Escrow Enabled" value={renderBool(draft.escrowEnabled)} />
           </div>
         )}
         {draft.standard === "IOU" && (
@@ -130,6 +146,43 @@ export const Step5Review: React.FC<Step5ReviewProps> = ({ draft }) => {
           </div>
         )}
       </CollapsibleSection>
+
+      {/* MPT Flags Section */}
+      {draft.standard === "MPT" && (
+        <CollapsibleSection
+          title="MPT Flags"
+          icon={<Flag className="h-4 w-4" />}
+          isExpanded={isExpanded("flags")}
+          onToggle={() => toggleSection("flags")}
+        >
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-xs text-muted-foreground">Computed Value:</span>
+              {mptFlagsValue && (
+                <Badge variant="outline" className="font-mono text-xs">
+                  {mptFlagsValue.decimal} ({mptFlagsValue.hex})
+                </Badge>
+              )}
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {MPT_FLAG_INFO.map((flag) => (
+                <div key={flag.key} className="flex items-center gap-2">
+                  <ReviewItem 
+                    label={flag.name} 
+                    value={renderBool(draft[flag.key] as boolean)} 
+                  />
+                  <code className="text-[9px] font-mono text-muted-foreground">{flag.hex}</code>
+                </div>
+              ))}
+            </div>
+            {draft.xls89Metadata && (
+              <div className="mt-3 pt-3 border-t border-border">
+                <ReviewItem label="XLS-89 Metadata" value={draft.xls89Metadata} mono />
+              </div>
+            )}
+          </div>
+        </CollapsibleSection>
+      )}
 
       {/* Compliance */}
       <CollapsibleSection
