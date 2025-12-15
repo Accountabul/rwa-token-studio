@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Table,
   TableBody,
@@ -13,57 +14,48 @@ import {
   InvestorWallet,
   InvestorApplication,
   getApprovalLevel,
+  canParticipate,
 } from "@/types/investor";
 import {
-  KycStatusBadge,
+  KycStatusIcon,
   AccreditationBadge,
   ApprovalLevelIcon,
-  KycStatusIcon,
-  PermissionDexIcon,
-  ApprovalLevelBadge,
 } from "./InvestorStatusBadges";
-import { Copy, Mail, Phone, ExternalLink } from "lucide-react";
-import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { CheckCircle2, XCircle, AlertCircle, Wallet } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 interface InvestorTableProps {
   investors: Investor[];
   wallets: InvestorWallet[];
   applications: InvestorApplication[];
-  selectedId: string | null;
-  onSelect: (id: string) => void;
 }
 
 export const InvestorTable: React.FC<InvestorTableProps> = ({
   investors,
   wallets,
   applications,
-  selectedId,
-  onSelect,
 }) => {
+  const navigate = useNavigate();
+
   const getWalletStats = (investorId: string) => {
     const investorWallets = wallets.filter((w) => w.investorId === investorId);
-    const hasApproved = investorWallets.some((w) => w.permissionDexStatus === "APPROVED");
-    const hasPending = investorWallets.some((w) => w.permissionDexStatus === "PENDING");
-    return { total: investorWallets.length, hasApproved, hasPending };
+    const permissioned = investorWallets.filter(
+      (w) => w.permissionDexStatus === "APPROVED"
+    ).length;
+    return { total: investorWallets.length, permissioned };
   };
 
-  const getApplicationStats = (investorId: string) => {
-    const investorApps = applications.filter((a) => a.investorId === investorId);
-    return investorApps.length;
-  };
-
-  const copyToClipboard = (text: string, label: string) => {
-    navigator.clipboard.writeText(text);
-    toast.success(`${label} copied to clipboard`);
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
+  const getEligibility = (investor: Investor, investorWallets: InvestorWallet[]) => {
+    const approvedWallet = investorWallets.find(
+      (w) => w.permissionDexStatus === "APPROVED"
+    );
+    if (approvedWallet && canParticipate(investor, approvedWallet)) {
+      return "eligible";
+    }
+    if (investor.kycStatus === "APPROVED") {
+      return "partial";
+    }
+    return "blocked";
   };
 
   const getLastAction = (investor: Investor, investorWallets: InvestorWallet[]) => {
@@ -80,116 +72,42 @@ export const InvestorTable: React.FC<InvestorTableProps> = ({
     });
   };
 
+  const handleRowClick = (investorId: string) => {
+    navigate(`/investors/${investorId}`);
+  };
+
   return (
     <div className="flex-1 overflow-auto">
       <Table>
         <TableHeader className="sticky top-0 bg-muted/80 backdrop-blur-sm">
           <TableRow>
-            <TableHead className="w-[200px]">Name</TableHead>
-            <TableHead className="w-[180px]">Email</TableHead>
-            <TableHead className="w-[140px]">Phone</TableHead>
-            <TableHead className="w-[100px]">Signup</TableHead>
+            <TableHead className="w-[220px]">Investor</TableHead>
             <TableHead className="w-[80px] text-center">KYC</TableHead>
-            <TableHead className="w-[110px]">Accreditation</TableHead>
-            <TableHead className="w-[80px] text-center">Wallet</TableHead>
-            <TableHead className="w-[120px]">Approval</TableHead>
-            <TableHead className="w-[80px] text-center">Apps</TableHead>
-            <TableHead className="w-[90px]">Last Action</TableHead>
+            <TableHead className="w-[130px]">Accreditation</TableHead>
+            <TableHead className="w-[100px] text-center">Wallets</TableHead>
+            <TableHead className="w-[100px] text-center">Eligible</TableHead>
+            <TableHead className="w-[100px]">Last Action</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {investors.map((investor) => {
             const investorWallets = wallets.filter((w) => w.investorId === investor.id);
             const walletStats = getWalletStats(investor.id);
-            const appCount = getApplicationStats(investor.id);
             const approvalLevel = getApprovalLevel(investor, investorWallets);
+            const eligibility = getEligibility(investor, investorWallets);
 
             return (
               <TableRow
                 key={investor.id}
-                className={cn(
-                  "cursor-pointer transition-colors",
-                  selectedId === investor.id && "bg-primary/5 border-l-2 border-l-primary"
-                )}
-                onClick={() => onSelect(investor.id)}
+                onClick={() => handleRowClick(investor.id)}
+                className="cursor-pointer transition-colors hover:bg-muted/60"
               >
-                {/* Name with approval indicator */}
+                {/* Investor Name with approval indicator */}
                 <TableCell className="font-medium">
                   <div className="flex items-center gap-2">
                     <ApprovalLevelIcon level={approvalLevel} className="shrink-0" />
                     <span className="truncate">{investor.fullName}</span>
                   </div>
-                </TableCell>
-
-                {/* Email with copy/mail actions */}
-                <TableCell>
-                  <div className="flex items-center gap-1 group">
-                    <span className="text-sm text-muted-foreground truncate max-w-[120px]">
-                      {investor.email}
-                    </span>
-                    <div className="flex opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          copyToClipboard(investor.email, "Email");
-                        }}
-                      >
-                        <Copy className="w-3 h-3" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          window.open(`mailto:${investor.email}`);
-                        }}
-                      >
-                        <Mail className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  </div>
-                </TableCell>
-
-                {/* Phone with copy/call actions */}
-                <TableCell>
-                  <div className="flex items-center gap-1 group">
-                    <span className="text-sm text-muted-foreground truncate max-w-[100px]">
-                      {investor.phone}
-                    </span>
-                    <div className="flex opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          copyToClipboard(investor.phone, "Phone");
-                        }}
-                      >
-                        <Copy className="w-3 h-3" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          window.open(`tel:${investor.phone.replace(/\D/g, "")}`);
-                        }}
-                      >
-                        <Phone className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  </div>
-                </TableCell>
-
-                {/* Signup Date */}
-                <TableCell className="text-sm text-muted-foreground">
-                  {formatDate(investor.createdAt)}
                 </TableCell>
 
                 {/* KYC Status */}
@@ -202,22 +120,36 @@ export const InvestorTable: React.FC<InvestorTableProps> = ({
                   <AccreditationBadge status={investor.accreditationStatus} />
                 </TableCell>
 
-                {/* Wallet PermissionDEX */}
+                {/* Wallets: Permissioned / Total */}
                 <TableCell className="text-center">
-                  <PermissionDexIcon
-                    hasApproved={walletStats.hasApproved}
-                    hasPending={walletStats.hasPending}
-                  />
+                  <div className="flex items-center justify-center gap-1.5">
+                    <Wallet className="w-3.5 h-3.5 text-muted-foreground" />
+                    <span className="text-sm">
+                      <span
+                        className={cn(
+                          walletStats.permissioned > 0
+                            ? "text-emerald-600 font-medium"
+                            : "text-muted-foreground"
+                        )}
+                      >
+                        {walletStats.permissioned}
+                      </span>
+                      <span className="text-muted-foreground">/{walletStats.total}</span>
+                    </span>
+                  </div>
                 </TableCell>
 
-                {/* Approval Level */}
-                <TableCell>
-                  <ApprovalLevelBadge level={approvalLevel} />
-                </TableCell>
-
-                {/* Application Count */}
-                <TableCell className="text-center text-sm text-muted-foreground">
-                  {appCount > 0 ? appCount : "—"}
+                {/* Eligibility */}
+                <TableCell className="text-center">
+                  {eligibility === "eligible" && (
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500 mx-auto" />
+                  )}
+                  {eligibility === "partial" && (
+                    <AlertCircle className="w-4 h-4 text-amber-500 mx-auto" />
+                  )}
+                  {eligibility === "blocked" && (
+                    <XCircle className="w-4 h-4 text-muted-foreground mx-auto" />
+                  )}
                 </TableCell>
 
                 {/* Last Action */}
