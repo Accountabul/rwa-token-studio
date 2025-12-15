@@ -26,10 +26,17 @@ export interface TokenDraft {
   decimals: number;
   maxSupply?: number;
   transferFee?: number;
-  // MPT specific
+  // MPT specific flags
+  canLock: boolean;
+  requireAuth: boolean;
+  canEscrow: boolean;
+  canTrade: boolean;
+  canTransfer: boolean;
+  canClawback: boolean;
+  xls89Metadata: string;
+  // Legacy MPT (keep for backward compatibility)
   clawbackEnabled: boolean;
   escrowEnabled: boolean;
-  xls89Metadata: string;
   // IOU specific
   currencyCode: string;
   trustlineAuthRequired: boolean;
@@ -49,13 +56,23 @@ const initialDraft: TokenDraft = {
   symbol: "",
   description: "",
   decimals: 6,
+  // MPT flags - defaults for RWA tokens
+  canLock: true,
+  requireAuth: true,
+  canEscrow: true,
+  canTrade: false,
+  canTransfer: true,
+  canClawback: true,
+  xls89Metadata: "",
+  // Legacy
   clawbackEnabled: true,
   escrowEnabled: true,
-  xls89Metadata: "",
+  // IOU
   currencyCode: "",
   trustlineAuthRequired: true,
   freezeEnabled: true,
   ripplingAllowed: false,
+  // NFT
   taxon: 0,
   burnable: false,
   onlyXRP: false,
