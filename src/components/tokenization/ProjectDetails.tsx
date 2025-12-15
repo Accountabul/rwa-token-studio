@@ -1,8 +1,9 @@
 import React, { useState } from "react";
-import { TokenizationProject, Role, statusOrder, assetClassLabel, realEstateSubclassLabel, AssetClass, RealEstateSubclass } from "@/types/tokenization";
+import { TokenizationProject, Role, statusOrder, assetClassLabel, realEstateSubclassLabel, AssetClass, RealEstateSubclass, MPTConfig } from "@/types/tokenization";
 import { StatusBadge } from "./StatusBadge";
 import { StatusStepper } from "./StatusStepper";
 import { MetadataForm } from "./MetadataForm";
+import { TokenLifecyclePanel } from "./TokenLifecyclePanel";
 import { cn } from "@/lib/utils";
 import { 
   ArrowRight, 
@@ -17,7 +18,8 @@ import {
   ChevronDown,
   ChevronUp,
   User,
-  Home
+  Home,
+  Settings2
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -32,6 +34,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { MPT_FLAG_INFO, calculateFlagsValue, MPTFlagsState } from "@/lib/mptFlags";
 
 interface ProjectDetailsProps {
   project: TokenizationProject;
@@ -358,6 +362,22 @@ export const ProjectDetails: React.FC<ProjectDetailsProps> = ({
           </Collapsible>
         </div>
       </div>
+
+      {/* Token Lifecycle Panel - Only shown when MINTED */}
+      {project.status === "MINTED" && (
+        <TokenLifecyclePanel
+          projectId={project.id}
+          role={role}
+          mptFlags={project.mptConfig?.flags || {
+            canLock: true,
+            requireAuth: true,
+            canEscrow: true,
+            canTrade: true,
+            canTransfer: true,
+            canClawback: true,
+          }}
+        />
+      )}
     </section>
   );
 };

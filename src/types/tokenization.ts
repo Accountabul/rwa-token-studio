@@ -43,6 +43,21 @@ export const realEstateSubclassLabel: Record<RealEstateSubclass, string> = {
   special: "Special Purpose",
 };
 
+export interface MPTConfig {
+  assetScale: number; // 0-15
+  maxSupply: number;
+  transferFee: number; // 0-50000 (basis points, 0-50%)
+  flags: {
+    canLock: boolean;
+    requireAuth: boolean;
+    canEscrow: boolean;
+    canTrade: boolean;
+    canTransfer: boolean;
+    canClawback: boolean;
+  };
+  computedFlagsValue: number;
+}
+
 export interface TokenizationProject {
   id: string;
   name: string;
@@ -60,6 +75,8 @@ export interface TokenizationProject {
   propertyAddress: string;
   ownerName: string;
   propertyNickname?: string;
+  // MPT Configuration (added after METADATA_DRAFT)
+  mptConfig?: MPTConfig;
 }
 
 export const statusLabel: Record<ProjectStatus, string> = {
