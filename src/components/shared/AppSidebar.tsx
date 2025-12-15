@@ -10,7 +10,9 @@ import {
   ChevronDown,
   Hexagon,
   BookOpen,
-  Coins
+  Coins,
+  Lock,
+  Wallet
 } from "lucide-react";
 
 interface AppSidebarProps {
@@ -21,6 +23,8 @@ interface AppSidebarProps {
 const navItems = [
   { label: "Tokenization Projects", icon: LayoutDashboard, href: "/" },
   { label: "Token Registry", icon: Coins, href: "/tokens" },
+  { label: "Escrows", icon: Lock, href: "/escrows" },
+  { label: "Wallet Management", icon: Wallet, href: "/wallets" },
   { label: "Investor Onboarding", icon: Users, href: "/investors" },
   { label: "Knowledge Base", icon: BookOpen, href: "/knowledge-base" },
   { label: "Reporting & Logs", icon: FileText, disabled: true },

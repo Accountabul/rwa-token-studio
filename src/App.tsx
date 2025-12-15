@@ -9,6 +9,9 @@ import InvestorProfile from "./pages/InvestorProfile";
 import KnowledgeBase from "./pages/KnowledgeBase";
 import Tokens from "./pages/Tokens";
 import TokenCreate from "./pages/TokenCreate";
+import Escrows from "./pages/Escrows";
+import EscrowDetailsPage from "./pages/EscrowDetailsPage";
+import Wallets from "./pages/Wallets";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +29,9 @@ const App = () => (
           <Route path="/knowledge-base" element={<KnowledgeBase />} />
           <Route path="/tokens" element={<Tokens />} />
           <Route path="/tokens/create" element={<TokenCreate />} />
+          <Route path="/escrows" element={<Escrows />} />
+          <Route path="/escrows/:escrowId" element={<EscrowDetailsPage />} />
+          <Route path="/wallets" element={<Wallets />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
