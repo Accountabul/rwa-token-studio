@@ -194,21 +194,23 @@ export const TokenWizard: React.FC<TokenWizardProps> = ({ role }) => {
         </div>
       </div>
 
-      {/* Progress Steps */}
+      {/* Progress Steps - Clickable */}
       <div className="flex items-center gap-2">
         {steps.map((step, index) => (
           <React.Fragment key={step.id}>
-            <div
-              className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium transition-colors ${
+            <button
+              onClick={() => setCurrentStep(step.id)}
+              className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium transition-colors cursor-pointer hover:ring-2 hover:ring-primary/50 ${
                 currentStep > step.id
                   ? "bg-primary text-primary-foreground"
                   : currentStep === step.id
                   ? "bg-primary/20 text-primary border-2 border-primary"
-                  : "bg-muted text-muted-foreground"
+                  : "bg-muted text-muted-foreground hover:bg-muted/80"
               }`}
+              title={step.name}
             >
               {currentStep > step.id ? <Check className="h-4 w-4" /> : step.id}
-            </div>
+            </button>
             {index < steps.length - 1 && (
               <div
                 className={`flex-1 h-0.5 ${
