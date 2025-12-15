@@ -14,7 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Search, Plus, BookOpen, FileEdit } from "lucide-react";
 import { toast } from "sonner";
 
-const categories: KBCategory[] = ["projects_assets", "asset_classification", "xls89_metadata", "investor_compliance", "permissiondex"];
+const categories: KBCategory[] = ["projects_assets", "asset_classification", "xls89_metadata", "investor_compliance", "permissiondex", "token_registry", "xrpl_explorer", "portfolio_holdings", "system_roles"];
 
 export function KnowledgeBaseApp() {
   const [role, setRole] = useState<Role>("TOKENIZATION_MANAGER");
@@ -58,6 +58,7 @@ export function KnowledgeBaseApp() {
       token_registry: 0,
       xrpl_explorer: 0,
       portfolio_holdings: 0,
+      system_roles: 0,
     };
     entries.forEach((e) => {
       counts[e.category]++;
@@ -68,6 +69,11 @@ export function KnowledgeBaseApp() {
   const handleProposeEdit = (entry: KBEntry) => {
     setEditingEntry(entry);
     setProposalDialogOpen(true);
+  };
+
+  const handleDirectEdit = (updatedEntry: KBEntry) => {
+    setEntries(entries.map(e => e.id === updatedEntry.id ? updatedEntry : e));
+    setSelectedEntry(updatedEntry);
   };
 
   const handleNewProposal = () => {
@@ -280,6 +286,7 @@ export function KnowledgeBaseApp() {
                       entry={selectedEntry}
                       role={role}
                       onProposeEdit={() => handleProposeEdit(selectedEntry)}
+                      onDirectEdit={handleDirectEdit}
                     />
                   ) : (
                     <div className="flex items-center justify-center h-64 text-muted-foreground">
