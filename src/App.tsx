@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Investors from "./pages/Investors";
+import InvestorProfile from "./pages/InvestorProfile";
 import KnowledgeBase from "./pages/KnowledgeBase";
 import Tokens from "./pages/Tokens";
 import TokenCreate from "./pages/TokenCreate";
@@ -21,6 +22,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/investors" element={<Investors />} />
+          <Route path="/investors/:investorId" element={<InvestorProfile />} />
           <Route path="/knowledge-base" element={<KnowledgeBase />} />
           <Route path="/tokens" element={<Tokens />} />
           <Route path="/tokens/create" element={<TokenCreate />} />
