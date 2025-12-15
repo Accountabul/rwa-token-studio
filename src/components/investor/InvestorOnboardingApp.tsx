@@ -12,7 +12,7 @@ import {
   mockWallets,
   mockApplications,
 } from "@/data/mockInvestors";
-import { InvestorSidebar } from "./InvestorSidebar";
+import { AppSidebar } from "@/components/shared/AppSidebar";
 import { InvestorHeader } from "./InvestorHeader";
 import { InvestorTable } from "./InvestorTable";
 import { InvestorDetails } from "./InvestorDetails";
@@ -163,7 +163,7 @@ export const InvestorOnboardingApp: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background flex">
-      <InvestorSidebar role={role} onRoleChange={setRole} />
+      <AppSidebar role={role} onRoleChange={setRole} />
 
       <main className="flex-1 flex flex-col min-h-screen">
         <InvestorHeader
