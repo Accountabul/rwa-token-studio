@@ -1,25 +1,25 @@
 import React from "react";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search } from "lucide-react";
-import { TokenStandard, TokenStatus, tokenStandardLabel, tokenStatusLabel } from "@/types/token";
+import { TokenAdvancedFilters, TokenFiltersState } from "./TokenAdvancedFilters";
+import { TokenSortDropdown, SortField } from "./TokenSortDropdown";
 
 interface TokenFiltersProps {
   searchQuery: string;
   onSearchChange: (value: string) => void;
-  standardFilter: TokenStandard | "ALL";
-  onStandardFilterChange: (value: TokenStandard | "ALL") => void;
-  statusFilter: TokenStatus | "ALL";
-  onStatusFilterChange: (value: TokenStatus | "ALL") => void;
+  filters: TokenFiltersState;
+  onFiltersChange: (filters: TokenFiltersState) => void;
+  sortBy: SortField;
+  onSortChange: (sort: SortField) => void;
 }
 
 export const TokenFilters: React.FC<TokenFiltersProps> = ({
   searchQuery,
   onSearchChange,
-  standardFilter,
-  onStandardFilterChange,
-  statusFilter,
-  onStatusFilterChange,
+  filters,
+  onFiltersChange,
+  sortBy,
+  onSortChange,
 }) => {
   return (
     <div className="flex flex-col sm:flex-row gap-3">
@@ -33,29 +33,16 @@ export const TokenFilters: React.FC<TokenFiltersProps> = ({
         />
       </div>
       
-      <Select value={standardFilter} onValueChange={(v) => onStandardFilterChange(v as TokenStandard | "ALL")}>
-        <SelectTrigger className="w-full sm:w-40 bg-card border-border">
-          <SelectValue placeholder="Standard" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="ALL">All Standards</SelectItem>
-          {(Object.keys(tokenStandardLabel) as TokenStandard[]).map((std) => (
-            <SelectItem key={std} value={std}>{std}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      
-      <Select value={statusFilter} onValueChange={(v) => onStatusFilterChange(v as TokenStatus | "ALL")}>
-        <SelectTrigger className="w-full sm:w-40 bg-card border-border">
-          <SelectValue placeholder="Status" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="ALL">All Statuses</SelectItem>
-          {(Object.keys(tokenStatusLabel) as TokenStatus[]).map((status) => (
-            <SelectItem key={status} value={status}>{tokenStatusLabel[status]}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <div className="flex gap-2">
+        <TokenAdvancedFilters
+          filters={filters}
+          onFiltersChange={onFiltersChange}
+        />
+        <TokenSortDropdown
+          sortBy={sortBy}
+          onSortChange={onSortChange}
+        />
+      </div>
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { Token, TokenStandard, TokenStatus } from "@/types/token";
+import { Token } from "@/types/token";
 import { mockTokens } from "@/data/mockTokens";
 import { TokenTable } from "./TokenTable";
 import { TokenFilters } from "./TokenFilters";
@@ -9,6 +9,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Plus, Coins, FileText, Snowflake, Archive } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Role } from "@/types/tokenization";
+import { TokenFiltersState, defaultFilters } from "./TokenAdvancedFilters";
+import { SortField } from "./TokenSortDropdown";
 
 interface TokenDashboardProps {
   role: Role;
@@ -19,8 +21,8 @@ export const TokenDashboard: React.FC<TokenDashboardProps> = ({ role }) => {
   const [tokens] = useState<Token[]>(mockTokens);
   const [selectedToken, setSelectedToken] = useState<Token | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [standardFilter, setStandardFilter] = useState<TokenStandard | "ALL">("ALL");
-  const [statusFilter, setStatusFilter] = useState<TokenStatus | "ALL">("ALL");
+  const [filters, setFilters] = useState<TokenFiltersState>(defaultFilters);
+  const [sortBy, setSortBy] = useState<SortField>("created_desc");
 
   const stats = useMemo(() => {
     const issued = tokens.filter((t) => t.status === "ISSUED").length;
@@ -37,19 +39,132 @@ export const TokenDashboard: React.FC<TokenDashboardProps> = ({ role }) => {
     return { total: tokens.length, issued, frozen, draft, retired, byStandard };
   }, [tokens]);
 
-  const filteredTokens = useMemo(() => {
-    return tokens.filter((token) => {
+  const filteredAndSortedTokens = useMemo(() => {
+    let result = tokens.filter((token) => {
+      // Search filter
       const matchesSearch = 
         token.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         token.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
         token.issuerWalletAddress.toLowerCase().includes(searchQuery.toLowerCase());
       
-      const matchesStandard = standardFilter === "ALL" || token.standard === standardFilter;
-      const matchesStatus = statusFilter === "ALL" || token.status === statusFilter;
-      
-      return matchesSearch && matchesStandard && matchesStatus;
+      if (!matchesSearch) return false;
+
+      // Standard filter
+      if (filters.standards.length > 0 && !filters.standards.includes(token.standard)) {
+        return false;
+      }
+
+      // Status filter
+      if (filters.statuses.length > 0 && !filters.statuses.includes(token.status)) {
+        return false;
+      }
+
+      // Compliance filters
+      if (filters.kycRequired !== "ALL") {
+        const required = filters.kycRequired === "YES";
+        if (token.compliance.kycRequired !== required) return false;
+      }
+
+      if (filters.accreditationRequired !== "ALL") {
+        const required = filters.accreditationRequired === "YES";
+        if (token.compliance.accreditationRequired !== required) return false;
+      }
+
+      if (filters.permissionDexEnforced !== "ALL") {
+        const enforced = filters.permissionDexEnforced === "YES";
+        if (token.compliance.permissionDexEnforced !== enforced) return false;
+      }
+
+      if (filters.hasTransferRestrictions !== "ALL") {
+        const hasRestrictions = !!token.compliance.transferRestrictions;
+        const wantsRestrictions = filters.hasTransferRestrictions === "YES";
+        if (hasRestrictions !== wantsRestrictions) return false;
+      }
+
+      // Jurisdictions filter
+      if (filters.jurisdictions.length > 0) {
+        const hasMatchingJurisdiction = filters.jurisdictions.some((j) =>
+          token.compliance.jurisdictions.includes(j)
+        );
+        if (!hasMatchingJurisdiction) return false;
+      }
+
+      // Supply range
+      if (filters.minSupply) {
+        const min = parseInt(filters.minSupply);
+        if (!isNaN(min) && token.totalIssued < min) return false;
+      }
+
+      if (filters.maxSupply) {
+        const max = parseInt(filters.maxSupply);
+        if (!isNaN(max) && token.totalIssued > max) return false;
+      }
+
+      // Asset classification
+      if (filters.assetClass !== "ALL" && token.assetClass !== filters.assetClass) {
+        return false;
+      }
+
+      if (filters.assetSubclass !== "ALL" && token.assetSubclass !== filters.assetSubclass) {
+        return false;
+      }
+
+      // Source project
+      if (filters.hasSourceProject !== "ALL") {
+        const hasProject = !!token.sourceProjectId;
+        const wantsProject = filters.hasSourceProject === "YES";
+        if (hasProject !== wantsProject) return false;
+      }
+
+      return true;
     });
-  }, [tokens, searchQuery, standardFilter, statusFilter]);
+
+    // Sorting
+    result.sort((a, b) => {
+      switch (sortBy) {
+        case "name_asc":
+          return a.name.localeCompare(b.name);
+        case "name_desc":
+          return b.name.localeCompare(a.name);
+        case "symbol_asc":
+          return a.symbol.localeCompare(b.symbol);
+        case "symbol_desc":
+          return b.symbol.localeCompare(a.symbol);
+        case "supply_desc":
+          return b.totalIssued - a.totalIssued;
+        case "supply_asc":
+          return a.totalIssued - b.totalIssued;
+        case "max_supply_desc":
+          return (b.maxSupply || 0) - (a.maxSupply || 0);
+        case "max_supply_asc":
+          return (a.maxSupply || 0) - (b.maxSupply || 0);
+        case "circulating_desc":
+          return b.circulatingSupply - a.circulatingSupply;
+        case "circulating_asc":
+          return a.circulatingSupply - b.circulatingSupply;
+        case "escrow_desc":
+          return b.inEscrow - a.inEscrow;
+        case "escrow_asc":
+          return a.inEscrow - b.inEscrow;
+        case "created_desc":
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        case "created_asc":
+          return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        case "issued_desc":
+          if (!a.issuedAt) return 1;
+          if (!b.issuedAt) return -1;
+          return new Date(b.issuedAt).getTime() - new Date(a.issuedAt).getTime();
+        case "issued_asc":
+          if (!a.issuedAt) return 1;
+          if (!b.issuedAt) return -1;
+          return new Date(a.issuedAt).getTime() - new Date(b.issuedAt).getTime();
+        default:
+          return 0;
+      }
+    });
+
+    return result;
+  }, [tokens, searchQuery, filters, sortBy]);
 
   const canCreateToken = role === "SUPER_ADMIN" || role === "TOKENIZATION_MANAGER";
 
@@ -158,15 +273,15 @@ export const TokenDashboard: React.FC<TokenDashboardProps> = ({ role }) => {
       <TokenFilters
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
-        standardFilter={standardFilter}
-        onStandardFilterChange={setStandardFilter}
-        statusFilter={statusFilter}
-        onStatusFilterChange={setStatusFilter}
+        filters={filters}
+        onFiltersChange={setFilters}
+        sortBy={sortBy}
+        onSortChange={setSortBy}
       />
 
       {/* Token Table */}
       <TokenTable 
-        tokens={filteredTokens} 
+        tokens={filteredAndSortedTokens} 
         onSelectToken={setSelectedToken}
       />
     </div>
