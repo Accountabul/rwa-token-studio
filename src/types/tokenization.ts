@@ -75,6 +75,8 @@ export interface TokenizationProject {
   propertyAddress: string;
   ownerName: string;
   propertyNickname?: string;
+  // Token Fractionalization (pre-minting)
+  plannedTokenSupply?: number;
   // MPT Configuration (added after METADATA_DRAFT)
   mptConfig?: MPTConfig;
 }

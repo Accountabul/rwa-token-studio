@@ -16,6 +16,7 @@ export const initialProjects: TokenizationProject[] = [
     propertyAddress: "1234 Maple Ave, St. Louis, MO 63104",
     ownerName: "James & Sarah Mitchell",
     propertyNickname: "Maple Duplex",
+    plannedTokenSupply: 185000,
     xls89Metadata: JSON.stringify(
       {
         t: "ABUL-MAPLE-01",
@@ -104,6 +105,7 @@ export const initialProjects: TokenizationProject[] = [
     propertyAddress: "8901 Commerce Blvd, Austin, TX 78701",
     ownerName: "Retail Ventures Holdings",
     propertyNickname: "Commerce Strip",
+    plannedTokenSupply: 2100000,
     xls89Metadata: JSON.stringify(
       {
         t: "",
