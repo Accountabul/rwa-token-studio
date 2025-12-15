@@ -33,7 +33,7 @@ export const SignerCard: React.FC<SignerCardProps> = ({ signer, canRemove, onRem
           </div>
           <ExplorerLinkBadge
             type="address"
-            address={signer.address}
+            value={signer.address}
             network="testnet"
           />
           <p className="text-xs text-muted-foreground mt-1">
