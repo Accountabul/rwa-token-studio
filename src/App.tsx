@@ -12,6 +12,12 @@ import TokenCreate from "./pages/TokenCreate";
 import Escrows from "./pages/Escrows";
 import EscrowDetailsPage from "./pages/EscrowDetailsPage";
 import Wallets from "./pages/Wallets";
+import Checks from "./pages/Checks";
+import CheckDetailsPage from "./pages/CheckDetailsPage";
+import PaymentChannels from "./pages/PaymentChannels";
+import ChannelDetailsPage from "./pages/ChannelDetailsPage";
+import AMM from "./pages/AMM";
+import PoolDetailsPage from "./pages/PoolDetailsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +38,12 @@ const App = () => (
           <Route path="/escrows" element={<Escrows />} />
           <Route path="/escrows/:escrowId" element={<EscrowDetailsPage />} />
           <Route path="/wallets" element={<Wallets />} />
+          <Route path="/checks" element={<Checks />} />
+          <Route path="/checks/:checkId" element={<CheckDetailsPage />} />
+          <Route path="/channels" element={<PaymentChannels />} />
+          <Route path="/channels/:channelId" element={<ChannelDetailsPage />} />
+          <Route path="/amm" element={<AMM />} />
+          <Route path="/amm/:poolId" element={<PoolDetailsPage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

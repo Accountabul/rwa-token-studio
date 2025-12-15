@@ -12,7 +12,10 @@ import {
   BookOpen,
   Coins,
   Lock,
-  Wallet
+  Wallet,
+  FileCheck,
+  ArrowLeftRight,
+  Waves
 } from "lucide-react";
 
 interface AppSidebarProps {
@@ -25,6 +28,9 @@ const navItems = [
   { label: "Token Registry", icon: Coins, href: "/tokens" },
   { label: "Escrows", icon: Lock, href: "/escrows" },
   { label: "Wallet Management", icon: Wallet, href: "/wallets" },
+  { label: "Checks", icon: FileCheck, href: "/checks" },
+  { label: "Payment Channels", icon: ArrowLeftRight, href: "/channels" },
+  { label: "AMM Pools", icon: Waves, href: "/amm" },
   { label: "Investor Onboarding", icon: Users, href: "/investors" },
   { label: "Knowledge Base", icon: BookOpen, href: "/knowledge-base" },
   { label: "Reporting & Logs", icon: FileText, disabled: true },
