@@ -122,7 +122,7 @@ export const EscrowDetails: React.FC<EscrowDetailsProps> = ({ escrow, role, onBa
               <p className="font-medium">{escrow.senderName || "Unknown"}</p>
               <ExplorerLinkBadge
                 type="address"
-                address={escrow.senderAddress}
+                value={escrow.senderAddress}
                 network={escrow.network}
               />
             </div>
@@ -132,7 +132,7 @@ export const EscrowDetails: React.FC<EscrowDetailsProps> = ({ escrow, role, onBa
               <p className="font-medium">{escrow.destinationName || "Unknown"}</p>
               <ExplorerLinkBadge
                 type="address"
-                address={escrow.destinationAddress}
+                value={escrow.destinationAddress}
                 network={escrow.network}
               />
             </div>
@@ -188,7 +188,7 @@ export const EscrowDetails: React.FC<EscrowDetailsProps> = ({ escrow, role, onBa
                 <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Creation TX</p>
                 <ExplorerLinkBadge
                   type="tx"
-                  txHash={escrow.createTxHash}
+                  value={escrow.createTxHash}
                   network={escrow.network}
                 />
               </div>
@@ -198,7 +198,7 @@ export const EscrowDetails: React.FC<EscrowDetailsProps> = ({ escrow, role, onBa
                 <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Completion TX</p>
                 <ExplorerLinkBadge
                   type="tx"
-                  txHash={escrow.finishTxHash}
+                  value={escrow.finishTxHash}
                   network={escrow.network}
                 />
               </div>
@@ -208,7 +208,7 @@ export const EscrowDetails: React.FC<EscrowDetailsProps> = ({ escrow, role, onBa
                 <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Cancellation TX</p>
                 <ExplorerLinkBadge
                   type="tx"
-                  txHash={escrow.cancelTxHash}
+                  value={escrow.cancelTxHash}
                   network={escrow.network}
                 />
               </div>

@@ -76,7 +76,7 @@ export const WalletCard: React.FC<WalletCardProps> = ({ wallet, config, onSelect
           <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Address</p>
           <ExplorerLinkBadge
             type="address"
-            address={wallet.xrplAddress}
+            value={wallet.xrplAddress}
             network="testnet"
           />
         </div>
