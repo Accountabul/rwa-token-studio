@@ -1,15 +1,15 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FileCheck, Clock, CheckCircle, XCircle, Plus, Search } from "lucide-react";
+import { FileCheck, Clock, CheckCircle, XCircle, Search } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { mockChecks } from "@/data/mockChecks";
 import { format, isPast } from "date-fns";
 import { CheckStatus } from "@/types/check";
+import { CreateCheckDialog } from "./CreateCheckDialog";
 
 const statusConfig: Record<CheckStatus, { label: string; icon: typeof Clock; className: string }> = {
   PENDING: { label: "Pending", icon: Clock, className: "bg-amber-500/10 text-amber-500 border-amber-500/20" },
@@ -81,6 +81,7 @@ export function ChecksDashboard() {
             <TabsTrigger value="EXPIRED">Expired</TabsTrigger>
           </TabsList>
         </Tabs>
+        <CreateCheckDialog />
       </div>
 
       {/* Table */}
