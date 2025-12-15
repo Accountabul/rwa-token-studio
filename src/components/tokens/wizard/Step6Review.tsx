@@ -61,7 +61,7 @@ export const Step6Review: React.FC<Step6ReviewProps> = ({ draft }) => {
 
   const renderBool = (value: boolean) =>
     value ? (
-      <span className="flex items-center gap-1 text-emerald-400">
+      <span className="flex items-center gap-1 text-primary">
         <CheckCircle className="h-3.5 w-3.5" /> Yes
       </span>
     ) : (
