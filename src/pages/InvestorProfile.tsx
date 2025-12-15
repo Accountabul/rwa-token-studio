@@ -1,11 +1,13 @@
 import React, { useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Role } from "@/types/tokenization";
-import { InvestorWallet, InvestorApplication } from "@/types/investor";
+import { InvestorWallet } from "@/types/investor";
 import {
   mockInvestors,
   mockWallets,
   mockApplications,
+  mockHoldings,
+  mockAuditLog,
 } from "@/data/mockInvestors";
 import { AppSidebar } from "@/components/shared/AppSidebar";
 import { InvestorProfilePage } from "@/components/investor/InvestorProfilePage";
@@ -31,6 +33,16 @@ const InvestorProfile: React.FC = () => {
 
   const investorApplications = useMemo(
     () => mockApplications.filter((a) => a.investorId === investorId),
+    [investorId]
+  );
+
+  const investorHoldings = useMemo(
+    () => mockHoldings.filter((h) => h.investorId === investorId),
+    [investorId]
+  );
+
+  const investorAuditLog = useMemo(
+    () => mockAuditLog.filter((e) => e.investorId === investorId),
     [investorId]
   );
 
@@ -74,6 +86,8 @@ const InvestorProfile: React.FC = () => {
           investor={investor}
           wallets={investorWallets}
           applications={investorApplications}
+          holdings={investorHoldings}
+          auditLog={investorAuditLog}
           onSyncWallet={handleSyncWallet}
           onBack={() => navigate("/investors")}
         />

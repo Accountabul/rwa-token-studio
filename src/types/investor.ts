@@ -68,6 +68,45 @@ export interface InvestorWallet {
   permissionDexStatus: PermissionDexStatus;
   createdAt: string;
   lastSyncAt: string | null;
+  network?: "XRPL" | "EVM";
+  totalValueUsd?: number;
+  breakdown?: {
+    projectTokens: number;
+    stablecoins: number;
+    utilityTokens: number;
+  };
+  valuationSource?: "oracle" | "last_trade" | "issuance_price";
+}
+
+export type HoldingTokenType = "OWNERSHIP" | "UTILITY" | "REVENUE";
+export type HoldingStatus = "ACTIVE" | "LOCKED" | "PENDING";
+
+export interface InvestorHolding {
+  id: string;
+  investorId: string;
+  projectId: string;
+  projectName: string;
+  tokenSymbol: string;
+  tokenType: HoldingTokenType;
+  quantity: number;
+  entryPriceUsd: number;
+  currentValueUsd: number;
+  status: HoldingStatus;
+  walletId: string;
+  issuedAt: string;
+}
+
+export type AuditLogResult = "SUCCESS" | "FAILED";
+
+export interface AuditLogEntry {
+  id: string;
+  investorId: string;
+  timestamp: string;
+  actor: string;
+  actorType: "SYSTEM" | "ADMIN";
+  action: string;
+  result: AuditLogResult;
+  details?: string;
 }
 
 export interface InvestorApplication {
