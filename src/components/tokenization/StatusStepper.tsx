@@ -30,7 +30,7 @@ export const StatusStepper: React.FC<StatusStepperProps> = ({ current }) => {
                 className={cn(
                   "w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold transition-all duration-300",
                   isActive && "bg-primary text-primary-foreground",
-                  isCompleted && "bg-status-complete text-white",
+                  isCompleted && "bg-[hsl(var(--status-complete))] text-primary-foreground",
                   !isActive && !isCompleted && "border border-muted-foreground/30"
                 )}
               >

@@ -135,8 +135,7 @@ export const ProjectDetails: React.FC<ProjectDetailsProps> = ({
 
   const handleSimulateMint = () => {
     try {
-      const parsed = JSON.parse(project.xls89Metadata);
-      console.log("Ready to mint with:", parsed);
+      JSON.parse(project.xls89Metadata);
       toast.success("Mint simulation successful", {
         description: "MPTokenIssuanceCreate would be triggered in production"
       });
