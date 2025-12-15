@@ -18,6 +18,11 @@ import PaymentChannels from "./pages/PaymentChannels";
 import ChannelDetailsPage from "./pages/ChannelDetailsPage";
 import AMM from "./pages/AMM";
 import PoolDetailsPage from "./pages/PoolDetailsPage";
+import SmartContracts from "./pages/SmartContracts";
+import ContractDetailsPage from "./pages/ContractDetailsPage";
+import BatchTransactions from "./pages/BatchTransactions";
+import BatchBuilderPage from "./pages/BatchBuilderPage";
+import BatchDetailsPage from "./pages/BatchDetailsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -44,6 +49,11 @@ const App = () => (
           <Route path="/channels/:channelId" element={<ChannelDetailsPage />} />
           <Route path="/amm" element={<AMM />} />
           <Route path="/amm/:poolId" element={<PoolDetailsPage />} />
+          <Route path="/contracts" element={<SmartContracts />} />
+          <Route path="/contracts/:contractId" element={<ContractDetailsPage />} />
+          <Route path="/batch" element={<BatchTransactions />} />
+          <Route path="/batch/new" element={<BatchBuilderPage />} />
+          <Route path="/batch/:batchId" element={<BatchDetailsPage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
