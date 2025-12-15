@@ -7,16 +7,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TokenStatusBadge, TokenStandardBadge } from "./TokenStatusBadge";
 import { AuditLog } from "./AuditLog";
+import { ExplorerDropdown } from "./ExplorerDropdown";
+import { ExplorerLinkBadge } from "./ExplorerLinkBadge";
 import { 
   ArrowLeft, 
-  ExternalLink, 
   Snowflake, 
   Flame, 
   Plus,
-  Copy,
   CheckCircle,
   XCircle,
-  Clock
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
@@ -29,13 +28,16 @@ interface TokenDetailsProps {
 export const TokenDetails: React.FC<TokenDetailsProps> = ({ token, role, onBack }) => {
   const auditEntries = mockTokenAuditLog.filter((e) => e.tokenId === token.id);
 
-  const copyAddress = () => {
-    navigator.clipboard.writeText(token.issuerWalletAddress);
-    toast({ title: "Address copied", description: "Wallet address copied to clipboard" });
-  };
-
   const canMintBurn = role === "SUPER_ADMIN" || role === "TOKENIZATION_MANAGER";
   const canFreeze = role === "SUPER_ADMIN" || role === "COMPLIANCE_OFFICER";
+
+  // Get currency code for IOU tokens
+  const getCurrencyCode = (): string | undefined => {
+    if (token.standard === "IOU") {
+      return (token.properties as IOUProperties).currencyCode;
+    }
+    return undefined;
+  };
 
   const renderProperties = () => {
     if (token.standard === "MPT") {
@@ -114,12 +116,14 @@ export const TokenDetails: React.FC<TokenDetailsProps> = ({ token, role, onBack 
               </Button>
             </>
           )}
-          {token.xrplTxHash && (
-            <Button variant="outline" className="gap-2">
-              <ExternalLink className="h-4 w-4" />
-              Explorer
-            </Button>
-          )}
+          {/* Explorer Dropdown - replaces single button */}
+          <ExplorerDropdown
+            standard={token.standard}
+            issuerAddress={token.issuerWalletAddress}
+            currencyCode={getCurrencyCode()}
+            txHash={token.xrplTxHash}
+            network="mainnet"
+          />
         </div>
       </div>
 
@@ -172,10 +176,11 @@ export const TokenDetails: React.FC<TokenDetailsProps> = ({ token, role, onBack 
               
               <div className="flex items-center gap-2">
                 <span className="text-xs text-muted-foreground">Issuer Wallet:</span>
-                <code className="text-xs bg-muted/50 px-2 py-1 rounded">{token.issuerWalletAddress}</code>
-                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={copyAddress}>
-                  <Copy className="h-3 w-3" />
-                </Button>
+                <ExplorerLinkBadge
+                  type="address"
+                  value={token.issuerWalletAddress}
+                  network="mainnet"
+                />
               </div>
               
               {token.decimals !== undefined && (
