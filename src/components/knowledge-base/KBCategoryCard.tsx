@@ -1,6 +1,6 @@
 import { KBCategory, kbCategoryLabel, kbCategoryDescription } from "@/types/knowledgeBase";
 import { Card, CardContent } from "@/components/ui/card";
-import { Building2, Layers, Code, UserCheck, Wallet } from "lucide-react";
+import { Building2, Layers, Code, UserCheck, Wallet, Coins, ExternalLink, Briefcase } from "lucide-react";
 
 const categoryIcons: Record<KBCategory, React.ReactNode> = {
   projects_assets: <Building2 className="h-5 w-5" />,
@@ -8,6 +8,9 @@ const categoryIcons: Record<KBCategory, React.ReactNode> = {
   xls89_metadata: <Code className="h-5 w-5" />,
   investor_compliance: <UserCheck className="h-5 w-5" />,
   permissiondex: <Wallet className="h-5 w-5" />,
+  token_registry: <Coins className="h-5 w-5" />,
+  xrpl_explorer: <ExternalLink className="h-5 w-5" />,
+  portfolio_holdings: <Briefcase className="h-5 w-5" />,
 };
 
 interface KBCategoryCardProps {
