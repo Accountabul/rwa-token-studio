@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Role, TokenizationProject, statusOrder } from "@/types/tokenization";
 import { initialProjects } from "@/data/mockProjects";
-import { Sidebar } from "./Sidebar";
+import { AppSidebar } from "@/components/shared/AppSidebar";
 import { Header } from "./Header";
 import { ProjectList } from "./ProjectList";
 import { ProjectDetails } from "./ProjectDetails";
@@ -77,7 +77,7 @@ export const TokenizationAdminApp: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background flex">
-      <Sidebar role={role} onRoleChange={setRole} />
+      <AppSidebar role={role} onRoleChange={setRole} />
 
       <main className="flex-1 flex flex-col min-h-screen">
         <Header onNewProject={handleNewProject} />

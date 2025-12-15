@@ -1,4 +1,5 @@
 import React from "react";
+import { useLocation } from "react-router-dom";
 import { Role, roleLabel } from "@/types/tokenization";
 import { cn } from "@/lib/utils";
 import { 
@@ -12,16 +13,16 @@ import {
   Coins
 } from "lucide-react";
 
-interface SidebarProps {
+interface AppSidebarProps {
   role: Role;
   onRoleChange: (role: Role) => void;
 }
 
 const navItems = [
-  { label: "Tokenization Projects", icon: LayoutDashboard, active: true, href: "/" },
-  { label: "Token Registry", icon: Coins, active: false, href: "/tokens" },
-  { label: "Investor Onboarding", icon: Users, active: false, href: "/investors" },
-  { label: "Knowledge Base", icon: BookOpen, active: false, href: "/knowledge-base" },
+  { label: "Tokenization Projects", icon: LayoutDashboard, href: "/" },
+  { label: "Token Registry", icon: Coins, href: "/tokens" },
+  { label: "Investor Onboarding", icon: Users, href: "/investors" },
+  { label: "Knowledge Base", icon: BookOpen, href: "/knowledge-base" },
   { label: "Reporting & Logs", icon: FileText, disabled: true },
 ];
 
@@ -33,9 +34,17 @@ const roles: Role[] = [
   "VALUATION_OFFICER",
 ];
 
-export const Sidebar: React.FC<SidebarProps> = ({ role, onRoleChange }) => {
+export const AppSidebar: React.FC<AppSidebarProps> = ({ role, onRoleChange }) => {
+  const location = useLocation();
+
+  const isActive = (href?: string) => {
+    if (!href) return false;
+    if (href === "/") return location.pathname === "/";
+    return location.pathname.startsWith(href);
+  };
+
   return (
-    <aside className="w-64 sidebar-gradient flex flex-col border-r border-sidebar-border">
+    <aside className="w-64 sidebar-gradient flex flex-col border-r border-sidebar-border shrink-0">
       {/* Logo */}
       <div className="px-5 py-6 border-b border-sidebar-border">
         <div className="flex items-center gap-3">
@@ -61,8 +70,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ role, onRoleChange }) => {
             href={item.href || "#"}
             className={cn(
               "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
-              item.active && "bg-sidebar-accent/10 text-sidebar-accent",
-              !item.active && !item.disabled && "text-sidebar-foreground/70 hover:bg-sidebar-foreground/5 hover:text-sidebar-foreground",
+              isActive(item.href) && "bg-sidebar-accent/10 text-sidebar-accent",
+              !isActive(item.href) && !item.disabled && "text-sidebar-foreground/70 hover:bg-sidebar-foreground/5 hover:text-sidebar-foreground",
               item.disabled && "text-sidebar-muted/50 cursor-not-allowed pointer-events-none"
             )}
             onClick={(e) => item.disabled && e.preventDefault()}
@@ -99,7 +108,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ role, onRoleChange }) => {
           <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-sidebar-muted pointer-events-none" />
         </div>
         <p className="text-[10px] text-sidebar-muted leading-relaxed">
-          Switch roles to simulate different permission levels for the tokenization workflow.
+          Switch roles to simulate different permission levels.
         </p>
       </div>
     </aside>
