@@ -2,11 +2,10 @@ import { useState } from "react";
 import { AppSidebar } from "@/components/shared/AppSidebar";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { PaymentChannelDashboard } from "@/components/channels/PaymentChannelDashboard";
-
-export type Role = "super_admin" | "tokenization_manager" | "compliance_officer" | "custody_officer" | "valuation_officer";
+import { Role } from "@/types/tokenization";
 
 export default function PaymentChannels() {
-  const [role, setRole] = useState<Role>("super_admin");
+  const [role, setRole] = useState<Role>("SUPER_ADMIN");
 
   return (
     <SidebarProvider>
