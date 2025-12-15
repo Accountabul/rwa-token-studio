@@ -3,15 +3,23 @@ import { TokenStandard, Token, TokenCompliance, IssuingWallet } from "@/types/to
 import { Role } from "@/types/tokenization";
 import { mockWallets } from "@/data/mockWallets";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Step1TokenType } from "./Step1TokenType";
 import { Step2WalletConfig } from "./Step2WalletConfig";
 import { Step3Properties } from "./Step3Properties";
-import { Step4Compliance } from "./Step4Compliance";
-import { Step5Review } from "./Step5Review";
+import { StepPricing } from "./StepPricing";
+import { Step5Compliance } from "./Step5Compliance";
+import { Step6Review } from "./Step6Review";
 import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
+import { 
+  ValuationMethod, 
+  TokenClass, 
+  PricingMode, 
+  PricingCurrency 
+} from "@/types/tokenPricing";
+import { validatePricing } from "@/lib/pricingCalculator";
 
 interface TokenWizardProps {
   role: Role;
@@ -49,6 +57,16 @@ export interface TokenDraft {
   metadataUri: string;
   // Compliance
   compliance: TokenCompliance;
+  // Pricing fields (Step 4)
+  assetValuationUsd?: number;
+  valuationMethod?: ValuationMethod;
+  valuationSourceRef?: string;
+  tokenClass?: TokenClass;
+  pricingMode: PricingMode;
+  pricingCurrency: PricingCurrency;
+  issuerDefinedPrice?: number;
+  fairValuePrice?: number;
+  deviationAcknowledged?: boolean;
 }
 
 const initialDraft: TokenDraft = {
@@ -83,14 +101,18 @@ const initialDraft: TokenDraft = {
     accreditationRequired: false,
     permissionDexEnforced: true,
   },
+  // Pricing defaults
+  pricingMode: "FAIR_VALUE",
+  pricingCurrency: "USD",
 };
 
 const steps = [
   { id: 1, name: "Token Type" },
   { id: 2, name: "Wallet" },
   { id: 3, name: "Properties" },
-  { id: 4, name: "Compliance" },
-  { id: 5, name: "Review" },
+  { id: 4, name: "Pricing" },
+  { id: 5, name: "Compliance" },
+  { id: 6, name: "Review" },
 ];
 
 export const TokenWizard: React.FC<TokenWizardProps> = ({ role }) => {
@@ -111,9 +133,22 @@ export const TokenWizard: React.FC<TokenWizardProps> = ({ role }) => {
         return !!draft.wallet && draft.wallet.isAuthorized && draft.wallet.permissionDexStatus === "APPROVED";
       case 3:
         return draft.name.trim() !== "" && draft.symbol.trim() !== "";
-      case 4:
-        return true;
+      case 4: {
+        // Pricing validation
+        const validation = validatePricing(
+          draft.assetValuationUsd,
+          draft.maxSupply,
+          draft.valuationMethod,
+          draft.tokenClass,
+          draft.pricingMode,
+          draft.issuerDefinedPrice,
+          draft.deviationAcknowledged
+        );
+        return validation.isValid;
+      }
       case 5:
+        return true;
+      case 6:
         return true;
       default:
         return false;
@@ -121,7 +156,7 @@ export const TokenWizard: React.FC<TokenWizardProps> = ({ role }) => {
   };
 
   const handleNext = () => {
-    if (currentStep < 5) {
+    if (currentStep < 6) {
       setCurrentStep((prev) => prev + 1);
     }
   };
@@ -167,13 +202,20 @@ export const TokenWizard: React.FC<TokenWizardProps> = ({ role }) => {
         );
       case 4:
         return (
-          <Step4Compliance
+          <StepPricing
+            draft={draft}
+            onUpdate={updateDraft}
+          />
+        );
+      case 5:
+        return (
+          <Step5Compliance
             compliance={draft.compliance}
             onUpdate={(compliance) => updateDraft({ compliance })}
           />
         );
-      case 5:
-        return <Step5Review draft={draft} />;
+      case 6:
+        return <Step6Review draft={draft} />;
       default:
         return null;
     }
@@ -189,7 +231,7 @@ export const TokenWizard: React.FC<TokenWizardProps> = ({ role }) => {
         <div>
           <h1 className="text-2xl font-semibold text-foreground">Create New Token</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Step {currentStep} of 5: {steps[currentStep - 1].name}
+            Step {currentStep} of 6: {steps[currentStep - 1].name}
           </p>
         </div>
       </div>
@@ -239,7 +281,7 @@ export const TokenWizard: React.FC<TokenWizardProps> = ({ role }) => {
           Back
         </Button>
 
-        {currentStep < 5 ? (
+        {currentStep < 6 ? (
           <Button onClick={handleNext} disabled={!canProceed()} className="gap-2">
             Next
             <ArrowRight className="h-4 w-4" />

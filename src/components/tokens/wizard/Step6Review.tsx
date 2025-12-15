@@ -15,18 +15,27 @@ import {
   Coins,
   ChevronDown,
   ChevronUp,
-  Flag
+  Flag,
+  DollarSign
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { calculateFlagsValue, MPT_FLAG_INFO, MPTFlagsState } from "@/lib/mptFlags";
+import { 
+  valuationMethodLabel, 
+  tokenClassLabel, 
+  pricingModeLabel, 
+  pricingCurrencyLabel 
+} from "@/types/tokenPricing";
+import { formatPrice, formatValuation } from "@/lib/pricingCalculator";
+import { PriceDeviationBadge } from "./PriceDeviationBadge";
 
-interface Step5ReviewProps {
+interface Step6ReviewProps {
   draft: TokenDraft;
 }
 
-export const Step5Review: React.FC<Step5ReviewProps> = ({ draft }) => {
+export const Step6Review: React.FC<Step6ReviewProps> = ({ draft }) => {
   const [confirmed, setConfirmed] = useState(false);
-  const [expandedSections, setExpandedSections] = useState<string[]>(["token", "wallet", "properties", "flags", "compliance"]);
+  const [expandedSections, setExpandedSections] = useState<string[]>(["token", "wallet", "pricing", "properties", "flags", "compliance"]);
 
   // Calculate MPT flags value for display
   const mptFlagsValue = useMemo(() => {
@@ -110,6 +119,74 @@ export const Step5Review: React.FC<Step5ReviewProps> = ({ draft }) => {
               }
             />
             <ReviewItem label="PermissionDEX" value={draft.wallet?.permissionDexStatus || "-"} />
+          </div>
+        </div>
+      </CollapsibleSection>
+
+      {/* Pricing & Valuation */}
+      <CollapsibleSection
+        title="Pricing & Valuation"
+        icon={<DollarSign className="h-4 w-4" />}
+        isExpanded={isExpanded("pricing")}
+        onToggle={() => toggleSection("pricing")}
+      >
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <ReviewItem 
+              label="Asset Valuation" 
+              value={draft.assetValuationUsd ? formatValuation(draft.assetValuationUsd) : "-"} 
+            />
+            <ReviewItem 
+              label="Valuation Method" 
+              value={draft.valuationMethod ? valuationMethodLabel[draft.valuationMethod] : "-"} 
+            />
+            <ReviewItem 
+              label="Token Class" 
+              value={draft.tokenClass ? tokenClassLabel[draft.tokenClass] : "-"} 
+            />
+            <ReviewItem 
+              label="Total Supply" 
+              value={draft.maxSupply?.toLocaleString() || "-"} 
+            />
+          </div>
+          
+          {draft.valuationSourceRef && (
+            <ReviewItem label="Valuation Source" value={draft.valuationSourceRef} mono />
+          )}
+
+          <Separator className="my-3" />
+
+          <div className="grid grid-cols-2 gap-3">
+            <ReviewItem 
+              label="Pricing Mode" 
+              value={pricingModeLabel[draft.pricingMode]} 
+            />
+            <ReviewItem 
+              label="Currency" 
+              value={pricingCurrencyLabel[draft.pricingCurrency]} 
+            />
+          </div>
+
+          <div className="p-3 rounded-lg bg-primary/5 border border-primary/20">
+            <p className="text-xs text-muted-foreground mb-1">Price Per Token</p>
+            <p className="text-lg font-semibold text-primary">
+              {formatPrice(
+                draft.pricingMode === "FAIR_VALUE" 
+                  ? (draft.fairValuePrice || 0)
+                  : (draft.issuerDefinedPrice || draft.fairValuePrice || 0),
+                draft.pricingCurrency
+              )}
+            </p>
+            {draft.pricingMode !== "FAIR_VALUE" && draft.issuerDefinedPrice && draft.fairValuePrice && (
+              <div className="flex items-center gap-2 mt-2">
+                <span className="text-xs text-muted-foreground">
+                  Fair value: {formatPrice(draft.fairValuePrice, draft.pricingCurrency)}
+                </span>
+                <PriceDeviationBadge 
+                  deviationPercent={((draft.issuerDefinedPrice - draft.fairValuePrice) / draft.fairValuePrice) * 100} 
+                />
+              </div>
+            )}
           </div>
         </div>
       </CollapsibleSection>
