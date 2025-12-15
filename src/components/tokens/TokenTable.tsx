@@ -10,6 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { format } from "date-fns";
 
 interface TokenTableProps {
   tokens: Token[];
@@ -29,6 +30,11 @@ export const TokenTable: React.FC<TokenTableProps> = ({ tokens, onSelectToken })
     return issued;
   };
 
+  const formatIssuedDate = (token: Token) => {
+    if (!token.issuedAt) return "—";
+    return format(new Date(token.issuedAt), "MMM d, yyyy");
+  };
+
   return (
     <div className="border border-border rounded-lg overflow-hidden">
       <Table>
@@ -38,6 +44,7 @@ export const TokenTable: React.FC<TokenTableProps> = ({ tokens, onSelectToken })
             <TableHead className="text-xs font-semibold text-muted-foreground">Standard</TableHead>
             <TableHead className="text-xs font-semibold text-muted-foreground">Issuer</TableHead>
             <TableHead className="text-xs font-semibold text-muted-foreground">Supply</TableHead>
+            <TableHead className="text-xs font-semibold text-muted-foreground">Issued Date</TableHead>
             <TableHead className="text-xs font-semibold text-muted-foreground">Status</TableHead>
             <TableHead className="text-xs font-semibold text-muted-foreground">Compliance</TableHead>
             <TableHead className="text-xs font-semibold text-muted-foreground w-12"></TableHead>
@@ -46,7 +53,7 @@ export const TokenTable: React.FC<TokenTableProps> = ({ tokens, onSelectToken })
         <TableBody>
           {tokens.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+              <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                 No tokens found
               </TableCell>
             </TableRow>
@@ -73,6 +80,9 @@ export const TokenTable: React.FC<TokenTableProps> = ({ tokens, onSelectToken })
                 </TableCell>
                 <TableCell>
                   <span className="text-sm text-foreground">{formatSupply(token)}</span>
+                </TableCell>
+                <TableCell>
+                  <span className="text-sm text-muted-foreground">{formatIssuedDate(token)}</span>
                 </TableCell>
                 <TableCell>
                   <TokenStatusBadge status={token.status} />
