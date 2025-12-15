@@ -8,14 +8,14 @@ import { Badge } from "@/components/ui/badge";
 import { X, AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
-interface Step4ComplianceProps {
+interface Step5ComplianceProps {
   compliance: TokenCompliance;
   onUpdate: (compliance: TokenCompliance) => void;
 }
 
 const commonJurisdictions = ["US", "US-DE", "US-NY", "US-CA", "US-TX", "EU", "UK", "SG", "CH"];
 
-export const Step4Compliance: React.FC<Step4ComplianceProps> = ({ compliance, onUpdate }) => {
+export const Step5Compliance: React.FC<Step5ComplianceProps> = ({ compliance, onUpdate }) => {
   const [newJurisdiction, setNewJurisdiction] = React.useState("");
 
   const addJurisdiction = (jurisdiction: string) => {
