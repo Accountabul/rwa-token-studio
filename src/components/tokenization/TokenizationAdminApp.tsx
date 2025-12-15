@@ -6,6 +6,7 @@ import { Header } from "./Header";
 import { ProjectList } from "./ProjectList";
 import { ProjectDetails } from "./ProjectDetails";
 import { FileSearch } from "lucide-react";
+import { toast } from "sonner";
 
 export const TokenizationAdminApp: React.FC = () => {
   const [role, setRole] = useState<Role>("SUPER_ADMIN");
@@ -21,6 +22,38 @@ export const TokenizationAdminApp: React.FC = () => {
     setProjects((prev) =>
       prev.map((p) => (p.id === id ? { ...p, ...updates } : p))
     );
+  };
+
+  const saveProject = (id: string) => {
+    const project = projects.find((p) => p.id === id);
+    if (project) {
+      toast.success("Project saved", {
+        description: `"${project.propertyAddress || project.name}" has been saved successfully.`
+      });
+    }
+  };
+
+  const deleteProject = (id: string) => {
+    const project = projects.find((p) => p.id === id);
+    if (!project) return;
+    
+    // Cannot delete minted projects
+    if (project.status === "MINTED") {
+      toast.error("Cannot delete minted project", {
+        description: "Projects that have been minted on-ledger cannot be deleted."
+      });
+      return;
+    }
+
+    setProjects((prev) => prev.filter((p) => p.id !== id));
+    
+    // Select next project or null
+    const remaining = projects.filter((p) => p.id !== id);
+    setSelectedProjectId(remaining[0]?.id ?? null);
+    
+    toast.success("Project deleted", {
+      description: `"${project.propertyAddress || project.name}" has been removed.`
+    });
   };
 
   const handleAdvanceStatus = () => {
@@ -52,6 +85,12 @@ export const TokenizationAdminApp: React.FC = () => {
     }
   };
 
+  const canDelete = (project: TokenizationProject | null): boolean => {
+    if (!project) return false;
+    // Only Super Admin and Tokenization Manager can delete, and not minted projects
+    return (role === "SUPER_ADMIN" || role === "TOKENIZATION_MANAGER") && project.status !== "MINTED";
+  };
+
   const handleNewProject = () => {
     const id = `proj-${String(projects.length + 1).padStart(3, "0")}`;
     const newProject: TokenizationProject = {
@@ -73,6 +112,9 @@ export const TokenizationAdminApp: React.FC = () => {
     };
     setProjects((prev) => [newProject, ...prev]);
     setSelectedProjectId(newProject.id);
+    toast.success("New project created", {
+      description: "Fill in the property details to get started."
+    });
   };
 
   return (
@@ -96,8 +138,11 @@ export const TokenizationAdminApp: React.FC = () => {
               project={selectedProject}
               role={role}
               onUpdate={(updates) => updateProject(selectedProject.id, updates)}
+              onSave={() => saveProject(selectedProject.id)}
+              onDelete={() => deleteProject(selectedProject.id)}
               onAdvanceStatus={handleAdvanceStatus}
               canAdvance={canAdvance(selectedProject)}
+              canDelete={canDelete(selectedProject)}
             />
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground">

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Token, MPTProperties, IOUProperties, NFTProperties, tokenStatusLabel } from "@/types/token";
 import { Role } from "@/types/tokenization";
 import { mockTokenAuditLog } from "@/data/mockTokens";
@@ -9,6 +9,7 @@ import { TokenStatusBadge, TokenStandardBadge } from "./TokenStatusBadge";
 import { AuditLog } from "./AuditLog";
 import { ExplorerDropdown } from "./ExplorerDropdown";
 import { ExplorerLinkBadge } from "./ExplorerLinkBadge";
+import { TokenLifecyclePanel } from "@/components/tokenization/TokenLifecyclePanel";
 import { 
   ArrowLeft, 
   Snowflake, 
@@ -16,6 +17,7 @@ import {
   Plus,
   CheckCircle,
   XCircle,
+  Settings2,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
@@ -27,6 +29,8 @@ interface TokenDetailsProps {
 
 export const TokenDetails: React.FC<TokenDetailsProps> = ({ token, role, onBack }) => {
   const auditEntries = mockTokenAuditLog.filter((e) => e.tokenId === token.id);
+  const isMPT = token.standard === "MPT";
+  const isIssued = token.status === "ISSUED";
 
   const canMintBurn = role === "SUPER_ADMIN" || role === "TOKENIZATION_MANAGER";
   const canFreeze = role === "SUPER_ADMIN" || role === "COMPLIANCE_OFFICER";
@@ -37,6 +41,20 @@ export const TokenDetails: React.FC<TokenDetailsProps> = ({ token, role, onBack 
       return (token.properties as IOUProperties).currencyCode;
     }
     return undefined;
+  };
+
+  // Build MPT flags from properties
+  const getMPTFlags = () => {
+    if (!isMPT) return null;
+    const props = token.properties as MPTProperties;
+    return {
+      canLock: true,
+      requireAuth: true,
+      canEscrow: props.escrowEnabled,
+      canTrade: true,
+      canTransfer: true,
+      canClawback: props.clawbackEnabled,
+    };
   };
 
   const renderProperties = () => {
@@ -155,11 +173,17 @@ export const TokenDetails: React.FC<TokenDetailsProps> = ({ token, role, onBack 
         </Card>
       </div>
 
-      {/* Tabs */}
+      {/* Tabs - include Lifecycle for MPT tokens */}
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList className="bg-muted/50">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="compliance">Compliance</TabsTrigger>
+          {isMPT && isIssued && (
+            <TabsTrigger value="lifecycle" className="gap-1.5">
+              <Settings2 className="w-3.5 h-3.5" />
+              Lifecycle
+            </TabsTrigger>
+          )}
           <TabsTrigger value="audit">Audit Log</TabsTrigger>
         </TabsList>
 
@@ -230,6 +254,17 @@ export const TokenDetails: React.FC<TokenDetailsProps> = ({ token, role, onBack 
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* Lifecycle Tab for MPT tokens */}
+        {isMPT && isIssued && (
+          <TabsContent value="lifecycle" className="space-y-4">
+            <TokenLifecyclePanel
+              projectId={token.sourceProjectId || token.id}
+              role={role}
+              mptFlags={getMPTFlags()!}
+            />
+          </TabsContent>
+        )}
 
         <TabsContent value="audit">
           <AuditLog entries={auditEntries} />
