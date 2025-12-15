@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { TokenizationProject, Role, statusOrder, assetClassLabel, realEstateSubclassLabel, AssetClass, RealEstateSubclass, MPTConfig } from "@/types/tokenization";
 import { StatusBadge } from "./StatusBadge";
 import { StatusStepper } from "./StatusStepper";
@@ -19,7 +19,11 @@ import {
   ChevronUp,
   User,
   Home,
-  Settings2
+  Settings2,
+  Coins,
+  Calculator,
+  Divide,
+  Equal
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -36,6 +40,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { MPT_FLAG_INFO, calculateFlagsValue, MPTFlagsState } from "@/lib/mptFlags";
+import { calculatePricePerToken, formatPrice, formatValuation } from "@/lib/pricingCalculator";
 
 interface ProjectDetailsProps {
   project: TokenizationProject;
@@ -109,6 +114,99 @@ const subclassOptions = Object.entries(realEstateSubclassLabel).map(([value, lab
   value,
   label,
 }));
+
+// Token Fractionalization Section Component
+interface TokenFractionalizationSectionProps {
+  project: TokenizationProject;
+  onUpdate: (updates: Partial<TokenizationProject>) => void;
+}
+
+const TokenFractionalizationSection: React.FC<TokenFractionalizationSectionProps> = ({ project, onUpdate }) => {
+  const tokenSupply = project.mptConfig?.maxSupply || project.plannedTokenSupply || 0;
+  const isMinted = project.status === "MINTED";
+  
+  const pricePerToken = useMemo(() => {
+    if (project.valuationUsd > 0 && tokenSupply > 0) {
+      return calculatePricePerToken(project.valuationUsd, tokenSupply);
+    }
+    return 0;
+  }, [project.valuationUsd, tokenSupply]);
+
+  const formattedValuation = formatValuation(project.valuationUsd);
+  const formattedSupply = tokenSupply >= 1000000 
+    ? `${(tokenSupply / 1000000).toFixed(1)}M` 
+    : tokenSupply >= 1000 
+      ? `${(tokenSupply / 1000).toFixed(0)}K`
+      : tokenSupply.toLocaleString();
+
+  return (
+    <>
+      <div className="border-t border-border pt-3 mt-3" />
+      <h5 className="text-xs font-semibold text-foreground mb-2 flex items-center gap-2">
+        <Calculator className="w-3.5 h-3.5 text-primary" />
+        Token Fractionalization
+      </h5>
+      
+      {/* Token Supply Input */}
+      <div className="grid grid-cols-3 gap-3 items-center">
+        <label className="text-xs text-muted-foreground flex items-center gap-2">
+          <Coins className="w-3 h-3" />
+          Total Token Supply
+        </label>
+        {isMinted ? (
+          <div className="col-span-2 rounded-lg border border-input bg-muted/50 px-3 py-2 text-xs font-medium">
+            {tokenSupply.toLocaleString()} <span className="text-muted-foreground">(locked)</span>
+          </div>
+        ) : (
+          <input
+            type="number"
+            value={project.plannedTokenSupply || ""}
+            onChange={(e) => onUpdate({ plannedTokenSupply: Number(e.target.value) || 0 })}
+            placeholder="e.g., 1000000"
+            className="col-span-2 rounded-lg border border-input bg-background px-3 py-2 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-ring transition-all duration-200"
+          />
+        )}
+      </div>
+
+      {/* Price Per Token Display */}
+      <div className="grid grid-cols-3 gap-3 items-center">
+        <label className="text-xs text-muted-foreground flex items-center gap-2">
+          <DollarSign className="w-3 h-3" />
+          Price Per Token
+        </label>
+        <div className="col-span-2 rounded-lg border border-input bg-muted/50 px-3 py-2 text-xs font-semibold text-primary">
+          {pricePerToken > 0 ? formatPrice(pricePerToken, "USD") : "—"}
+        </div>
+      </div>
+
+      {/* Visual Price Calculator Card */}
+      {project.valuationUsd > 0 && tokenSupply > 0 && (
+        <div className="mt-3 p-3 rounded-xl bg-primary/5 border border-primary/20">
+          <div className="flex items-center gap-2 mb-2">
+            <Calculator className="w-3.5 h-3.5 text-primary" />
+            <span className="text-[11px] font-semibold text-foreground">Price Calculation</span>
+          </div>
+          <div className="flex items-center justify-center gap-2 text-sm">
+            <div className="flex flex-col items-center">
+              <span className="font-bold text-foreground">{formattedValuation}</span>
+              <span className="text-[10px] text-muted-foreground">Valuation</span>
+            </div>
+            <Divide className="w-4 h-4 text-muted-foreground" />
+            <div className="flex flex-col items-center">
+              <span className="font-bold text-foreground">{formattedSupply}</span>
+              <span className="text-[10px] text-muted-foreground">Tokens</span>
+            </div>
+            <Equal className="w-4 h-4 text-muted-foreground" />
+            <div className="flex flex-col items-center">
+              <span className="font-bold text-primary">{formatPrice(pricePerToken, "USD")}</span>
+              <span className="text-[10px] text-muted-foreground">Per Token</span>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
 
 export const ProjectDetails: React.FC<ProjectDetailsProps> = ({
   project,
@@ -293,6 +391,9 @@ export const ProjectDetails: React.FC<ProjectDetailsProps> = ({
               onChange={(v) => onUpdate({ valuationDate: v })}
               icon={<Calendar className="w-3 h-3" />}
             />
+            
+            {/* Token Fractionalization Section */}
+            <TokenFractionalizationSection project={project} onUpdate={onUpdate} />
           </div>
           <p className="text-[11px] text-muted-foreground pt-2 border-t border-border flex items-start gap-2">
             <Sparkles className="w-3 h-3 mt-0.5 flex-shrink-0 text-primary" />
