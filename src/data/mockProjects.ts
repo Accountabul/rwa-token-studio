@@ -48,11 +48,25 @@ export const initialProjects: TokenizationProject[] = [
     assetSubclass: "com_office",
     valuationUsd: 4500000,
     valuationDate: "2025-12-01",
-    status: "COMPLIANCE_APPROVED",
+    status: "MINTED",
     createdAt: "2025-10-15",
     propertyAddress: "500 5th Avenue, New York, NY 10110",
     ownerName: "Urban Capital Partners LLC",
     propertyNickname: "5th Ave Tower",
+    mptConfig: {
+      assetScale: 6,
+      maxSupply: 1000000,
+      transferFee: 100,
+      flags: {
+        canLock: true,
+        requireAuth: true,
+        canEscrow: true,
+        canTrade: true,
+        canTransfer: true,
+        canClawback: true,
+      },
+      computedFlagsValue: 126,
+    },
     xls89Metadata: JSON.stringify(
       {
         t: "ABUL-URBAN-02",
