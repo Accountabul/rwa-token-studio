@@ -5,7 +5,10 @@ export type KBCategory =
   | "asset_classification"
   | "xls89_metadata"
   | "investor_compliance"
-  | "permissiondex";
+  | "permissiondex"
+  | "token_registry"
+  | "xrpl_explorer"
+  | "portfolio_holdings";
 
 export const kbCategoryLabel: Record<KBCategory, string> = {
   projects_assets: "Projects & Assets",
@@ -13,6 +16,9 @@ export const kbCategoryLabel: Record<KBCategory, string> = {
   xls89_metadata: "XLS-89 Metadata",
   investor_compliance: "Investor & Compliance",
   permissiondex: "PermissionDEX",
+  token_registry: "Token Registry",
+  xrpl_explorer: "XRPL Explorer",
+  portfolio_holdings: "Portfolio & Holdings",
 };
 
 export const kbCategoryDescription: Record<KBCategory, string> = {
@@ -21,6 +27,9 @@ export const kbCategoryDescription: Record<KBCategory, string> = {
   xls89_metadata: "Defines every metadata key used in XRPL MPTs per XLS-0089",
   investor_compliance: "Defines investor-level concepts and compliance rules",
   permissiondex: "Defines wallet-level permissioning via PermissionDEX",
+  token_registry: "Defines token standards, lifecycle, and management on XRPL",
+  xrpl_explorer: "Defines XRPL explorer integration and on-chain verification",
+  portfolio_holdings: "Defines investor portfolio metrics and asset holdings",
 };
 
 export type KBEntryStatus = "draft" | "published";

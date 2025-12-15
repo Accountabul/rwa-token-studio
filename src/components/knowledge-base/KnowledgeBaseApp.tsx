@@ -55,6 +55,9 @@ export function KnowledgeBaseApp() {
       xls89_metadata: 0,
       investor_compliance: 0,
       permissiondex: 0,
+      token_registry: 0,
+      xrpl_explorer: 0,
+      portfolio_holdings: 0,
     };
     entries.forEach((e) => {
       counts[e.category]++;
