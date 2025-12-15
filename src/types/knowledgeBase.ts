@@ -8,7 +8,8 @@ export type KBCategory =
   | "permissiondex"
   | "token_registry"
   | "xrpl_explorer"
-  | "portfolio_holdings";
+  | "portfolio_holdings"
+  | "system_roles";
 
 export const kbCategoryLabel: Record<KBCategory, string> = {
   projects_assets: "Projects & Assets",
@@ -19,6 +20,7 @@ export const kbCategoryLabel: Record<KBCategory, string> = {
   token_registry: "Token Registry",
   xrpl_explorer: "XRPL Explorer",
   portfolio_holdings: "Portfolio & Holdings",
+  system_roles: "System Roles & Permissions",
 };
 
 export const kbCategoryDescription: Record<KBCategory, string> = {
@@ -30,6 +32,7 @@ export const kbCategoryDescription: Record<KBCategory, string> = {
   token_registry: "Defines token standards, lifecycle, and management on XRPL",
   xrpl_explorer: "Defines XRPL explorer integration and on-chain verification",
   portfolio_holdings: "Defines investor portfolio metrics and asset holdings",
+  system_roles: "Defines human roles, AI agents, access controls, and audit criteria for compliance review",
 };
 
 export type KBEntryStatus = "draft" | "published";
@@ -84,4 +87,8 @@ export function canPublishKB(role: Role): boolean {
 
 export function canProposeKB(_role: Role): boolean {
   return true; // All staff can propose
+}
+
+export function canEditKBDirectly(role: Role): boolean {
+  return role === "SUPER_ADMIN";
 }
