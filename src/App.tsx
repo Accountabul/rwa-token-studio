@@ -23,6 +23,7 @@ import ContractDetailsPage from "./pages/ContractDetailsPage";
 import BatchTransactions from "./pages/BatchTransactions";
 import BatchBuilderPage from "./pages/BatchBuilderPage";
 import BatchDetailsPage from "./pages/BatchDetailsPage";
+import ReportsLogs from "./pages/ReportsLogs";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -54,6 +55,7 @@ const App = () => (
           <Route path="/batch" element={<BatchTransactions />} />
           <Route path="/batch/new" element={<BatchBuilderPage />} />
           <Route path="/batch/:batchId" element={<BatchDetailsPage />} />
+          <Route path="/reports" element={<ReportsLogs />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
