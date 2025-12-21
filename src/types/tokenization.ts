@@ -3,7 +3,9 @@ export type Role =
   | "TOKENIZATION_MANAGER"
   | "COMPLIANCE_OFFICER"
   | "CUSTODY_OFFICER"
-  | "VALUATION_OFFICER";
+  | "VALUATION_OFFICER"
+  | "FINANCE_OFFICER"
+  | "AUDITOR";
 
 export type ProjectStatus =
   | "INTAKE_PENDING"
@@ -107,4 +109,6 @@ export const roleLabel: Record<Role, string> = {
   COMPLIANCE_OFFICER: "Compliance Officer",
   CUSTODY_OFFICER: "Custody Officer",
   VALUATION_OFFICER: "Valuation/Appraisal Officer",
+  FINANCE_OFFICER: "Finance Officer",
+  AUDITOR: "Auditor (Read-Only)",
 };

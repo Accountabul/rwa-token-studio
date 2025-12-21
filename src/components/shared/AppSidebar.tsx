@@ -37,7 +37,7 @@ const navItems = [
   { label: "Batch Transactions", icon: Layers, href: "/batch" },
   { label: "Investor Onboarding", icon: Users, href: "/investors" },
   { label: "Knowledge Base", icon: BookOpen, href: "/knowledge-base" },
-  { label: "Reporting & Logs", icon: FileText, disabled: true },
+  { label: "Reporting & Logs", icon: FileText, href: "/reports" },
 ];
 
 const roles: Role[] = [
@@ -46,6 +46,8 @@ const roles: Role[] = [
   "COMPLIANCE_OFFICER",
   "CUSTODY_OFFICER",
   "VALUATION_OFFICER",
+  "FINANCE_OFFICER",
+  "AUDITOR",
 ];
 
 export const AppSidebar: React.FC<AppSidebarProps> = ({ role, onRoleChange }) => {
@@ -85,18 +87,11 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ role, onRoleChange }) =>
             className={cn(
               "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
               isActive(item.href) && "bg-sidebar-accent/10 text-sidebar-accent",
-              !isActive(item.href) && !item.disabled && "text-sidebar-foreground/70 hover:bg-sidebar-foreground/5 hover:text-sidebar-foreground",
-              item.disabled && "text-sidebar-muted/50 cursor-not-allowed pointer-events-none"
+              !isActive(item.href) && "text-sidebar-foreground/70 hover:bg-sidebar-foreground/5 hover:text-sidebar-foreground"
             )}
-            onClick={(e) => item.disabled && e.preventDefault()}
           >
             <item.icon className="w-4 h-4" />
             <span>{item.label}</span>
-            {item.disabled && (
-              <span className="ml-auto text-[9px] uppercase tracking-wider bg-sidebar-foreground/10 px-1.5 py-0.5 rounded text-sidebar-muted">
-                Soon
-              </span>
-            )}
           </a>
         ))}
       </nav>
