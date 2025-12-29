@@ -15,7 +15,12 @@ export type AuditEntityType =
   | "CHECK"
   | "PAYMENT_CHANNEL"
   | "CONTRACT"
-  | "BATCH";
+  | "BATCH"
+  | "BUSINESS"
+  | "WORK_ORDER"
+  | "CONTRACT_CALL"
+  | "MULTI_SIGN_TX"
+  | "HOLDER_AUTH";
 
 export type AuditAction =
   | "CREATE"
@@ -36,7 +41,17 @@ export type AuditAction =
   | "LOCK"
   | "UNLOCK"
   | "AUTHORIZE"
-  | "REVOKE";
+  | "REVOKE"
+  | "CALL"
+  | "SUBMIT"
+  | "EXECUTE"
+  | "ASSIGN"
+  | "COMPLETE"
+  | "PAY";
+
+export type AuditSource = "UI" | "API" | "WEBHOOK" | "BATCH_JOB" | "LLM_AGENT";
+export type AuditSeverity = "INFO" | "WARN" | "HIGH";
+export type AuditClassification = "INTERNAL" | "CONFIDENTIAL" | "RESTRICTED";
 
 export interface UnifiedAuditEntry {
   id: string;
@@ -54,6 +69,19 @@ export interface UnifiedAuditEntry {
   xrplTxHash?: string;
   metadata?: Record<string, unknown>;
   createdAt: string;
+  
+  // Extended fields for multi-tenant tracking
+  source?: AuditSource;
+  severity?: AuditSeverity;
+  classification?: AuditClassification;
+  walletAddress?: string;
+  linkedBusinessId?: string;
+  linkedWorkOrderId?: string;
+  linkedWalletId?: string;
+  linkedInvestorId?: string;
+  linkedContractId?: string;
+  requestId?: string;
+  traceId?: string;
 }
 
 // ============================================
@@ -73,11 +101,26 @@ export type LedgerEntryType =
   | "MINT"
   | "BURN"
   | "TRANSFER"
-  | "CLAWBACK";
+  | "CLAWBACK"
+  | "WORK_ORDER_PAYMENT"
+  | "PLATFORM_FEE"
+  | "BUSINESS_PAYOUT";
 
-export type LedgerRail = "XRPL" | "STRIPE" | "PAYPAL" | "ACH" | "WIRE" | "INTERNAL";
+export type LedgerRail = "XRPL" | "STRIPE" | "PAYPAL" | "ACH" | "WIRE" | "INTERNAL" | "ACCOUNTABUL_MANUAL";
 
-export type LedgerStatus = "PENDING" | "SETTLED" | "FAILED" | "REVERSED";
+export type LedgerStatus = "PENDING" | "SETTLED" | "FAILED" | "REVERSED" | "INITIATED" | "REFUNDED" | "DISPUTED";
+
+export type PayerOfRecord = "STRIPE_PLATFORM" | "ACCOUNTABUL" | "BUSINESS" | "VENDOR";
+
+export type EarningCategory = 
+  | "CONTRACTOR_COMP" 
+  | "VENDOR_PAYOUT" 
+  | "TIP" 
+  | "BOUNTY" 
+  | "REFERRAL_REWARD" 
+  | "MEMBERSHIP" 
+  | "WORK_ORDER"
+  | "OTHER";
 
 export type LedgerEntityType = "PLATFORM" | "USER" | "BUSINESS" | "ESCROW" | "WALLET";
 
@@ -114,6 +157,22 @@ export interface TransactionLedgerEntry {
   taxCategory?: TaxCategory;
   effectiveAt: string;
   createdAt: string;
+  
+  // Extended fields for multi-tenant tracking
+  direction?: "IN" | "OUT";
+  grossAmount?: number;
+  feesAmount?: number;
+  netAmount?: number;
+  payerOfRecord?: PayerOfRecord;
+  earningCategory?: EarningCategory;
+  evidenceUri?: string;
+  auditEventId?: string;
+  linkedBusinessId?: string;
+  linkedWorkOrderId?: string;
+  linkedWalletId?: string;
+  linkedInvestorId?: string;
+  linkedContractId?: string;
+  signerAddresses?: string[];
 }
 
 // ============================================
@@ -130,6 +189,9 @@ export type EntityLegalType =
   | "TRUST";
 
 export type TaxFormStatus = "MISSING" | "COLLECTED" | "VERIFIED" | "REJECTED" | "EXPIRED";
+
+export type PayeeType = "INDIVIDUAL" | "BUSINESS";
+export type PayeeCategory = "WORKER" | "VENDOR" | "BUSINESS_OWNER" | "USER";
 
 export interface TaxProfile {
   userId: string;
@@ -152,6 +214,14 @@ export interface TaxProfile {
   totalPaymentsYTD: number;
   createdAt: string;
   updatedAt: string;
+  
+  // Extended fields for multi-tenant tracking
+  payeeType?: PayeeType;
+  payeeCategory?: PayeeCategory;
+  countryCode?: string;
+  primaryWalletAddress?: string;
+  linkedBusinessId?: string;
+  restrictedAccess?: boolean;
 }
 
 // ============================================
