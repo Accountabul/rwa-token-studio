@@ -35,6 +35,7 @@ export type AuditAction =
   | "UNFREEZE"
   | "CLAWBACK"
   | "DISTRIBUTE"
+  | "TRANSFER"
   | "SIGN"
   | "APPROVE"
   | "REJECT"
@@ -47,7 +48,10 @@ export type AuditAction =
   | "EXECUTE"
   | "ASSIGN"
   | "COMPLETE"
-  | "PAY";
+  | "PAY"
+  | "CANCEL"
+  | "CONNECT"
+  | "DISCONNECT";
 
 export type AuditSource = "UI" | "API" | "WEBHOOK" | "BATCH_JOB" | "LLM_AGENT";
 export type AuditSeverity = "INFO" | "WARN" | "HIGH";
@@ -110,7 +114,7 @@ export type LedgerRail = "XRPL" | "STRIPE" | "PAYPAL" | "ACH" | "WIRE" | "INTERN
 
 export type LedgerStatus = "PENDING" | "SETTLED" | "FAILED" | "REVERSED" | "INITIATED" | "REFUNDED" | "DISPUTED";
 
-export type PayerOfRecord = "STRIPE_PLATFORM" | "ACCOUNTABUL" | "BUSINESS" | "VENDOR";
+export type PayerOfRecord = "STRIPE_PLATFORM" | "ACCOUNTABUL" | "BUSINESS" | "VENDOR" | "PLATFORM";
 
 export type EarningCategory = 
   | "CONTRACTOR_COMP" 
