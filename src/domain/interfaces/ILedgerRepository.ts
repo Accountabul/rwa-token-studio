@@ -1,44 +1,29 @@
-import { TransactionLedgerEntry, LedgerRail, LedgerStatus, LedgerEntryType, TaxCategory } from "@/types/reportsAndLogs";
+import { 
+  TransactionLedgerEntry, 
+  LedgerRail, 
+  LedgerStatus, 
+  LedgerEntryType, 
+  TaxCategory,
+  PayerOfRecord,
+  EarningCategory,
+} from "@/types/reportsAndLogs";
 
 /**
  * Extended rail types including manual payouts
  */
-export type ExtendedLedgerRail = LedgerRail | "ACCOUNTABUL_MANUAL";
+export type ExtendedLedgerRail = LedgerRail;
 
 /**
  * Extended status types per PRD
  */
-export type ExtendedLedgerStatus = LedgerStatus | "INITIATED" | "REFUNDED" | "DISPUTED";
-
-/**
- * Payer of record for tax purposes
- */
-export type PayerOfRecord = "STRIPE_PLATFORM" | "ACCOUNTABUL" | "VENDOR";
-
-/**
- * Earning category for tax classification
- */
-export type EarningCategory = 
-  | "CONTRACTOR_COMP" 
-  | "VENDOR_PAYOUT" 
-  | "TIP" 
-  | "BOUNTY" 
-  | "REFERRAL_REWARD" 
-  | "MEMBERSHIP" 
-  | "OTHER";
+export type ExtendedLedgerStatus = LedgerStatus;
 
 /**
  * Extended ledger entry with new PRD fields (all new fields optional for backward compatibility)
+ * Now extends TransactionLedgerEntry which already includes the extended fields
  */
 export interface ExtendedLedgerEntry extends TransactionLedgerEntry {
-  grossAmount?: number;
-  feesAmount?: number;
-  netAmount?: number;
-  payerOfRecord?: PayerOfRecord;
-  earningCategory?: EarningCategory;
-  evidenceUri?: string;
-  auditEventId?: string;
-  direction?: "IN" | "OUT";
+  // Additional fields beyond TransactionLedgerEntry (if any)
 }
 
 /**
@@ -66,7 +51,7 @@ export interface RecordLedgerEventParams {
   memo?: string;
   taxCategory?: TaxCategory;
   effectiveAt?: string;
-  // New PRD fields
+  // Extended fields
   grossAmount?: number;
   feesAmount?: number;
   netAmount?: number;
@@ -75,6 +60,13 @@ export interface RecordLedgerEventParams {
   evidenceUri?: string;
   auditEventId?: string;
   direction?: "IN" | "OUT";
+  // Multi-tenant linking
+  linkedBusinessId?: string;
+  linkedWorkOrderId?: string;
+  linkedWalletId?: string;
+  linkedInvestorId?: string;
+  linkedContractId?: string;
+  signerAddresses?: string[];
 }
 
 /**
