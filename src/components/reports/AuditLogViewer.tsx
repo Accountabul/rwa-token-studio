@@ -458,10 +458,11 @@ export const AuditLogViewer: React.FC<AuditLogViewerProps> = ({ role }) => {
 
       <ExportReasonModal
         open={exportModalOpen}
-        onClose={() => setExportModalOpen(false)}
+        onOpenChange={setExportModalOpen}
         onConfirm={handleExportConfirm}
-        title="Export Audit Log"
-        description={`You are about to export ${filteredEntries.length} audit entries. Please provide a reason for this export.`}
+        exportType="CSV"
+        rowCount={filteredEntries.length}
+        reportName="Audit Log Export"
       />
     </>
   );
