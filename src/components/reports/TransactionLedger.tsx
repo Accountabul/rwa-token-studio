@@ -463,15 +463,20 @@ export const TransactionLedger: React.FC<TransactionLedgerProps> = ({ role }) =>
 
       <ManualPayoutDialog 
         open={manualPayoutOpen} 
-        onClose={() => setManualPayoutOpen(false)} 
+        onOpenChange={setManualPayoutOpen}
+        onSubmit={async (data) => {
+          console.log("Manual payout submitted:", data);
+          setManualPayoutOpen(false);
+        }}
       />
 
       <ExportReasonModal
         open={exportModalOpen}
-        onClose={() => setExportModalOpen(false)}
+        onOpenChange={setExportModalOpen}
         onConfirm={handleExportConfirm}
-        title="Export Transaction Ledger"
-        description={`You are about to export ${filteredEntries.length} ledger entries. Please provide a reason for this export.`}
+        exportType="CSV"
+        rowCount={filteredEntries.length}
+        reportName="Transaction Ledger Export"
       />
     </div>
   );
