@@ -51,6 +51,13 @@ export interface CreateAuditEventParams {
   severity?: AuditSeverity;
   classification?: AuditClassification;
   exportReason?: string;
+  // Multi-tenant linking fields
+  walletAddress?: string;
+  linkedBusinessId?: string;
+  linkedWorkOrderId?: string;
+  linkedWalletId?: string;
+  linkedInvestorId?: string;
+  linkedContractId?: string;
 }
 
 /**

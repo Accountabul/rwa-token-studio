@@ -3,6 +3,8 @@ import { AuditService, auditService } from "./services/AuditService";
 import { LedgerService, ledgerService } from "./services/LedgerService";
 import { TaxService, taxService } from "./services/TaxService";
 import { ReportsService, reportsService } from "./services/ReportsService";
+import { BusinessService, businessService } from "./services/BusinessService";
+import { WorkOrderService, workOrderService } from "./services/WorkOrderService";
 
 /**
  * Service container for dependency injection
@@ -12,6 +14,8 @@ export interface ServiceContainer {
   ledgerService: LedgerService;
   taxService: TaxService;
   reportsService: ReportsService;
+  businessService: BusinessService;
+  workOrderService: WorkOrderService;
 }
 
 /**
@@ -22,6 +26,8 @@ const defaultServices: ServiceContainer = {
   ledgerService,
   taxService,
   reportsService,
+  businessService,
+  workOrderService,
 };
 
 /**
@@ -93,4 +99,20 @@ export function useTaxService(): TaxService {
 export function useReportsService(): ReportsService {
   const { reportsService } = useContext(ServiceContext);
   return reportsService;
+}
+
+/**
+ * Hook to access business service
+ */
+export function useBusinessService(): BusinessService {
+  const { businessService } = useContext(ServiceContext);
+  return businessService;
+}
+
+/**
+ * Hook to access work order service
+ */
+export function useWorkOrderService(): WorkOrderService {
+  const { workOrderService } = useContext(ServiceContext);
+  return workOrderService;
 }

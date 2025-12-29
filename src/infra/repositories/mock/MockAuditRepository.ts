@@ -49,6 +49,13 @@ export class MockAuditRepository implements IAuditRepository {
       severity: params.severity ?? "INFO",
       classification: params.classification ?? "INTERNAL",
       exportReason: params.exportReason,
+      // Multi-tenant linking fields
+      walletAddress: params.walletAddress,
+      linkedBusinessId: params.linkedBusinessId,
+      linkedWorkOrderId: params.linkedWorkOrderId,
+      linkedWalletId: params.linkedWalletId,
+      linkedInvestorId: params.linkedInvestorId,
+      linkedContractId: params.linkedContractId,
     };
 
     // Prepend to maintain reverse chronological order

@@ -80,10 +80,13 @@ export interface WorkOrderStats {
 
 export interface CreateWorkOrderParams {
   businessId: string;
+  businessName: string;
   title: string;
   description?: string;
   category?: string;
   tokenType: WorkOrderTokenType;
+  tokenId?: string;
+  xrplTxHash?: string;
   agreedAmountUsd: number;
   currency?: string;
   assigneeUserId?: string;
@@ -91,4 +94,21 @@ export interface CreateWorkOrderParams {
   assigneeWalletAddress?: string;
   createdBy: string;
   createdByName: string;
+}
+
+export interface UpdateWorkOrderParams {
+  title?: string;
+  description?: string;
+  category?: string;
+  tokenId?: string;
+  xrplTxHash?: string;
+  assigneeUserId?: string;
+  assigneeName?: string;
+  assigneeWalletAddress?: string;
+  agreedAmountUsd?: number;
+  status?: WorkOrderStatus;
+  completedAt?: string;
+  paidAt?: string;
+  paymentLedgerEventId?: string;
+  paymentXrplTxHash?: string;
 }
