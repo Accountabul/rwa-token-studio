@@ -598,13 +598,107 @@ export const mockLedgerEntries: TransactionLedgerEntry[] = [
     effectiveAt: "2024-01-28T16:00:00Z",
     createdAt: "2024-01-28T16:00:00Z",
   },
+  // Work Order Payment entries
+  {
+    id: "led-013",
+    entryType: "PAYOUT",
+    amount: 15000,
+    currency: "USD",
+    rail: "XRPL",
+    status: "SETTLED",
+    payerEntityType: "BUSINESS",
+    payerEntityId: "bus-001",
+    payerName: "Sunset Holdings LLC",
+    payeeEntityType: "USER",
+    payeeEntityId: "inv-004",
+    payeeName: "J. Smith",
+    xrplTxHash: "H8I9J0K1L2M3N4O5P6Q7R8S9T0U1V2W3X4Y5Z6A7B8C9D0E1F2G3H4I5J6K7",
+    memo: "Work order payment: Q1 Property Maintenance",
+    taxCategory: "NONEMPLOYEE_COMP",
+    linkedBusinessId: "bus-001",
+    linkedWorkOrderId: "wo-001",
+    earningCategory: "WORK_ORDER",
+    payerOfRecord: "PLATFORM",
+    effectiveAt: "2024-01-16T10:00:00Z",
+    createdAt: "2024-01-16T10:00:00Z",
+  },
+  {
+    id: "led-014",
+    entryType: "PAYOUT",
+    amount: 8500,
+    currency: "USD",
+    rail: "ACH",
+    status: "SETTLED",
+    payerEntityType: "BUSINESS",
+    payerEntityId: "bus-002",
+    payerName: "Harbor Management Co",
+    payeeEntityType: "USER",
+    payeeEntityId: "inv-003",
+    payeeName: "State Street Fund",
+    processorRef: "ACH-2024-02-001",
+    memo: "Work order payment: Security System Upgrade",
+    taxCategory: "NONEMPLOYEE_COMP",
+    linkedBusinessId: "bus-002",
+    linkedWorkOrderId: "wo-002",
+    earningCategory: "WORK_ORDER",
+    payerOfRecord: "PLATFORM",
+    effectiveAt: "2024-02-05T14:00:00Z",
+    createdAt: "2024-02-05T14:00:00Z",
+  },
+  // Token Distribution entries
+  {
+    id: "led-015",
+    entryType: "TOKEN_DISTRIBUTION",
+    amount: 50000,
+    currency: "SUNSET-RE",
+    rail: "XRPL",
+    status: "SETTLED",
+    payerEntityType: "WALLET",
+    payerEntityId: "wal-001",
+    payerName: "Primary Treasury",
+    payeeEntityType: "USER",
+    payeeEntityId: "inv-002",
+    payeeName: "Vanguard RWA Fund",
+    tokenId: "tok-001",
+    xrplTxHash: "I9J0K1L2M3N4O5P6Q7R8S9T0U1V2W3X4Y5Z6A7B8C9D0E1F2G3H4I5J6K7L8",
+    memo: "Token distribution: Q1 2024 allocation",
+    taxCategory: "NOT_TAXABLE",
+    effectiveAt: "2024-01-25T09:00:00Z",
+    createdAt: "2024-01-25T09:00:00Z",
+  },
+  {
+    id: "led-016",
+    entryType: "TOKEN_DISTRIBUTION",
+    amount: 25000,
+    currency: "HARBOR-COM",
+    rail: "XRPL",
+    status: "SETTLED",
+    payerEntityType: "WALLET",
+    payerEntityId: "wal-002",
+    payerName: "Operations Wallet",
+    payeeEntityType: "USER",
+    payeeEntityId: "inv-int-001",
+    payeeName: "UBS Zurich Fund",
+    tokenId: "tok-002",
+    xrplTxHash: "J0K1L2M3N4O5P6Q7R8S9T0U1V2W3X4Y5Z6A7B8C9D0E1F2G3H4I5J6K7L8M9",
+    memo: "Token distribution: International investor allocation",
+    taxCategory: "NOT_TAXABLE",
+    effectiveAt: "2024-02-01T11:00:00Z",
+    createdAt: "2024-02-01T11:00:00Z",
+  },
 ];
 
 // ============================================
 // MOCK TAX PROFILES
 // ============================================
 
-export const mockTaxProfiles: TaxProfile[] = [
+// Extended tax profile type with new fields
+export interface ExtendedMockTaxProfile extends TaxProfile {
+  payeeCategory?: "WORKER" | "VENDOR" | "BUSINESS_OWNER";
+  residency?: "US" | "NON_US";
+}
+
+export const mockTaxProfiles: ExtendedMockTaxProfile[] = [
   {
     userId: "inv-001",
     userName: "BlackRock Fund VII",
@@ -625,6 +719,8 @@ export const mockTaxProfiles: TaxProfile[] = [
     totalPaymentsYTD: 850000,
     createdAt: "2023-06-15T10:00:00Z",
     updatedAt: "2024-01-10T14:30:00Z",
+    payeeCategory: "VENDOR",
+    residency: "US",
   },
   {
     userId: "inv-002",
@@ -646,6 +742,8 @@ export const mockTaxProfiles: TaxProfile[] = [
     totalPaymentsYTD: 625000,
     createdAt: "2023-07-20T11:00:00Z",
     updatedAt: "2024-01-15T09:00:00Z",
+    payeeCategory: "VENDOR",
+    residency: "US",
   },
   {
     userId: "inv-003",
@@ -667,6 +765,8 @@ export const mockTaxProfiles: TaxProfile[] = [
     totalPaymentsYTD: 425000,
     createdAt: "2023-08-10T14:00:00Z",
     updatedAt: "2024-01-20T10:30:00Z",
+    payeeCategory: "VENDOR",
+    residency: "US",
   },
   {
     userId: "inv-004",
@@ -688,6 +788,8 @@ export const mockTaxProfiles: TaxProfile[] = [
     totalPaymentsYTD: 125000,
     createdAt: "2023-09-01T09:00:00Z",
     updatedAt: "2024-01-23T15:00:00Z",
+    payeeCategory: "WORKER",
+    residency: "US",
   },
   {
     userId: "inv-005",
@@ -709,6 +811,8 @@ export const mockTaxProfiles: TaxProfile[] = [
     totalPaymentsYTD: 975000,
     createdAt: "2023-05-15T10:00:00Z",
     updatedAt: "2024-01-25T11:00:00Z",
+    payeeCategory: "VENDOR",
+    residency: "US",
   },
   {
     userId: "bus-001",
@@ -730,6 +834,8 @@ export const mockTaxProfiles: TaxProfile[] = [
     totalPaymentsYTD: 250000,
     createdAt: "2023-04-01T08:00:00Z",
     updatedAt: "2024-01-15T10:00:00Z",
+    payeeCategory: "BUSINESS_OWNER",
+    residency: "US",
   },
   {
     userId: "bus-002",
@@ -751,6 +857,8 @@ export const mockTaxProfiles: TaxProfile[] = [
     totalPaymentsYTD: 50000,
     createdAt: "2023-10-15T14:00:00Z",
     updatedAt: "2024-01-28T16:00:00Z",
+    payeeCategory: "BUSINESS_OWNER",
+    residency: "US",
   },
   {
     userId: "inv-int-001",
@@ -770,6 +878,8 @@ export const mockTaxProfiles: TaxProfile[] = [
     totalPaymentsYTD: 1250000,
     createdAt: "2023-06-01T10:00:00Z",
     updatedAt: "2024-01-20T09:00:00Z",
+    payeeCategory: "VENDOR",
+    residency: "NON_US",
   },
   {
     userId: "inv-int-002",
@@ -789,6 +899,8 @@ export const mockTaxProfiles: TaxProfile[] = [
     totalPaymentsYTD: 2500000,
     createdAt: "2023-07-01T08:00:00Z",
     updatedAt: "2024-01-22T11:00:00Z",
+    payeeCategory: "VENDOR",
+    residency: "NON_US",
   },
   {
     userId: "inv-006",
@@ -806,6 +918,8 @@ export const mockTaxProfiles: TaxProfile[] = [
     totalPaymentsYTD: 0,
     createdAt: "2023-11-15T10:00:00Z",
     updatedAt: "2024-01-26T13:45:00Z",
+    payeeCategory: "WORKER",
+    residency: "US",
   },
 ];
 

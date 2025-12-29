@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from "react";
 import { Role } from "@/types/tokenization";
 import { TaxProfile, TaxFormStatus, rolePermissionsMatrix } from "@/types/reportsAndLogs";
-import { mockTaxProfiles } from "@/data/mockReportsLogs";
+import { mockTaxProfiles, mockLedgerEntries, ExtendedMockTaxProfile } from "@/data/mockReportsLogs";
+import { mockBusinesses } from "@/data/mockBusinesses";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -41,9 +42,13 @@ import {
   Building2,
   User,
   Globe,
-  Shield
+  Shield,
+  DollarSign,
+  Users,
+  Briefcase
 } from "lucide-react";
 import { toast } from "sonner";
+import { ExportReasonModal } from "./ExportReasonModal";
 
 interface TaxCenterProps {
   role: Role;
@@ -52,22 +57,30 @@ interface TaxCenterProps {
 export const TaxCenter: React.FC<TaxCenterProps> = ({ role }) => {
   const [search, setSearch] = useState("");
   const [w9Filter, setW9Filter] = useState<string>("all");
+  const [payeeCategoryFilter, setPayeeCategoryFilter] = useState<string>("all");
+  const [residencyFilter, setResidencyFilter] = useState<string>("all");
+  const [businessFilter, setBusinessFilter] = useState<string>("all");
   const [selectedProfile, setSelectedProfile] = useState<TaxProfile | null>(null);
+  const [taxYear, setTaxYear] = useState<string>("2024");
+  const [exportModalOpen, setExportModalOpen] = useState(false);
+  const [exportContext, setExportContext] = useState<{ type: string; count: number }>({ type: "", count: 0 });
   
   const permissions = rolePermissionsMatrix[role];
 
   const filteredProfiles = useMemo(() => {
-    return mockTaxProfiles.filter((profile) => {
+    return (mockTaxProfiles as ExtendedMockTaxProfile[]).filter((profile) => {
       const matchesSearch = 
         search === "" ||
         profile.userName.toLowerCase().includes(search.toLowerCase()) ||
         profile.legalName.toLowerCase().includes(search.toLowerCase());
       
       const matchesW9 = w9Filter === "all" || profile.w9Status === w9Filter;
+      const matchesCategory = payeeCategoryFilter === "all" || profile.payeeCategory === payeeCategoryFilter;
+      const matchesResidency = residencyFilter === "all" || profile.residency === residencyFilter;
       
-      return matchesSearch && matchesW9;
+      return matchesSearch && matchesW9 && matchesCategory && matchesResidency;
     });
-  }, [search, w9Filter]);
+  }, [search, w9Filter, payeeCategoryFilter, residencyFilter]);
 
   const stats = useMemo(() => {
     const total = mockTaxProfiles.length;
@@ -78,6 +91,61 @@ export const TaxCenter: React.FC<TaxCenterProps> = ({ role }) => {
     
     return { total, verified, missing, withholding, over600 };
   }, []);
+
+  // Payout summaries computed from ledger entries
+  const payoutSummaries = useMemo(() => {
+    const payoutEntries = mockLedgerEntries.filter(e => 
+      e.entryType === "PAYOUT" || e.entryType === "TOKEN_DISTRIBUTION"
+    );
+
+    // Group by payee
+    const byPayee: Record<string, {
+      payeeName: string;
+      payeeId: string;
+      category: string;
+      totalPayouts: number;
+      byRail: Record<string, number>;
+      workOrderPayments: number;
+      tokenDistributions: number;
+    }> = {};
+
+    payoutEntries.forEach(entry => {
+      if (!byPayee[entry.payeeEntityId]) {
+        const profile = mockTaxProfiles.find(p => p.userId === entry.payeeEntityId) as ExtendedMockTaxProfile | undefined;
+        byPayee[entry.payeeEntityId] = {
+          payeeName: entry.payeeName,
+          payeeId: entry.payeeEntityId,
+          category: profile?.payeeCategory ?? "UNKNOWN",
+          totalPayouts: 0,
+          byRail: {},
+          workOrderPayments: 0,
+          tokenDistributions: 0,
+        };
+      }
+      
+      const payee = byPayee[entry.payeeEntityId];
+      payee.totalPayouts += entry.amount;
+      payee.byRail[entry.rail] = (payee.byRail[entry.rail] || 0) + entry.amount;
+      
+      if (entry.linkedWorkOrderId) {
+        payee.workOrderPayments += entry.amount;
+      }
+      if (entry.entryType === "TOKEN_DISTRIBUTION") {
+        payee.tokenDistributions += entry.amount;
+      }
+    });
+
+    return Object.values(byPayee).sort((a, b) => b.totalPayouts - a.totalPayouts);
+  }, []);
+
+  const payoutStats = useMemo(() => {
+    const totalPayouts = payoutSummaries.reduce((sum, p) => sum + p.totalPayouts, 0);
+    const workOrderTotal = payoutSummaries.reduce((sum, p) => sum + p.workOrderPayments, 0);
+    const tokenTotal = payoutSummaries.reduce((sum, p) => sum + p.tokenDistributions, 0);
+    const over600Count = payoutSummaries.filter(p => p.totalPayouts >= 600).length;
+    
+    return { totalPayouts, workOrderTotal, tokenTotal, over600Count };
+  }, [payoutSummaries]);
 
   const getStatusIcon = (status: TaxFormStatus) => {
     switch (status) {
@@ -117,10 +185,21 @@ export const TaxCenter: React.FC<TaxCenterProps> = ({ role }) => {
 
   const handleViewProfile = (profile: TaxProfile) => {
     setSelectedProfile(profile);
-    // Log the sensitive data access
     toast.info("Tax profile access logged", {
       description: `Viewing ${profile.userName}'s tax profile`
     });
+  };
+
+  const handleExport = (type: string, count: number) => {
+    setExportContext({ type, count });
+    setExportModalOpen(true);
+  };
+
+  const handleExportConfirm = (reason: string) => {
+    toast.success(`Exporting ${exportContext.type}...`, {
+      description: `Reason: ${reason}`
+    });
+    setExportModalOpen(false);
   };
 
   return (
@@ -163,6 +242,7 @@ export const TaxCenter: React.FC<TaxCenterProps> = ({ role }) => {
       <Tabs defaultValue="profiles" className="space-y-6">
         <TabsList>
           <TabsTrigger value="profiles">Tax Profiles</TabsTrigger>
+          <TabsTrigger value="payouts">Payout Summaries</TabsTrigger>
           <TabsTrigger value="1099">1099 Preparation</TabsTrigger>
         </TabsList>
 
@@ -175,7 +255,7 @@ export const TaxCenter: React.FC<TaxCenterProps> = ({ role }) => {
                   variant="outline" 
                   size="sm" 
                   className="gap-1.5"
-                  onClick={() => toast.success("Exporting tax profiles...")}
+                  onClick={() => handleExport("Tax Profiles", filteredProfiles.length)}
                 >
                   <Download className="w-3.5 h-3.5" />
                   Export
@@ -195,8 +275,7 @@ export const TaxCenter: React.FC<TaxCenterProps> = ({ role }) => {
                   />
                 </div>
                 <Select value={w9Filter} onValueChange={setW9Filter}>
-                  <SelectTrigger className="w-[160px]">
-                    <Filter className="w-3.5 h-3.5 mr-2" />
+                  <SelectTrigger className="w-[140px]">
                     <SelectValue placeholder="W-9 Status" />
                   </SelectTrigger>
                   <SelectContent>
@@ -205,6 +284,27 @@ export const TaxCenter: React.FC<TaxCenterProps> = ({ role }) => {
                     <SelectItem value="COLLECTED">Collected</SelectItem>
                     <SelectItem value="MISSING">Missing</SelectItem>
                     <SelectItem value="REJECTED">Rejected</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={payeeCategoryFilter} onValueChange={setPayeeCategoryFilter}>
+                  <SelectTrigger className="w-[150px]">
+                    <SelectValue placeholder="Category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Categories</SelectItem>
+                    <SelectItem value="WORKER">Worker</SelectItem>
+                    <SelectItem value="VENDOR">Vendor</SelectItem>
+                    <SelectItem value="BUSINESS_OWNER">Business Owner</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={residencyFilter} onValueChange={setResidencyFilter}>
+                  <SelectTrigger className="w-[130px]">
+                    <SelectValue placeholder="Residency" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All</SelectItem>
+                    <SelectItem value="US">US</SelectItem>
+                    <SelectItem value="NON_US">Non-US</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -216,6 +316,7 @@ export const TaxCenter: React.FC<TaxCenterProps> = ({ role }) => {
                     <TableRow className="bg-muted/50">
                       <TableHead>Name</TableHead>
                       <TableHead>Entity Type</TableHead>
+                      <TableHead>Category</TableHead>
                       <TableHead className="text-center">W-9</TableHead>
                       <TableHead className="text-center">W-8</TableHead>
                       <TableHead className="text-right">YTD Payments</TableHead>
@@ -236,6 +337,13 @@ export const TaxCenter: React.FC<TaxCenterProps> = ({ role }) => {
                           <Badge variant="outline" className="text-[10px]">
                             {profile.entityType.replace(/_/g, " ")}
                           </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {profile.payeeCategory && (
+                            <Badge variant="secondary" className="text-[10px]">
+                              {profile.payeeCategory.replace(/_/g, " ")}
+                            </Badge>
+                          )}
                         </TableCell>
                         <TableCell className="text-center">
                           <div className="flex items-center justify-center gap-1.5">
@@ -280,6 +388,141 @@ export const TaxCenter: React.FC<TaxCenterProps> = ({ role }) => {
           </Card>
         </TabsContent>
 
+        <TabsContent value="payouts">
+          <div className="space-y-6">
+            {/* Payout Summary Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-primary/10">
+                      <DollarSign className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-semibold">{formatCurrency(payoutStats.totalPayouts)}</p>
+                      <p className="text-xs text-muted-foreground">Total Payouts</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-secondary">
+                      <Briefcase className="w-5 h-5 text-foreground" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-semibold">{formatCurrency(payoutStats.workOrderTotal)}</p>
+                      <p className="text-xs text-muted-foreground">Work Order Payments</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-amber-500/10">
+                      <Globe className="w-5 h-5 text-amber-600" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-semibold">{payoutStats.tokenTotal.toLocaleString()}</p>
+                      <p className="text-xs text-muted-foreground">Token Distributions</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-destructive/10">
+                      <Users className="w-5 h-5 text-destructive" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-semibold">{payoutStats.over600Count}</p>
+                      <p className="text-xs text-muted-foreground">1099 Candidates (≥$600)</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Payout Table */}
+            <Card>
+              <CardHeader className="pb-4">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base font-medium">Payout Summaries by Payee</CardTitle>
+                  <div className="flex items-center gap-2">
+                    <Select value={taxYear} onValueChange={setTaxYear}>
+                      <SelectTrigger className="w-[100px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="2024">2024</SelectItem>
+                        <SelectItem value="2023">2023</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="gap-1.5"
+                      onClick={() => handleExport("Payout Summaries", payoutSummaries.length)}
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      Export
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="border rounded-lg overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-muted/50">
+                        <TableHead>Payee</TableHead>
+                        <TableHead>Category</TableHead>
+                        <TableHead className="text-right">Total Payouts</TableHead>
+                        <TableHead className="text-right">Work Orders</TableHead>
+                        <TableHead className="text-right">Token Dist.</TableHead>
+                        <TableHead className="text-center">$600+</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {payoutSummaries.map((summary) => (
+                        <TableRow key={summary.payeeId}>
+                          <TableCell>
+                            <p className="font-medium text-sm">{summary.payeeName}</p>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="text-[10px]">
+                              {summary.category.replace(/_/g, " ")}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right font-medium">
+                            {formatCurrency(summary.totalPayouts)}
+                          </TableCell>
+                          <TableCell className="text-right text-sm">
+                            {summary.workOrderPayments > 0 ? formatCurrency(summary.workOrderPayments) : "—"}
+                          </TableCell>
+                          <TableCell className="text-right text-sm">
+                            {summary.tokenDistributions > 0 ? summary.tokenDistributions.toLocaleString() : "—"}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {summary.totalPayouts >= 600 ? (
+                              <Badge variant="default" className="text-[10px]">Yes</Badge>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">No</span>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
         <TabsContent value="1099">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card>
@@ -294,7 +537,7 @@ export const TaxCenter: React.FC<TaxCenterProps> = ({ role }) => {
                   <p className="text-2xl font-semibold">{stats.over600}</p>
                   <p className="text-xs text-muted-foreground mt-1">Eligible payees</p>
                 </div>
-                <Button className="w-full gap-2" onClick={() => toast.success("Generating 1099-NEC dataset...")}>
+                <Button className="w-full gap-2" onClick={() => handleExport("1099-NEC Dataset", stats.over600)}>
                   <Download className="w-4 h-4" />
                   Generate Dataset
                 </Button>
@@ -313,7 +556,7 @@ export const TaxCenter: React.FC<TaxCenterProps> = ({ role }) => {
                   <p className="text-2xl font-semibold text-destructive">{stats.missing}</p>
                   <p className="text-xs text-muted-foreground mt-1">Missing forms</p>
                 </div>
-                <Button variant="outline" className="w-full gap-2" onClick={() => toast.success("Generating missing forms report...")}>
+                <Button variant="outline" className="w-full gap-2" onClick={() => handleExport("Missing Forms", stats.missing)}>
                   <FileWarning className="w-4 h-4" />
                   Generate Report
                 </Button>
@@ -423,17 +666,24 @@ export const TaxCenter: React.FC<TaxCenterProps> = ({ role }) => {
                   <h4 className="text-sm font-medium text-foreground">Financial Summary</h4>
                   <div className="p-4 rounded-lg bg-muted/50 space-y-3">
                     <div className="flex justify-between">
-                      <span className="text-xs text-muted-foreground">YTD Payments</span>
-                      <span className="text-sm font-semibold">
-                        {formatCurrency(selectedProfile.totalPaymentsYTD)}
+                      <span className="text-xs text-muted-foreground">Total Payments YTD</span>
+                      <span className="text-sm font-semibold">{formatCurrency(selectedProfile.totalPaymentsYTD)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-xs text-muted-foreground">1099 Threshold</span>
+                      <span className="text-sm">
+                        {selectedProfile.totalPaymentsYTD >= 600 ? (
+                          <Badge variant="default">Met ($600+)</Badge>
+                        ) : (
+                          <span className="text-muted-foreground">Not Met</span>
+                        )}
                       </span>
                     </div>
                     {selectedProfile.backupWithholdingRequired && (
-                      <div className="p-3 rounded bg-destructive/10 border border-destructive/20">
-                        <div className="flex items-center gap-2 text-destructive text-sm font-medium">
-                          <AlertTriangle className="w-4 h-4" />
+                      <div className="p-2 rounded bg-destructive/10 border border-destructive/20">
+                        <p className="text-xs text-destructive font-medium">
                           Backup Withholding Required (24%)
-                        </div>
+                        </p>
                         {selectedProfile.backupWithholdingReason && (
                           <p className="text-xs text-muted-foreground mt-1">
                             {selectedProfile.backupWithholdingReason}
@@ -448,6 +698,16 @@ export const TaxCenter: React.FC<TaxCenterProps> = ({ role }) => {
           )}
         </SheetContent>
       </Sheet>
+
+      {/* Export Modal */}
+      <ExportReasonModal
+        open={exportModalOpen}
+        onOpenChange={setExportModalOpen}
+        onConfirm={handleExportConfirm}
+        exportType="CSV"
+        rowCount={exportContext.count}
+        reportName={exportContext.type}
+      />
     </div>
   );
 };
