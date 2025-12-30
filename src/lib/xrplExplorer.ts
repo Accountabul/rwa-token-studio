@@ -63,7 +63,9 @@ export function buildExplorerLink(params: ExplorerLinkParams): string {
   switch (type) {
     case "ACCOUNT":
       if (!address) throw new Error("Address required for ACCOUNT link");
-      return `${base}/account/${address}`;
+      // testnet.xrpl.org uses /accounts/ (plural), xrpscan uses /account/ (singular)
+      const accountPath = network === "testnet" || network === "devnet" ? "accounts" : "account";
+      return `${base}/${accountPath}/${address}`;
 
     case "TOKEN_IOU":
       if (!currencyCode || !issuer) throw new Error("Currency code and issuer required for TOKEN_IOU link");
