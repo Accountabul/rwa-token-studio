@@ -3,6 +3,15 @@ import { Role } from "./tokenization";
 // Token standards supported on XRPL
 export type TokenStandard = "IOU" | "MPT" | "NFT";
 
+// Wallet role classification
+export type WalletRole = "ISSUER" | "TREASURY" | "ESCROW" | "OPS" | "TEST";
+
+// Wallet status for provisioning workflow
+export type WalletStatus = "PROVISIONING" | "ACTIVE" | "SUSPENDED" | "ARCHIVED";
+
+// XRPL Network
+export type XRPLNetwork = "mainnet" | "testnet" | "devnet";
+
 // Token lifecycle status
 export type TokenStatus = "DRAFT" | "ISSUED" | "FROZEN" | "RETIRED";
 
@@ -86,14 +95,38 @@ export interface Token {
 // Issuing wallet
 export interface IssuingWallet {
   id: string;
-  xrplAddress: string;
   name: string;
+  
+  // XRPL identity
+  xrplAddress: string;
+  publicKey?: string;
+  
+  // Classification
+  role: WalletRole;
+  network: XRPLNetwork;
+  status: WalletStatus;
+  
+  // Multi-sig configuration
   multiSignEnabled: boolean;
   multiSignQuorum?: number;
   multiSignSigners?: number;
+  multiSignConfigId?: string;
+  
+  // PermissionDEX integration
   permissionDexStatus: WalletPermissionStatus;
   isAuthorized: boolean;
+  
+  // Custody tracking
+  encryptedSeedRef?: string;
+  vaultKeyId?: string;
+  
+  // Provisioning metadata
+  createdBy: string;
+  createdByName?: string;
+  createdAt: string;
   lastSyncedAt?: string;
+  fundedAt?: string;
+  balance?: number;
 }
 
 // Labels
@@ -115,6 +148,23 @@ export const walletPermissionLabel: Record<WalletPermissionStatus, string> = {
   PENDING: "Pending",
   APPROVED: "Approved",
   REJECTED: "Rejected",
+};
+
+// Wallet role labels for UI
+export const walletRoleLabel: Record<WalletRole, string> = {
+  ISSUER: "Issuer",
+  TREASURY: "Treasury",
+  ESCROW: "Escrow",
+  OPS: "Operations",
+  TEST: "Test",
+};
+
+// Wallet status labels for UI
+export const walletStatusLabel: Record<WalletStatus, string> = {
+  PROVISIONING: "Provisioning",
+  ACTIVE: "Active",
+  SUSPENDED: "Suspended",
+  ARCHIVED: "Archived",
 };
 
 // Role permissions for token actions
