@@ -1,12 +1,16 @@
-import React, { useState } from "react";
-import { Wallet, Shield, Users, AlertCircle, Clock } from "lucide-react";
+import React, { useState, useCallback } from "react";
+import { Wallet, Shield, Clock, AlertCircle, Plus, RefreshCw } from "lucide-react";
 import { Role } from "@/types/tokenization";
 import { mockWallets } from "@/data/mockWallets";
 import { mockPendingTransactions, mockMultiSignConfigs } from "@/data/mockPendingTransactions";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import { WalletCard } from "./WalletCard";
 import { MultiSignApprovalQueue } from "./MultiSignApprovalQueue";
 import { MultiSignConfigPanel } from "./MultiSignConfigPanel";
+import { ProvisionWalletDialog } from "./ProvisionWalletDialog";
+import { useWalletService } from "@/domain/ServiceContext";
+import { IssuingWallet } from "@/types/token";
 
 interface WalletDashboardProps {
   role: Role;
@@ -14,30 +18,72 @@ interface WalletDashboardProps {
 
 export const WalletDashboard: React.FC<WalletDashboardProps> = ({ role }) => {
   const [selectedWalletId, setSelectedWalletId] = useState<string | null>(null);
+  const [showProvisionDialog, setShowProvisionDialog] = useState(false);
+  const [wallets, setWallets] = useState<IssuingWallet[]>(mockWallets);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  
+  const walletService = useWalletService();
 
-  const multiSignWallets = mockWallets.filter((w) => w.multiSignEnabled);
+  const multiSignWallets = wallets.filter((w) => w.multiSignEnabled);
   const pendingCount = mockPendingTransactions.filter((tx) => tx.status === "PENDING").length;
   const readyCount = mockPendingTransactions.filter((tx) => tx.status === "READY").length;
+  const activeWallets = wallets.filter((w) => w.status === "ACTIVE").length;
 
-  const selectedWallet = selectedWalletId ? mockWallets.find((w) => w.id === selectedWalletId) : null;
+  const selectedWallet = selectedWalletId ? wallets.find((w) => w.id === selectedWalletId) : null;
   const selectedConfig = selectedWalletId ? mockMultiSignConfigs[selectedWalletId] : null;
+
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      const refreshedWallets = await walletService.listWallets();
+      setWallets(refreshedWallets);
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [walletService]);
+
+  const handleProvisionSuccess = useCallback(async () => {
+    await handleRefresh();
+  }, [handleRefresh]);
+
+  const canProvision = role === "SUPER_ADMIN";
 
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Wallet Management</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Manage issuing wallets, multi-signature configurations, and pending approvals
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Wallet Management</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Manage issuing wallets, multi-signature configurations, and pending approvals
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+          >
+            <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? "animate-spin" : ""}`} />
+            Refresh
+          </Button>
+          {canProvision && (
+            <Button onClick={() => setShowProvisionDialog(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Provision Wallet
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <StatCard
           icon={Wallet}
-          label="Total Wallets"
-          value={mockWallets.length}
+          label="Active Wallets"
+          value={activeWallets}
+          total={wallets.length}
           iconColor="text-primary"
         />
         <StatCard
@@ -76,7 +122,7 @@ export const WalletDashboard: React.FC<WalletDashboardProps> = ({ role }) => {
 
         <TabsContent value="wallets" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {mockWallets.map((wallet) => (
+            {wallets.map((wallet) => (
               <WalletCard
                 key={wallet.id}
                 wallet={wallet}
@@ -112,6 +158,13 @@ export const WalletDashboard: React.FC<WalletDashboardProps> = ({ role }) => {
           )}
         </TabsContent>
       </Tabs>
+
+      {/* Provision Dialog */}
+      <ProvisionWalletDialog
+        open={showProvisionDialog}
+        onOpenChange={setShowProvisionDialog}
+        onSuccess={handleProvisionSuccess}
+      />
     </div>
   );
 };
@@ -120,10 +173,11 @@ interface StatCardProps {
   icon: React.ElementType;
   label: string;
   value: number;
+  total?: number;
   iconColor: string;
 }
 
-const StatCard: React.FC<StatCardProps> = ({ icon: Icon, label, value, iconColor }) => (
+const StatCard: React.FC<StatCardProps> = ({ icon: Icon, label, value, total, iconColor }) => (
   <div className="bg-card border border-border rounded-lg p-4">
     <div className="flex items-center gap-3">
       <div className={`p-2 rounded-lg bg-muted ${iconColor}`}>
@@ -131,7 +185,12 @@ const StatCard: React.FC<StatCardProps> = ({ icon: Icon, label, value, iconColor
       </div>
       <div>
         <p className="text-sm text-muted-foreground">{label}</p>
-        <p className="text-xl font-semibold text-foreground">{value}</p>
+        <p className="text-xl font-semibold text-foreground">
+          {value}
+          {total !== undefined && total !== value && (
+            <span className="text-sm font-normal text-muted-foreground"> / {total}</span>
+          )}
+        </p>
       </div>
     </div>
   </div>

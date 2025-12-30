@@ -51,7 +51,12 @@ export type AuditAction =
   | "PAY"
   | "CANCEL"
   | "CONNECT"
-  | "DISCONNECT";
+  | "DISCONNECT"
+  | "PROVISION"
+  | "FUND"
+  | "SYNC"
+  | "SUSPEND"
+  | "ARCHIVE";
 
 export type AuditSource = "UI" | "API" | "WEBHOOK" | "BATCH_JOB" | "LLM_AGENT";
 export type AuditSeverity = "INFO" | "WARN" | "HIGH";
