@@ -14,7 +14,75 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      wallets: {
+        Row: {
+          balance: number | null
+          created_at: string
+          created_by: string
+          created_by_name: string | null
+          encrypted_seed: string | null
+          funded_at: string | null
+          id: string
+          is_authorized: boolean
+          last_synced_at: string | null
+          multi_sign_config_id: string | null
+          multi_sign_enabled: boolean
+          multi_sign_quorum: number | null
+          multi_sign_signers: number | null
+          name: string
+          network: string
+          permission_dex_status: string
+          public_key: string | null
+          role: string
+          status: string
+          xrpl_address: string
+        }
+        Insert: {
+          balance?: number | null
+          created_at?: string
+          created_by: string
+          created_by_name?: string | null
+          encrypted_seed?: string | null
+          funded_at?: string | null
+          id?: string
+          is_authorized?: boolean
+          last_synced_at?: string | null
+          multi_sign_config_id?: string | null
+          multi_sign_enabled?: boolean
+          multi_sign_quorum?: number | null
+          multi_sign_signers?: number | null
+          name: string
+          network?: string
+          permission_dex_status?: string
+          public_key?: string | null
+          role: string
+          status?: string
+          xrpl_address: string
+        }
+        Update: {
+          balance?: number | null
+          created_at?: string
+          created_by?: string
+          created_by_name?: string | null
+          encrypted_seed?: string | null
+          funded_at?: string | null
+          id?: string
+          is_authorized?: boolean
+          last_synced_at?: string | null
+          multi_sign_config_id?: string | null
+          multi_sign_enabled?: boolean
+          multi_sign_quorum?: number | null
+          multi_sign_signers?: number | null
+          name?: string
+          network?: string
+          permission_dex_status?: string
+          public_key?: string | null
+          role?: string
+          status?: string
+          xrpl_address?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

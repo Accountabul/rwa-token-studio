@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Wallet, Loader2, Server, Shield } from "lucide-react";
-import { WalletRole } from "@/types/token";
-import { walletService } from "@/domain/services/WalletService";
+import { WalletRole, XRPLNetwork } from "@/types/token";
+import { provisionWallet } from "@/lib/walletApi";
 import {
   Dialog,
   DialogContent,
@@ -33,6 +33,7 @@ interface ProvisionWalletDialogProps {
 interface FormData {
   name: string;
   role: WalletRole;
+  network: XRPLNetwork;
   enableMultiSig: boolean;
   autoFund: boolean;
 }
@@ -43,6 +44,12 @@ const walletRoles: { value: WalletRole; label: string; description: string }[] =
   { value: "ESCROW", label: "Escrow", description: "Holds funds in escrow arrangements" },
   { value: "OPS", label: "Operations", description: "Day-to-day operational transactions" },
   { value: "TEST", label: "Test", description: "Testing and development purposes" },
+];
+
+const networks: { value: XRPLNetwork; label: string; enabled: boolean }[] = [
+  { value: "testnet", label: "Testnet", enabled: true },
+  { value: "devnet", label: "Devnet", enabled: true },
+  { value: "mainnet", label: "Mainnet", enabled: false },
 ];
 
 export const ProvisionWalletDialog: React.FC<ProvisionWalletDialogProps> = ({
@@ -63,6 +70,7 @@ export const ProvisionWalletDialog: React.FC<ProvisionWalletDialogProps> = ({
     defaultValues: {
       name: "",
       role: "OPS",
+      network: "testnet",
       enableMultiSig: false,
       autoFund: true,
     },
@@ -71,15 +79,16 @@ export const ProvisionWalletDialog: React.FC<ProvisionWalletDialogProps> = ({
   const enableMultiSig = watch("enableMultiSig");
   const autoFund = watch("autoFund");
   const selectedRole = watch("role");
+  const selectedNetwork = watch("network");
 
   const onSubmit = async (data: FormData) => {
     setIsProvisioning(true);
     
     try {
-      const wallet = await walletService.provisionWallet({
+      const wallet = await provisionWallet({
         name: data.name,
         role: data.role,
-        network: "testnet",
+        network: data.network,
         enableMultiSig: data.enableMultiSig,
         autoFund: data.autoFund,
         createdBy: "current-user-id", // Would come from auth context
@@ -87,13 +96,14 @@ export const ProvisionWalletDialog: React.FC<ProvisionWalletDialogProps> = ({
       });
 
       toast.success("Wallet provisioned successfully", {
-        description: `${wallet.name} is now ${data.autoFund ? "funded and " : ""}ready to use.`,
+        description: `${wallet.name} (${wallet.xrplAddress.slice(0, 8)}...) is now active with ${wallet.balance || 0} XRP.`,
       });
 
       reset();
       onOpenChange(false);
       onSuccess();
     } catch (error) {
+      console.error('[ProvisionWalletDialog] Error:', error);
       toast.error("Failed to provision wallet", {
         description: error instanceof Error ? error.message : "An unexpected error occurred",
       });
@@ -118,8 +128,8 @@ export const ProvisionWalletDialog: React.FC<ProvisionWalletDialogProps> = ({
             Provision XRPL Wallet
           </DialogTitle>
           <DialogDescription>
-            Create a new managed wallet on XRPL Testnet. This wallet will be registered 
-            as an internal system resource with full audit logging.
+            Create a new managed wallet on XRPL. The wallet will be provisioned via the 
+            testnet faucet and registered as an internal system resource.
           </DialogDescription>
         </DialogHeader>
 
@@ -167,14 +177,34 @@ export const ProvisionWalletDialog: React.FC<ProvisionWalletDialogProps> = ({
 
           {/* Network */}
           <div className="space-y-2">
-            <Label>Network</Label>
-            <div className="flex items-center gap-2 p-3 bg-muted rounded-md">
-              <Server className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm font-medium">Testnet</span>
-              <span className="text-xs text-muted-foreground">(Locked)</span>
-            </div>
+            <Label>Network *</Label>
+            <Select
+              value={selectedNetwork}
+              onValueChange={(value) => setValue("network", value as XRPLNetwork)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select network" />
+              </SelectTrigger>
+              <SelectContent>
+                {networks.map((net) => (
+                  <SelectItem 
+                    key={net.value} 
+                    value={net.value}
+                    disabled={!net.enabled}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Server className="w-3.5 h-3.5" />
+                      <span className="font-medium">{net.label}</span>
+                      {!net.enabled && (
+                        <span className="text-xs text-muted-foreground">(Coming soon)</span>
+                      )}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <p className="text-xs text-muted-foreground">
-              Mainnet provisioning will be available after vault integration.
+              Mainnet provisioning requires vault integration.
             </p>
           </div>
 
@@ -208,7 +238,7 @@ export const ProvisionWalletDialog: React.FC<ProvisionWalletDialogProps> = ({
                   Auto-fund via Faucet
                 </Label>
                 <p className="text-xs text-muted-foreground">
-                  Request 1,000 XRP from Testnet faucet
+                  Request XRP from the {selectedNetwork} faucet (~1,000 XRP)
                 </p>
               </div>
             </div>
