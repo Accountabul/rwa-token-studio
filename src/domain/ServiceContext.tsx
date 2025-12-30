@@ -5,6 +5,8 @@ import { TaxService, taxService } from "./services/TaxService";
 import { ReportsService, reportsService } from "./services/ReportsService";
 import { BusinessService, businessService } from "./services/BusinessService";
 import { WorkOrderService, workOrderService } from "./services/WorkOrderService";
+import { PayeeService, payeeService } from "./services/PayeeService";
+import { PayoutRequestService, payoutRequestService } from "./services/PayoutRequestService";
 
 /**
  * Service container for dependency injection
@@ -16,6 +18,8 @@ export interface ServiceContainer {
   reportsService: ReportsService;
   businessService: BusinessService;
   workOrderService: WorkOrderService;
+  payeeService: PayeeService;
+  payoutRequestService: PayoutRequestService;
 }
 
 /**
@@ -28,6 +32,8 @@ const defaultServices: ServiceContainer = {
   reportsService,
   businessService,
   workOrderService,
+  payeeService,
+  payoutRequestService,
 };
 
 /**
@@ -115,4 +121,20 @@ export function useBusinessService(): BusinessService {
 export function useWorkOrderService(): WorkOrderService {
   const { workOrderService } = useContext(ServiceContext);
   return workOrderService;
+}
+
+/**
+ * Hook to access payee service
+ */
+export function usePayeeService(): PayeeService {
+  const { payeeService } = useContext(ServiceContext);
+  return payeeService;
+}
+
+/**
+ * Hook to access payout request service
+ */
+export function usePayoutRequestService(): PayoutRequestService {
+  const { payoutRequestService } = useContext(ServiceContext);
+  return payoutRequestService;
 }
