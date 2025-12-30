@@ -62,59 +62,58 @@ export const mockBatches: TransactionBatch[] = [
   },
   {
     id: "batch_002",
-    name: "Bulk Token Authorization",
-    description: "Authorize 5 new investors for Property Token Alpha",
-    atomicityMode: "INDEPENDENT",
+    name: "Account Setup Batch",
+    description: "Configure multi-sig and account settings for new institutional wallet",
+    atomicityMode: "ALL_OR_NOTHING",
     transactions: [
       {
         id: "tx_002_1",
         order: 1,
-        txType: "MPTokenAuthorize",
-        params: { holder: "rInvestor001", tokenId: "MPT_ALPHA_001" },
+        txType: "AccountSet",
+        params: { 
+          domain: "6163636f756e746162756c2e636f6d", // accountabul.com in hex
+          transferRate: 1000000000,
+          tickSize: 5
+        },
         status: "SUCCESS",
         innerTxHash: "INNER_TX_002_1"
       },
       {
         id: "tx_002_2",
         order: 2,
-        txType: "MPTokenAuthorize",
-        params: { holder: "rInvestor002", tokenId: "MPT_ALPHA_001" },
+        txType: "SignerListSet",
+        params: { 
+          signerQuorum: 2,
+          signerEntries: '[{"Account": "rSigner001", "SignerWeight": 1}, {"Account": "rSigner002", "SignerWeight": 1}, {"Account": "rSigner003", "SignerWeight": 1}]'
+        },
         status: "SUCCESS",
         innerTxHash: "INNER_TX_002_2"
       },
       {
         id: "tx_002_3",
         order: 3,
-        txType: "MPTokenAuthorize",
-        params: { holder: "rInvestor003", tokenId: "MPT_ALPHA_001" },
-        status: "FAILED",
-        resultMessage: "Holder already authorized"
+        txType: "SetRegularKey",
+        params: { regularKey: "rRegularKey001" },
+        status: "SUCCESS",
+        innerTxHash: "INNER_TX_002_3"
       },
       {
         id: "tx_002_4",
         order: 4,
-        txType: "MPTokenAuthorize",
-        params: { holder: "rInvestor004", tokenId: "MPT_ALPHA_001" },
+        txType: "DepositPreauth",
+        params: { authorize: "rTrustedPartner001" },
         status: "SUCCESS",
         innerTxHash: "INNER_TX_002_4"
-      },
-      {
-        id: "tx_002_5",
-        order: 5,
-        txType: "MPTokenAuthorize",
-        params: { holder: "rInvestor005", tokenId: "MPT_ALPHA_001" },
-        status: "SUCCESS",
-        innerTxHash: "INNER_TX_002_5"
       }
     ],
-    status: "PARTIAL",
+    status: "COMPLETED",
     outerTxHash: "OUTER_TX_BATCH_002",
     successCount: 4,
-    failedCount: 1,
+    failedCount: 0,
     createdAt: "2024-03-05T14:00:00Z",
     submittedAt: "2024-03-05T14:02:00Z",
     completedAt: "2024-03-05T14:02:30Z",
-    createdBy: "tokenization@accountabul.com",
+    createdBy: "admin@accountabul.com",
     network: "testnet"
   },
   {
@@ -218,14 +217,24 @@ export const mockBatches: TransactionBatch[] = [
         id: "tx_005_1",
         order: 1,
         txType: "OfferCreate",
-        params: { takerGets: { currency: "XRP", value: "1000" }, takerPays: { currency: "USD", value: "500" } },
+        params: { 
+          takerGetsValue: "1000",
+          takerGetsCurrency: "XRP",
+          takerPaysValue: "500",
+          takerPaysCurrency: "USD"
+        },
         status: "PENDING"
       },
       {
         id: "tx_005_2",
         order: 2,
         txType: "OfferCreate",
-        params: { takerGets: { currency: "XRP", value: "2000" }, takerPays: { currency: "USD", value: "1000" } },
+        params: { 
+          takerGetsValue: "2000",
+          takerGetsCurrency: "XRP",
+          takerPaysValue: "1000",
+          takerPaysCurrency: "USD"
+        },
         status: "PENDING"
       }
     ],
@@ -235,5 +244,135 @@ export const mockBatches: TransactionBatch[] = [
     createdAt: "2024-03-12T11:00:00Z",
     createdBy: "tokenization@accountabul.com",
     network: "devnet"
+  },
+  {
+    id: "batch_006",
+    name: "AMM Liquidity Provision",
+    description: "Add liquidity to XRP/USD AMM pool and vote on trading fee",
+    atomicityMode: "UNTIL_FAILURE",
+    transactions: [
+      {
+        id: "tx_006_1",
+        order: 1,
+        txType: "AMMDeposit",
+        params: {
+          asset1Currency: "XRP",
+          asset2Currency: "USD",
+          asset2Issuer: "rIssuer001",
+          amount: "10000",
+          amount2: "5000"
+        },
+        status: "PENDING"
+      },
+      {
+        id: "tx_006_2",
+        order: 2,
+        txType: "AMMVote",
+        params: {
+          asset1Currency: "XRP",
+          asset2Currency: "USD",
+          asset2Issuer: "rIssuer001",
+          tradingFee: 100
+        },
+        status: "PENDING"
+      }
+    ],
+    status: "DRAFT",
+    successCount: 0,
+    failedCount: 0,
+    createdAt: "2024-03-15T09:00:00Z",
+    createdBy: "custody@accountabul.com",
+    network: "testnet"
+  },
+  {
+    id: "batch_007",
+    name: "Payment Channel Setup",
+    description: "Create and fund payment channel for streaming payments",
+    atomicityMode: "ALL_OR_NOTHING",
+    transactions: [
+      {
+        id: "tx_007_1",
+        order: 1,
+        txType: "PaymentChannelCreate",
+        params: {
+          destination: "rReceiver001",
+          amount: "100000000",
+          settleDelay: 86400,
+          publicKey: "ED1234567890ABCDEF..."
+        },
+        status: "SUCCESS",
+        innerTxHash: "INNER_TX_007_1"
+      },
+      {
+        id: "tx_007_2",
+        order: 2,
+        txType: "PaymentChannelFund",
+        params: {
+          channel: "5DB01B7FFED6B67E6B0414DED11E051D2EE2B7...",
+          amount: "50000000"
+        },
+        status: "SUCCESS",
+        innerTxHash: "INNER_TX_007_2"
+      }
+    ],
+    status: "COMPLETED",
+    outerTxHash: "OUTER_TX_BATCH_007",
+    successCount: 2,
+    failedCount: 0,
+    createdAt: "2024-03-18T14:00:00Z",
+    submittedAt: "2024-03-18T14:05:00Z",
+    completedAt: "2024-03-18T14:05:10Z",
+    createdBy: "custody@accountabul.com",
+    network: "testnet"
+  },
+  {
+    id: "batch_008",
+    name: "NFT Marketplace Sale",
+    description: "Create sell offers for multiple NFTs",
+    atomicityMode: "INDEPENDENT",
+    transactions: [
+      {
+        id: "tx_008_1",
+        order: 1,
+        txType: "NFTokenCreateOffer",
+        params: {
+          nfTokenId: "000800000...",
+          amount: "50000000",
+          currency: "XRP",
+          isSellOffer: true
+        },
+        status: "PENDING"
+      },
+      {
+        id: "tx_008_2",
+        order: 2,
+        txType: "NFTokenCreateOffer",
+        params: {
+          nfTokenId: "000800001...",
+          amount: "75000000",
+          currency: "XRP",
+          isSellOffer: true
+        },
+        status: "PENDING"
+      },
+      {
+        id: "tx_008_3",
+        order: 3,
+        txType: "NFTokenCreateOffer",
+        params: {
+          nfTokenId: "000800002...",
+          amount: "100000000",
+          currency: "XRP",
+          isSellOffer: true
+        },
+        status: "PENDING"
+      }
+    ],
+    status: "READY",
+    successCount: 0,
+    failedCount: 0,
+    createdAt: "2024-03-20T10:00:00Z",
+    createdBy: "tokenization@accountabul.com",
+    network: "testnet"
   }
 ];
