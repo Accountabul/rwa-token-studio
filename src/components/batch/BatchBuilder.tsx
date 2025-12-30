@@ -1,14 +1,20 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Role } from "@/types/tokenization";
 import {
   BatchAtomicityMode,
   BatchableTxType,
   BatchTransaction,
+  TxCategory,
   atomicityModeLabels,
   atomicityModeDescriptions,
   batchableTxTypeLabels,
   batchableTxTypeDescriptions,
+  categoryLabels,
+  categoryDescriptions,
+  txTypeToCategory,
+  getOrderedCategories,
+  getTxTypesForCategory,
   canSubmitBatch
 } from "@/types/batchTransaction";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,8 +26,16 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-  ArrowLeft, Plus, Trash2, GripVertical, ArrowUpDown, Send,
-  Coins, Link, FileText, Lock, Unlock, Image, Shield, Clock
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import {
+  ArrowLeft, Plus, Trash2, GripVertical, ArrowUpDown, Send, Search,
+  Coins, Link, FileText, Lock, Unlock, Image, Shield, Clock, Layers,
+  UserCog, ArrowRightLeft, Droplets, GitBranch, Ticket, Code, X,
+  Ban, Key, Users, ShieldCheck, CreditCard, ImagePlus, ImageMinus, Tag, CheckSquare
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import TransactionConfigForm from "./TransactionConfigForm";
@@ -30,23 +44,64 @@ interface BatchBuilderProps {
   role: Role;
 }
 
-const txTypeIcons: Partial<Record<BatchableTxType, React.ReactNode>> = {
+// Icons for each transaction type
+const txTypeIcons: Record<BatchableTxType, React.ReactNode> = {
+  // Account
+  AccountDelete: <Ban className="h-4 w-4" />,
+  AccountSet: <UserCog className="h-4 w-4" />,
+  SetRegularKey: <Key className="h-4 w-4" />,
+  SignerListSet: <Users className="h-4 w-4" />,
+  DepositPreauth: <ShieldCheck className="h-4 w-4" />,
+  // Payments
   Payment: <Coins className="h-4 w-4" />,
+  // Trust
   TrustSet: <Link className="h-4 w-4" />,
+  // DEX
+  OfferCreate: <ArrowRightLeft className="h-4 w-4" />,
+  OfferCancel: <X className="h-4 w-4" />,
+  // AMM
+  AMMBid: <Droplets className="h-4 w-4" />,
+  AMMDeposit: <Plus className="h-4 w-4" />,
+  AMMWithdraw: <ArrowLeft className="h-4 w-4" />,
+  AMMVote: <CheckSquare className="h-4 w-4" />,
+  // Escrow
   EscrowCreate: <Lock className="h-4 w-4" />,
   EscrowFinish: <Unlock className="h-4 w-4" />,
+  EscrowCancel: <X className="h-4 w-4" />,
+  // Checks
   CheckCreate: <FileText className="h-4 w-4" />,
-  NFTokenMint: <Image className="h-4 w-4" />,
-  MPTokenAuthorize: <Shield className="h-4 w-4" />,
+  CheckCash: <CreditCard className="h-4 w-4" />,
+  CheckCancel: <X className="h-4 w-4" />,
+  // Payment Channels
+  PaymentChannelCreate: <GitBranch className="h-4 w-4" />,
+  PaymentChannelClaim: <Coins className="h-4 w-4" />,
+  PaymentChannelFund: <Plus className="h-4 w-4" />,
+  // NFToken
+  NFTokenMint: <ImagePlus className="h-4 w-4" />,
+  NFTokenBurn: <ImageMinus className="h-4 w-4" />,
+  NFTokenCreateOffer: <Tag className="h-4 w-4" />,
+  NFTokenAcceptOffer: <CheckSquare className="h-4 w-4" />,
+  NFTokenCancelOffer: <X className="h-4 w-4" />,
+  // Tickets
+  TicketCreate: <Ticket className="h-4 w-4" />,
+  // Custom
+  ContractCall: <Code className="h-4 w-4" />,
 };
 
-const availableTxTypes: BatchableTxType[] = [
-  "Payment", "TrustSet", "OfferCreate", "OfferCancel",
-  "EscrowCreate", "EscrowFinish", "EscrowCancel",
-  "CheckCreate", "CheckCash", "CheckCancel",
-  "NFTokenMint", "NFTokenBurn", "NFTokenCreateOffer",
-  "MPTokenAuthorize", "MPTokenIssuanceCreate", "ContractCall"
-];
+// Icons for each category
+const categoryIcons: Record<TxCategory, React.ReactNode> = {
+  ACCOUNT: <UserCog className="h-4 w-4" />,
+  PAYMENTS: <Coins className="h-4 w-4" />,
+  TRUST: <Link className="h-4 w-4" />,
+  DEX: <ArrowRightLeft className="h-4 w-4" />,
+  AMM: <Droplets className="h-4 w-4" />,
+  ESCROW: <Lock className="h-4 w-4" />,
+  CHECKS: <FileText className="h-4 w-4" />,
+  PAYMENT_CHANNELS: <GitBranch className="h-4 w-4" />,
+  NFTOKEN: <Image className="h-4 w-4" />,
+  TICKETS: <Ticket className="h-4 w-4" />,
+  CUSTOM: <Code className="h-4 w-4" />,
+};
 
 const BatchBuilder = ({ role }: BatchBuilderProps) => {
   const navigate = useNavigate();
@@ -55,6 +110,34 @@ const BatchBuilder = ({ role }: BatchBuilderProps) => {
   const [atomicityMode, setAtomicityMode] = useState<BatchAtomicityMode>("ALL_OR_NOTHING");
   const [transactions, setTransactions] = useState<BatchTransaction[]>([]);
   const [selectedTxIndex, setSelectedTxIndex] = useState<number | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Filter transaction types by search
+  const filteredCategories = useMemo(() => {
+    const query = searchQuery.toLowerCase();
+    const categories = getOrderedCategories();
+    
+    if (!query) return categories;
+    
+    return categories.filter(category => {
+      const types = getTxTypesForCategory(category);
+      return types.some(type => 
+        batchableTxTypeLabels[type].toLowerCase().includes(query) ||
+        batchableTxTypeDescriptions[type].toLowerCase().includes(query)
+      );
+    });
+  }, [searchQuery]);
+
+  const getFilteredTypesForCategory = (category: TxCategory): BatchableTxType[] => {
+    const types = getTxTypesForCategory(category);
+    if (!searchQuery) return types;
+    
+    const query = searchQuery.toLowerCase();
+    return types.filter(type =>
+      batchableTxTypeLabels[type].toLowerCase().includes(query) ||
+      batchableTxTypeDescriptions[type].toLowerCase().includes(query)
+    );
+  };
 
   const addTransaction = (txType: BatchableTxType) => {
     if (transactions.length >= 8) {
@@ -155,30 +238,61 @@ const BatchBuilder = ({ role }: BatchBuilderProps) => {
           <Card className="sticky top-6">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm">Transaction Types</CardTitle>
+              <div className="relative mt-2">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search transactions..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-8"
+                />
+              </div>
             </CardHeader>
             <CardContent className="p-2">
               <ScrollArea className="h-[500px]">
-                <div className="space-y-1 p-2">
-                  {availableTxTypes.map((txType) => (
-                    <Button
-                      key={txType}
-                      variant="ghost"
-                      className="w-full justify-start text-left h-auto py-2"
-                      onClick={() => addTransaction(txType)}
-                      disabled={transactions.length >= 8}
-                    >
-                      <div className="flex items-center gap-2">
-                        {txTypeIcons[txType] || <Clock className="h-4 w-4" />}
-                        <div>
-                          <div className="text-sm font-medium">{batchableTxTypeLabels[txType]}</div>
-                          <div className="text-xs text-muted-foreground truncate max-w-[150px]">
-                            {batchableTxTypeDescriptions[txType]}
+                <Accordion type="multiple" defaultValue={getOrderedCategories()} className="px-2">
+                  {filteredCategories.map((category) => {
+                    const types = getFilteredTypesForCategory(category);
+                    if (types.length === 0) return null;
+                    
+                    return (
+                      <AccordionItem key={category} value={category} className="border-b-0">
+                        <AccordionTrigger className="py-2 hover:no-underline">
+                          <div className="flex items-center gap-2">
+                            {categoryIcons[category]}
+                            <span className="text-sm font-medium">{categoryLabels[category]}</span>
+                            <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+                              {types.length}
+                            </Badge>
                           </div>
-                        </div>
-                      </div>
-                    </Button>
-                  ))}
-                </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="pb-2">
+                          <div className="space-y-1">
+                            {types.map((txType) => (
+                              <Button
+                                key={txType}
+                                variant="ghost"
+                                className="w-full justify-start text-left h-auto py-2 px-2"
+                                onClick={() => addTransaction(txType)}
+                                disabled={transactions.length >= 8}
+                              >
+                                <div className="flex items-center gap-2">
+                                  {txTypeIcons[txType]}
+                                  <div className="min-w-0">
+                                    <div className="text-sm font-medium truncate">{batchableTxTypeLabels[txType]}</div>
+                                    <div className="text-xs text-muted-foreground truncate max-w-[160px]">
+                                      {batchableTxTypeDescriptions[txType]}
+                                    </div>
+                                  </div>
+                                </div>
+                              </Button>
+                            ))}
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    );
+                  })}
+                </Accordion>
               </ScrollArea>
             </CardContent>
           </Card>
@@ -214,13 +328,16 @@ const BatchBuilder = ({ role }: BatchBuilderProps) => {
                       <Badge variant="secondary" className="w-6 h-6 p-0 flex items-center justify-center">
                         {tx.order}
                       </Badge>
-                      <div className="flex-1">
-                        <div className="font-medium text-sm">{batchableTxTypeLabels[tx.txType]}</div>
-                        {Object.keys(tx.params).length > 0 && (
-                          <div className="text-xs text-muted-foreground">
-                            {Object.keys(tx.params).length} params configured
-                          </div>
-                        )}
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        {txTypeIcons[tx.txType]}
+                        <div className="min-w-0">
+                          <div className="font-medium text-sm truncate">{batchableTxTypeLabels[tx.txType]}</div>
+                          {Object.keys(tx.params).length > 0 && (
+                            <div className="text-xs text-muted-foreground">
+                              {Object.keys(tx.params).length} params configured
+                            </div>
+                          )}
+                        </div>
                       </div>
                       <div className="flex items-center gap-1">
                         <Button
@@ -306,14 +423,17 @@ const BatchBuilder = ({ role }: BatchBuilderProps) => {
 
               {selectedTxIndex !== null && transactions[selectedTxIndex] && (
                 <div className="border-t pt-4">
-                  <h4 className="text-sm font-medium mb-3">
+                  <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
+                    {txTypeIcons[transactions[selectedTxIndex].txType]}
                     Configure: {batchableTxTypeLabels[transactions[selectedTxIndex].txType]}
                   </h4>
-                  <TransactionConfigForm
-                    txType={transactions[selectedTxIndex].txType}
-                    params={transactions[selectedTxIndex].params}
-                    onChange={(params) => updateTransactionParams(selectedTxIndex, params)}
-                  />
+                  <ScrollArea className="h-[300px] pr-4">
+                    <TransactionConfigForm
+                      txType={transactions[selectedTxIndex].txType}
+                      params={transactions[selectedTxIndex].params}
+                      onChange={(params) => updateTransactionParams(selectedTxIndex, params)}
+                    />
+                  </ScrollArea>
                 </div>
               )}
             </CardContent>
@@ -343,6 +463,3 @@ const BatchBuilder = ({ role }: BatchBuilderProps) => {
 };
 
 export default BatchBuilder;
-
-// Import the Layers icon that's used in the empty state
-import { Layers } from "lucide-react";
