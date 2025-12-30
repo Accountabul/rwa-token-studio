@@ -126,7 +126,7 @@ serve(async (req) => {
       multi_sign_enabled: body.enableMultiSig,
       permission_dex_status: 'NOT_LINKED',
       is_authorized: false,
-      balance: body.autoFund ? faucetData.balance : 0,
+      balance: body.autoFund ? (faucetData.balance || 1000) : 0,
       created_by: body.createdBy,
       created_by_name: body.createdByName,
       funded_at: body.autoFund ? new Date().toISOString() : null,
