@@ -1,7 +1,6 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { Wallet, Shield, Clock, AlertCircle, Plus, RefreshCw } from "lucide-react";
 import { Role } from "@/types/tokenization";
-import { mockWallets } from "@/data/mockWallets";
 import { mockPendingTransactions, mockMultiSignConfigs } from "@/data/mockPendingTransactions";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -20,7 +19,7 @@ interface WalletDashboardProps {
 export const WalletDashboard: React.FC<WalletDashboardProps> = ({ role }) => {
   const [selectedWalletId, setSelectedWalletId] = useState<string | null>(null);
   const [showProvisionDialog, setShowProvisionDialog] = useState(false);
-  const [wallets, setWallets] = useState<IssuingWallet[]>(mockWallets);
+  const [wallets, setWallets] = useState<IssuingWallet[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -35,20 +34,13 @@ export const WalletDashboard: React.FC<WalletDashboardProps> = ({ role }) => {
   const loadWallets = useCallback(async (showToast = false) => {
     try {
       const dbWallets = await fetchWallets();
-      // Combine database wallets with mock wallets (DB wallets take priority)
-      const dbAddresses = new Set(dbWallets.map(w => w.xrplAddress));
-      const combinedWallets = [
-        ...dbWallets,
-        ...mockWallets.filter(w => !dbAddresses.has(w.xrplAddress))
-      ];
-      setWallets(combinedWallets);
+      setWallets(dbWallets);
       if (showToast) {
         toast.success("Wallets refreshed");
       }
     } catch (error) {
       console.error('[WalletDashboard] Error loading wallets:', error);
-      // Fall back to mock data
-      setWallets(mockWallets);
+      setWallets([]);
       if (showToast) {
         toast.error("Failed to refresh wallets");
       }
