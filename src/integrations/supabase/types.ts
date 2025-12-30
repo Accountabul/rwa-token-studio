@@ -16,14 +16,34 @@ export type Database = {
     Tables: {
       wallets: {
         Row: {
+          asset_class: string | null
           balance: number | null
+          business_unit: string | null
+          can_authorize_holders: boolean | null
+          can_clawback: boolean | null
+          can_create_channels: boolean | null
+          can_create_escrows: boolean | null
+          can_freeze: boolean | null
+          can_issue_tokens: boolean | null
+          can_manage_amm: boolean | null
+          can_mint_nfts: boolean | null
+          contact_email: string | null
+          contact_phone: string | null
           created_at: string
           created_by: string
           created_by_name: string | null
+          description: string | null
+          did_document: string | null
+          did_method: string | null
           encrypted_seed: string | null
+          expiration_date: string | null
+          external_ref_id: string | null
           funded_at: string | null
           id: string
+          identity_verified: boolean | null
           is_authorized: boolean
+          jurisdiction: string | null
+          kyc_binding_id: string | null
           last_synced_at: string | null
           multi_sign_config_id: string | null
           multi_sign_enabled: boolean
@@ -32,20 +52,48 @@ export type Database = {
           name: string
           network: string
           permission_dex_status: string
+          project_ids: string[] | null
           public_key: string | null
+          purpose_code: string | null
+          requires_destination_tag: boolean | null
+          review_frequency: string | null
+          risk_tier: string | null
           role: string
           status: string
+          tags: string[] | null
+          vc_issuer_capable: boolean | null
+          verifiable_credentials: string[] | null
           xrpl_address: string
         }
         Insert: {
+          asset_class?: string | null
           balance?: number | null
+          business_unit?: string | null
+          can_authorize_holders?: boolean | null
+          can_clawback?: boolean | null
+          can_create_channels?: boolean | null
+          can_create_escrows?: boolean | null
+          can_freeze?: boolean | null
+          can_issue_tokens?: boolean | null
+          can_manage_amm?: boolean | null
+          can_mint_nfts?: boolean | null
+          contact_email?: string | null
+          contact_phone?: string | null
           created_at?: string
           created_by: string
           created_by_name?: string | null
+          description?: string | null
+          did_document?: string | null
+          did_method?: string | null
           encrypted_seed?: string | null
+          expiration_date?: string | null
+          external_ref_id?: string | null
           funded_at?: string | null
           id?: string
+          identity_verified?: boolean | null
           is_authorized?: boolean
+          jurisdiction?: string | null
+          kyc_binding_id?: string | null
           last_synced_at?: string | null
           multi_sign_config_id?: string | null
           multi_sign_enabled?: boolean
@@ -54,20 +102,48 @@ export type Database = {
           name: string
           network?: string
           permission_dex_status?: string
+          project_ids?: string[] | null
           public_key?: string | null
+          purpose_code?: string | null
+          requires_destination_tag?: boolean | null
+          review_frequency?: string | null
+          risk_tier?: string | null
           role: string
           status?: string
+          tags?: string[] | null
+          vc_issuer_capable?: boolean | null
+          verifiable_credentials?: string[] | null
           xrpl_address: string
         }
         Update: {
+          asset_class?: string | null
           balance?: number | null
+          business_unit?: string | null
+          can_authorize_holders?: boolean | null
+          can_clawback?: boolean | null
+          can_create_channels?: boolean | null
+          can_create_escrows?: boolean | null
+          can_freeze?: boolean | null
+          can_issue_tokens?: boolean | null
+          can_manage_amm?: boolean | null
+          can_mint_nfts?: boolean | null
+          contact_email?: string | null
+          contact_phone?: string | null
           created_at?: string
           created_by?: string
           created_by_name?: string | null
+          description?: string | null
+          did_document?: string | null
+          did_method?: string | null
           encrypted_seed?: string | null
+          expiration_date?: string | null
+          external_ref_id?: string | null
           funded_at?: string | null
           id?: string
+          identity_verified?: boolean | null
           is_authorized?: boolean
+          jurisdiction?: string | null
+          kyc_binding_id?: string | null
           last_synced_at?: string | null
           multi_sign_config_id?: string | null
           multi_sign_enabled?: boolean
@@ -76,9 +152,17 @@ export type Database = {
           name?: string
           network?: string
           permission_dex_status?: string
+          project_ids?: string[] | null
           public_key?: string | null
+          purpose_code?: string | null
+          requires_destination_tag?: boolean | null
+          review_frequency?: string | null
+          risk_tier?: string | null
           role?: string
           status?: string
+          tags?: string[] | null
+          vc_issuer_capable?: boolean | null
+          verifiable_credentials?: string[] | null
           xrpl_address?: string
         }
         Relationships: []
