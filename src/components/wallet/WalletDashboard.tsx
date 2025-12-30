@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { Wallet, Shield, Clock, AlertCircle, Plus, RefreshCw } from "lucide-react";
 import { Role } from "@/types/tokenization";
 import { mockWallets } from "@/data/mockWallets";
@@ -9,8 +9,9 @@ import { WalletCard } from "./WalletCard";
 import { MultiSignApprovalQueue } from "./MultiSignApprovalQueue";
 import { MultiSignConfigPanel } from "./MultiSignConfigPanel";
 import { ProvisionWalletDialog } from "./ProvisionWalletDialog";
-import { useWalletService } from "@/domain/ServiceContext";
 import { IssuingWallet } from "@/types/token";
+import { fetchWallets } from "@/lib/walletApi";
+import { toast } from "sonner";
 
 interface WalletDashboardProps {
   role: Role;
@@ -20,9 +21,8 @@ export const WalletDashboard: React.FC<WalletDashboardProps> = ({ role }) => {
   const [selectedWalletId, setSelectedWalletId] = useState<string | null>(null);
   const [showProvisionDialog, setShowProvisionDialog] = useState(false);
   const [wallets, setWallets] = useState<IssuingWallet[]>(mockWallets);
+  const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  
-  const walletService = useWalletService();
 
   const multiSignWallets = wallets.filter((w) => w.multiSignEnabled);
   const pendingCount = mockPendingTransactions.filter((tx) => tx.status === "PENDING").length;
@@ -32,19 +32,43 @@ export const WalletDashboard: React.FC<WalletDashboardProps> = ({ role }) => {
   const selectedWallet = selectedWalletId ? wallets.find((w) => w.id === selectedWalletId) : null;
   const selectedConfig = selectedWalletId ? mockMultiSignConfigs[selectedWalletId] : null;
 
+  const loadWallets = useCallback(async (showToast = false) => {
+    try {
+      const dbWallets = await fetchWallets();
+      // Combine database wallets with mock wallets (DB wallets take priority)
+      const dbAddresses = new Set(dbWallets.map(w => w.xrplAddress));
+      const combinedWallets = [
+        ...dbWallets,
+        ...mockWallets.filter(w => !dbAddresses.has(w.xrplAddress))
+      ];
+      setWallets(combinedWallets);
+      if (showToast) {
+        toast.success("Wallets refreshed");
+      }
+    } catch (error) {
+      console.error('[WalletDashboard] Error loading wallets:', error);
+      // Fall back to mock data
+      setWallets(mockWallets);
+      if (showToast) {
+        toast.error("Failed to refresh wallets");
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    setIsLoading(true);
+    loadWallets().finally(() => setIsLoading(false));
+  }, [loadWallets]);
+
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
-    try {
-      const refreshedWallets = await walletService.listWallets();
-      setWallets(refreshedWallets);
-    } finally {
-      setIsRefreshing(false);
-    }
-  }, [walletService]);
+    await loadWallets(true);
+    setIsRefreshing(false);
+  }, [loadWallets]);
 
   const handleProvisionSuccess = useCallback(async () => {
-    await handleRefresh();
-  }, [handleRefresh]);
+    await loadWallets();
+  }, [loadWallets]);
 
   const canProvision = role === "SUPER_ADMIN";
 
@@ -121,17 +145,23 @@ export const WalletDashboard: React.FC<WalletDashboardProps> = ({ role }) => {
         </TabsList>
 
         <TabsContent value="wallets" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {wallets.map((wallet) => (
-              <WalletCard
-                key={wallet.id}
-                wallet={wallet}
-                config={mockMultiSignConfigs[wallet.id]}
-                onSelect={() => setSelectedWalletId(wallet.id)}
-                isSelected={selectedWalletId === wallet.id}
-              />
-            ))}
-          </div>
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <RefreshCw className="w-6 h-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {wallets.map((wallet) => (
+                <WalletCard
+                  key={wallet.id}
+                  wallet={wallet}
+                  config={mockMultiSignConfigs[wallet.id]}
+                  onSelect={() => setSelectedWalletId(wallet.id)}
+                  isSelected={selectedWalletId === wallet.id}
+                />
+              ))}
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="approvals">
