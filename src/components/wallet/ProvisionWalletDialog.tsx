@@ -1,7 +1,18 @@
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
-import { Wallet, Loader2, Server, Shield } from "lucide-react";
-import { WalletRole, XRPLNetwork } from "@/types/token";
+import { Wallet, Loader2, Server, Shield, ChevronDown, ChevronUp } from "lucide-react";
+import { 
+  WalletRole, 
+  XRPLNetwork, 
+  PurposeCode, 
+  RiskTier,
+  WalletCapabilities,
+  walletRoleLabel, 
+  walletRoleDescription,
+  purposeCodeLabel,
+  riskTierLabel,
+  roleDefaultCapabilities,
+} from "@/types/token";
 import { provisionWallet } from "@/lib/walletApi";
 import {
   Dialog,
@@ -14,6 +25,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
@@ -22,7 +34,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { toast } from "sonner";
+import { WalletTagsInput } from "./WalletTagsInput";
+import { WalletCapabilitiesGrid, defaultCapabilities } from "./WalletCapabilitiesGrid";
 
 interface ProvisionWalletDialogProps {
   open: boolean;
@@ -32,19 +51,22 @@ interface ProvisionWalletDialogProps {
 
 interface FormData {
   name: string;
+  description: string;
   role: WalletRole;
   network: XRPLNetwork;
+  purposeCode: PurposeCode;
+  riskTier: RiskTier;
   enableMultiSig: boolean;
   autoFund: boolean;
+  businessUnit: string;
+  jurisdiction: string;
 }
 
-const walletRoles: { value: WalletRole; label: string; description: string }[] = [
-  { value: "ISSUER", label: "Issuer", description: "Issues tokens and manages supply" },
-  { value: "TREASURY", label: "Treasury", description: "Holds reserves and manages liquidity" },
-  { value: "ESCROW", label: "Escrow", description: "Holds funds in escrow arrangements" },
-  { value: "OPS", label: "Operations", description: "Day-to-day operational transactions" },
-  { value: "TEST", label: "Test", description: "Testing and development purposes" },
-];
+const walletRoles = Object.entries(walletRoleLabel).map(([value, label]) => ({
+  value: value as WalletRole,
+  label,
+  description: walletRoleDescription[value as WalletRole],
+}));
 
 const networks: { value: XRPLNetwork; label: string; enabled: boolean }[] = [
   { value: "testnet", label: "Testnet", enabled: true },
@@ -52,12 +74,27 @@ const networks: { value: XRPLNetwork; label: string; enabled: boolean }[] = [
   { value: "mainnet", label: "Mainnet", enabled: false },
 ];
 
+const purposeCodes = Object.entries(purposeCodeLabel).map(([value, label]) => ({
+  value: value as PurposeCode,
+  label,
+}));
+
+const riskTiers = Object.entries(riskTierLabel).map(([value, label]) => ({
+  value: value as RiskTier,
+  label,
+}));
+
+const jurisdictions = ["US", "UK", "EU", "CH", "SG", "HK", "JP", "AU", "CA", "AE", "OTHER"];
+
 export const ProvisionWalletDialog: React.FC<ProvisionWalletDialogProps> = ({
   open,
   onOpenChange,
   onSuccess,
 }) => {
   const [isProvisioning, setIsProvisioning] = useState(false);
+  const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [tags, setTags] = useState<string[]>([]);
+  const [capabilities, setCapabilities] = useState<WalletCapabilities>(defaultCapabilities);
   
   const {
     register,
@@ -69,10 +106,15 @@ export const ProvisionWalletDialog: React.FC<ProvisionWalletDialogProps> = ({
   } = useForm<FormData>({
     defaultValues: {
       name: "",
+      description: "",
       role: "OPS",
       network: "testnet",
+      purposeCode: "GENERAL",
+      riskTier: "MEDIUM",
       enableMultiSig: false,
       autoFund: true,
+      businessUnit: "",
+      jurisdiction: "",
     },
   });
 
@@ -80,6 +122,12 @@ export const ProvisionWalletDialog: React.FC<ProvisionWalletDialogProps> = ({
   const autoFund = watch("autoFund");
   const selectedRole = watch("role");
   const selectedNetwork = watch("network");
+
+  // Apply role defaults when role changes
+  const applyRoleDefaults = () => {
+    const defaults = roleDefaultCapabilities[selectedRole] || {};
+    setCapabilities({ ...defaultCapabilities, ...defaults });
+  };
 
   const onSubmit = async (data: FormData) => {
     setIsProvisioning(true);
@@ -91,15 +139,25 @@ export const ProvisionWalletDialog: React.FC<ProvisionWalletDialogProps> = ({
         network: data.network,
         enableMultiSig: data.enableMultiSig,
         autoFund: data.autoFund,
-        createdBy: "current-user-id", // Would come from auth context
-        createdByName: "Current User", // Would come from auth context
+        createdBy: "current-user-id",
+        createdByName: "Current User",
+        description: data.description || undefined,
+        tags: tags.length > 0 ? tags : undefined,
+        purposeCode: data.purposeCode,
+        riskTier: data.riskTier,
+        businessUnit: data.businessUnit || undefined,
+        jurisdiction: data.jurisdiction || undefined,
+        ...capabilities,
       });
 
       toast.success("Wallet provisioned successfully", {
-        description: `${wallet.name} (${wallet.xrplAddress.slice(0, 8)}...) is now active with ${wallet.balance || 0} XRP.`,
+        description: `${wallet.name} (${wallet.xrplAddress.slice(0, 8)}...) is now active.`,
       });
 
       reset();
+      setTags([]);
+      setCapabilities(defaultCapabilities);
+      setAdvancedOpen(false);
       onOpenChange(false);
       onSuccess();
     } catch (error) {
@@ -115,156 +173,152 @@ export const ProvisionWalletDialog: React.FC<ProvisionWalletDialogProps> = ({
   const handleClose = () => {
     if (!isProvisioning) {
       reset();
+      setTags([]);
+      setCapabilities(defaultCapabilities);
+      setAdvancedOpen(false);
       onOpenChange(false);
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Wallet className="w-5 h-5 text-primary" />
             Provision XRPL Wallet
           </DialogTitle>
           <DialogDescription>
-            Create a new managed wallet on XRPL. The wallet will be provisioned via the 
-            testnet faucet and registered as an internal system resource.
+            Create a new managed wallet with custom capabilities and metadata.
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {/* Wallet Name */}
-          <div className="space-y-2">
-            <Label htmlFor="name">Wallet Name *</Label>
-            <Input
-              id="name"
-              placeholder="e.g., Accountabul Ops Wallet 04"
-              {...register("name", {
-                required: "Wallet name is required",
-                minLength: { value: 3, message: "Name must be at least 3 characters" },
-              })}
-            />
-            {errors.name && (
-              <p className="text-xs text-destructive">{errors.name.message}</p>
-            )}
-          </div>
+          {/* Basic Info */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2 col-span-2">
+              <Label htmlFor="name">Wallet Name *</Label>
+              <Input
+                id="name"
+                placeholder="e.g., Treasury Wallet 01"
+                {...register("name", {
+                  required: "Wallet name is required",
+                  minLength: { value: 3, message: "Name must be at least 3 characters" },
+                })}
+              />
+              {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
+            </div>
 
-          {/* Wallet Role */}
-          <div className="space-y-2">
-            <Label htmlFor="role">Wallet Role *</Label>
-            <Select
-              value={selectedRole}
-              onValueChange={(value) => setValue("role", value as WalletRole)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select role" />
-              </SelectTrigger>
-              <SelectContent>
-                {walletRoles.map((role) => (
-                  <SelectItem key={role.value} value={role.value}>
-                    <div>
+            <div className="space-y-2">
+              <Label>Role *</Label>
+              <Select value={selectedRole} onValueChange={(v) => setValue("role", v as WalletRole)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {walletRoles.map((role) => (
+                    <SelectItem key={role.value} value={role.value}>
                       <span className="font-medium">{role.label}</span>
-                      <span className="text-xs text-muted-foreground ml-2">
-                        — {role.description}
-                      </span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button type="button" variant="link" size="sm" className="h-auto p-0 text-xs" onClick={applyRoleDefaults}>
+                Apply role defaults
+              </Button>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Network *</Label>
+              <Select value={selectedNetwork} onValueChange={(v) => setValue("network", v as XRPLNetwork)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {networks.map((net) => (
+                    <SelectItem key={net.value} value={net.value} disabled={!net.enabled}>
+                      <div className="flex items-center gap-2">
+                        <Server className="w-3.5 h-3.5" />
+                        <span>{net.label}</span>
+                        {!net.enabled && <span className="text-xs text-muted-foreground">(Coming soon)</span>}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
-          {/* Network */}
           <div className="space-y-2">
-            <Label>Network *</Label>
-            <Select
-              value={selectedNetwork}
-              onValueChange={(value) => setValue("network", value as XRPLNetwork)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select network" />
-              </SelectTrigger>
-              <SelectContent>
-                {networks.map((net) => (
-                  <SelectItem 
-                    key={net.value} 
-                    value={net.value}
-                    disabled={!net.enabled}
-                  >
-                    <div className="flex items-center gap-2">
-                      <Server className="w-3.5 h-3.5" />
-                      <span className="font-medium">{net.label}</span>
-                      {!net.enabled && (
-                        <span className="text-xs text-muted-foreground">(Coming soon)</span>
-                      )}
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground">
-              Mainnet provisioning requires vault integration.
-            </p>
+            <Label htmlFor="description">Description</Label>
+            <Textarea id="description" placeholder="Purpose and notes..." rows={2} {...register("description")} />
           </div>
 
           {/* Options */}
-          <div className="space-y-3 pt-2">
-            <div className="flex items-start gap-3">
-              <Checkbox
-                id="enableMultiSig"
-                checked={enableMultiSig}
-                onCheckedChange={(checked) => setValue("enableMultiSig", !!checked)}
-              />
-              <div className="space-y-0.5">
-                <Label htmlFor="enableMultiSig" className="cursor-pointer flex items-center gap-1.5">
-                  <Shield className="w-3.5 h-3.5" />
-                  Enable Multi-Sig
-                </Label>
-                <p className="text-xs text-muted-foreground">
-                  Configure signer list after creation
-                </p>
-              </div>
+          <div className="flex gap-6">
+            <div className="flex items-center gap-3">
+              <Checkbox id="enableMultiSig" checked={enableMultiSig} onCheckedChange={(c) => setValue("enableMultiSig", !!c)} />
+              <Label htmlFor="enableMultiSig" className="cursor-pointer flex items-center gap-1.5">
+                <Shield className="w-3.5 h-3.5" /> Enable Multi-Sig
+              </Label>
             </div>
-
-            <div className="flex items-start gap-3">
-              <Checkbox
-                id="autoFund"
-                checked={autoFund}
-                onCheckedChange={(checked) => setValue("autoFund", !!checked)}
-              />
-              <div className="space-y-0.5">
-                <Label htmlFor="autoFund" className="cursor-pointer">
-                  Auto-fund via Faucet
-                </Label>
-                <p className="text-xs text-muted-foreground">
-                  Request XRP from the {selectedNetwork} faucet (~1,000 XRP)
-                </p>
-              </div>
+            <div className="flex items-center gap-3">
+              <Checkbox id="autoFund" checked={autoFund} onCheckedChange={(c) => setValue("autoFund", !!c)} />
+              <Label htmlFor="autoFund" className="cursor-pointer">Auto-fund (~1,000 XRP)</Label>
             </div>
           </div>
 
+          {/* Advanced Options */}
+          <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
+            <CollapsibleTrigger asChild>
+              <Button type="button" variant="ghost" className="w-full justify-between">
+                Advanced Options
+                {advancedOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="space-y-4 pt-4">
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label>Purpose Code</Label>
+                  <Select value={watch("purposeCode")} onValueChange={(v) => setValue("purposeCode", v as PurposeCode)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {purposeCodes.map((pc) => <SelectItem key={pc.value} value={pc.value}>{pc.label}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Risk Tier</Label>
+                  <Select value={watch("riskTier")} onValueChange={(v) => setValue("riskTier", v as RiskTier)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {riskTiers.map((rt) => <SelectItem key={rt.value} value={rt.value}>{rt.label}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Jurisdiction</Label>
+                  <Select value={watch("jurisdiction")} onValueChange={(v) => setValue("jurisdiction", v)}>
+                    <SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger>
+                    <SelectContent>
+                      {jurisdictions.map((j) => <SelectItem key={j} value={j}>{j}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Tags</Label>
+                <WalletTagsInput tags={tags} onChange={setTags} />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Capabilities</Label>
+                <WalletCapabilitiesGrid capabilities={capabilities} onChange={setCapabilities} />
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+
           <DialogFooter className="pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleClose}
-              disabled={isProvisioning}
-            >
-              Cancel
-            </Button>
+            <Button type="button" variant="outline" onClick={handleClose} disabled={isProvisioning}>Cancel</Button>
             <Button type="submit" disabled={isProvisioning}>
-              {isProvisioning ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Provisioning...
-                </>
-              ) : (
-                <>
-                  <Wallet className="w-4 h-4 mr-2" />
-                  Provision Wallet
-                </>
-              )}
+              {isProvisioning ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Provisioning...</> : <><Wallet className="w-4 h-4 mr-2" />Provision Wallet</>}
             </Button>
           </DialogFooter>
         </form>

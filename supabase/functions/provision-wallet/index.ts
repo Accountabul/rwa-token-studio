@@ -11,12 +11,41 @@ const TESTNET_FAUCET_URL = "https://faucet.altnet.rippletest.net/accounts";
 
 interface ProvisionRequest {
   name: string;
-  role: "ISSUER" | "TREASURY" | "ESCROW" | "OPS" | "TEST";
+  role: string;
   network: "testnet" | "devnet";
   enableMultiSig: boolean;
   autoFund: boolean;
   createdBy: string;
   createdByName: string;
+  // Extended fields
+  description?: string;
+  tags?: string[];
+  purposeCode?: string;
+  riskTier?: string;
+  reviewFrequency?: string;
+  businessUnit?: string;
+  jurisdiction?: string;
+  assetClass?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  externalRefId?: string;
+  // Identity
+  didMethod?: string;
+  verifiableCredentials?: string[];
+  vcIssuerCapable?: boolean;
+  // Capabilities
+  canIssueTokens?: boolean;
+  canMintNfts?: boolean;
+  canClawback?: boolean;
+  canFreeze?: boolean;
+  canCreateEscrows?: boolean;
+  canManageAmm?: boolean;
+  canCreateChannels?: boolean;
+  canAuthorizeHolders?: boolean;
+  requiresDestinationTag?: boolean;
+  // Multi-sig
+  multiSignQuorum?: number;
+  multiSignSigners?: number;
 }
 
 interface FaucetResponse {
@@ -34,7 +63,6 @@ interface FaucetResponse {
  * In production, use proper KMS/Vault integration
  */
 function encryptSeed(seed: string, key: string): string {
-  // Simple XOR-based encryption for testnet - NOT for production
   const encoder = new TextEncoder();
   const seedBytes = encoder.encode(seed);
   const keyBytes = encoder.encode(key);
@@ -47,6 +75,13 @@ function encryptSeed(seed: string, key: string): string {
   return btoa(String.fromCharCode(...encrypted));
 }
 
+// Valid wallet roles
+const VALID_ROLES = [
+  "ISSUER", "TREASURY", "ESCROW", "OPS", "TEST",
+  "CUSTODY", "SETTLEMENT", "BRIDGE", "ORACLE", 
+  "COMPLIANCE", "COLD_STORAGE", "HOT_WALLET"
+];
+
 serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -57,7 +92,6 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     
-    // Create Supabase client with service role for DB operations
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const body: ProvisionRequest = await req.json();
@@ -72,9 +106,9 @@ serve(async (req) => {
       );
     }
 
-    if (!["ISSUER", "TREASURY", "ESCROW", "OPS", "TEST"].includes(body.role)) {
+    if (!VALID_ROLES.includes(body.role)) {
       return new Response(
-        JSON.stringify({ error: "Invalid wallet role" }),
+        JSON.stringify({ error: `Invalid wallet role. Valid roles: ${VALID_ROLES.join(', ')}` }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -87,7 +121,7 @@ serve(async (req) => {
       );
     }
 
-    // Step 1: Request wallet from XRPL Testnet Faucet
+    // Request wallet from XRPL Faucet
     console.log(`[provision-wallet] Requesting wallet from ${body.network} faucet...`);
     
     const faucetUrl = body.network === "devnet" 
@@ -111,12 +145,12 @@ serve(async (req) => {
     const faucetData: FaucetResponse = await faucetResponse.json();
     console.log(`[provision-wallet] Wallet created: ${faucetData.account.classicAddress}`);
 
-    // Step 2: Encrypt the seed for storage
+    // Encrypt the seed for storage
     const encryptionKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!.slice(0, 32);
     const encryptedSeed = encryptSeed(faucetData.account.secret, encryptionKey);
 
-    // Step 3: Store wallet in database
-    const walletData = {
+    // Build wallet data object with all fields
+    const walletData: Record<string, unknown> = {
       name: body.name,
       role: body.role,
       network: body.network,
@@ -132,6 +166,39 @@ serve(async (req) => {
       funded_at: body.autoFund ? new Date().toISOString() : null,
       last_synced_at: new Date().toISOString(),
     };
+
+    // Extended fields
+    if (body.description) walletData.description = body.description;
+    if (body.tags) walletData.tags = body.tags;
+    if (body.purposeCode) walletData.purpose_code = body.purposeCode;
+    if (body.riskTier) walletData.risk_tier = body.riskTier;
+    if (body.reviewFrequency) walletData.review_frequency = body.reviewFrequency;
+    if (body.businessUnit) walletData.business_unit = body.businessUnit;
+    if (body.jurisdiction) walletData.jurisdiction = body.jurisdiction;
+    if (body.assetClass) walletData.asset_class = body.assetClass;
+    if (body.contactEmail) walletData.contact_email = body.contactEmail;
+    if (body.contactPhone) walletData.contact_phone = body.contactPhone;
+    if (body.externalRefId) walletData.external_ref_id = body.externalRefId;
+
+    // Identity fields
+    if (body.didMethod) walletData.did_method = body.didMethod;
+    if (body.verifiableCredentials) walletData.verifiable_credentials = body.verifiableCredentials;
+    if (body.vcIssuerCapable !== undefined) walletData.vc_issuer_capable = body.vcIssuerCapable;
+
+    // Capability fields
+    if (body.canIssueTokens !== undefined) walletData.can_issue_tokens = body.canIssueTokens;
+    if (body.canMintNfts !== undefined) walletData.can_mint_nfts = body.canMintNfts;
+    if (body.canClawback !== undefined) walletData.can_clawback = body.canClawback;
+    if (body.canFreeze !== undefined) walletData.can_freeze = body.canFreeze;
+    if (body.canCreateEscrows !== undefined) walletData.can_create_escrows = body.canCreateEscrows;
+    if (body.canManageAmm !== undefined) walletData.can_manage_amm = body.canManageAmm;
+    if (body.canCreateChannels !== undefined) walletData.can_create_channels = body.canCreateChannels;
+    if (body.canAuthorizeHolders !== undefined) walletData.can_authorize_holders = body.canAuthorizeHolders;
+    if (body.requiresDestinationTag !== undefined) walletData.requires_destination_tag = body.requiresDestinationTag;
+
+    // Multi-sig fields
+    if (body.multiSignQuorum) walletData.multi_sign_quorum = body.multiSignQuorum;
+    if (body.multiSignSigners) walletData.multi_sign_signers = body.multiSignSigners;
 
     const { data: wallet, error: dbError } = await supabase
       .from('wallets')
