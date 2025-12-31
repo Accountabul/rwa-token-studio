@@ -112,79 +112,99 @@ async function fetchFromIndexer(
 ): Promise<typeof COMMON_ASSETS> {
   const assets: typeof COMMON_ASSETS = [];
   
-  // Use Bithomp API for token search (more reliable for this use case)
-  // Note: In production, you'd want to configure API keys via secrets
-  const baseUrl = network === "mainnet" 
-    ? "https://bithomp.com/api/v2" 
-    : "https://test.bithomp.com/api/v2";
+  // Use XRPSCAN API - supports mainnet and testnet
+  const xrpscanBase = network === "testnet" 
+    ? "https://testnet.xrpscan.com/api/v1"
+    : "https://api.xrpscan.com/api/v1";
   
   try {
-    // Search for tokens by currency code
-    const response = await fetch(`${baseUrl}/tokens?search=${encodeURIComponent(query)}&limit=15`, {
-      headers: {
-        "Accept": "application/json",
-      },
+    // Fetch token list from XRPSCAN
+    console.log(`[xrpl-asset-search] Fetching from XRPSCAN: ${xrpscanBase}/tokens`);
+    const response = await fetch(`${xrpscanBase}/tokens?limit=100`, {
+      headers: { "Accept": "application/json" },
     });
     
     if (response.ok) {
       const data = await response.json();
-      if (data.tokens && Array.isArray(data.tokens)) {
-        for (const token of data.tokens) {
-          assets.push({
-            type: "IOU",
-            currency: token.currency || token.currencyCode || query.toUpperCase(),
-            issuer: token.issuer,
-            name: token.name || token.currency || query.toUpperCase(),
-          });
+      console.log(`[xrpl-asset-search] Got ${data?.length || 0} tokens from XRPSCAN`);
+      
+      if (Array.isArray(data)) {
+        // Filter tokens that match the query
+        const queryLower = query.toLowerCase();
+        for (const token of data) {
+          const currency = token.currency || token.currencyCode || "";
+          const name = token.name || token.issuerName || "";
+          const issuer = token.issuer || "";
+          
+          // Match by currency code or name
+          if (
+            currency.toLowerCase().includes(queryLower) ||
+            name.toLowerCase().includes(queryLower)
+          ) {
+            assets.push({
+              type: "IOU",
+              currency: currency,
+              issuer: issuer,
+              name: name || currency,
+            });
+          }
         }
       }
+    } else {
+      console.log(`[xrpl-asset-search] XRPSCAN returned status: ${response.status}`);
     }
   } catch (err) {
-    console.log("[xrpl-asset-search] Bithomp API not available, using fallback");
+    console.error("[xrpl-asset-search] XRPSCAN API error:", err);
   }
   
-  // Also search XRPSCAN as backup
-  if (assets.length < 5 && network === "mainnet") {
+  // Also try Bithomp API as backup (has better search)
+  if (assets.length < 5) {
+    const bithompBase = network === "mainnet" 
+      ? "https://bithomp.com/api/v2" 
+      : "https://test.bithomp.com/api/v2";
+    
     try {
-      const xrpscanResponse = await fetch(
-        `https://api.xrpscan.com/api/v1/names?q=${encodeURIComponent(query)}&limit=10`
+      console.log(`[xrpl-asset-search] Trying Bithomp: ${bithompBase}/tokens`);
+      const response = await fetch(
+        `${bithompBase}/tokens?search=${encodeURIComponent(query)}&limit=15`,
+        { headers: { "Accept": "application/json" } }
       );
       
-      if (xrpscanResponse.ok) {
-        const xrpscanData = await xrpscanResponse.json();
-        if (Array.isArray(xrpscanData)) {
-          for (const item of xrpscanData) {
-            // XRPSCAN returns account names, we need to extract token info
-            if (item.account && item.name) {
-              // Check if this account is an issuer
-              const alreadyHave = assets.some(a => a.issuer === item.account);
-              if (!alreadyHave && query.length >= 3) {
-                assets.push({
-                  type: "IOU",
-                  currency: query.toUpperCase().slice(0, 3),
-                  issuer: item.account,
-                  name: item.name,
-                });
-              }
+      if (response.ok) {
+        const data = await response.json();
+        if (data.tokens && Array.isArray(data.tokens)) {
+          for (const token of data.tokens) {
+            // Avoid duplicates
+            const exists = assets.some(
+              a => a.currency === token.currency && a.issuer === token.issuer
+            );
+            if (!exists) {
+              assets.push({
+                type: "IOU",
+                currency: token.currency || token.currencyCode || query.toUpperCase(),
+                issuer: token.issuer,
+                name: token.name || token.currency || query.toUpperCase(),
+              });
             }
           }
         }
       }
     } catch (err) {
-      console.log("[xrpl-asset-search] XRPSCAN API not available");
+      console.log("[xrpl-asset-search] Bithomp API not available");
     }
   }
   
-  // If still no results, check common assets
+  // If still no results, filter common assets
   if (assets.length === 0) {
     const filtered = COMMON_ASSETS.filter(
       (a) =>
-        a.type !== "XRP" && // XRP already handled separately
+        a.type !== "XRP" &&
         (a.currency.toLowerCase().includes(query) ||
           (a.name && a.name.toLowerCase().includes(query)))
     );
     assets.push(...filtered);
   }
   
+  console.log(`[xrpl-asset-search] Returning ${assets.length} assets from indexer`);
   return assets;
 }
