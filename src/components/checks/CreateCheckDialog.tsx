@@ -3,7 +3,6 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
@@ -14,13 +13,15 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { XRPLAssetSelector } from "@/components/shared/XRPLAssetSelector";
+import { XRPLAsset, createXRPAsset, formatAssetWithIssuer } from "@/types/xrplAsset";
 
 export function CreateCheckDialog() {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [destination, setDestination] = useState("");
   const [amount, setAmount] = useState("");
-  const [currency, setCurrency] = useState("XRP");
+  const [asset, setAsset] = useState<XRPLAsset>(createXRPAsset());
   const [expiration, setExpiration] = useState("");
 
   const handleCreate = () => {
@@ -35,7 +36,7 @@ export function CreateCheckDialog() {
 
     toast({
       title: "Check Created",
-      description: `Created check for ${amount} ${currency} to ${destination.slice(0, 12)}...`,
+      description: `Created check for ${amount} ${formatAssetWithIssuer(asset)} to ${destination.slice(0, 12)}...`,
     });
     setOpen(false);
     resetForm();
@@ -44,7 +45,7 @@ export function CreateCheckDialog() {
   const resetForm = () => {
     setDestination("");
     setAmount("");
-    setCurrency("XRP");
+    setAsset(createXRPAsset());
     setExpiration("");
   };
 
@@ -85,17 +86,12 @@ export function CreateCheckDialog() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Currency</Label>
-              <Select value={currency} onValueChange={setCurrency}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="XRP">XRP</SelectItem>
-                  <SelectItem value="USD">USD (IOU)</SelectItem>
-                  <SelectItem value="EUR">EUR (IOU)</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label>Asset</Label>
+              <XRPLAssetSelector
+                value={asset}
+                onChange={setAsset}
+                placeholder="Select asset"
+              />
             </div>
           </div>
           <div className="space-y-2">

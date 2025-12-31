@@ -1,1 +1,10 @@
 project_id = "hihvpqzgjityqpotdmwz"
+
+[functions.provision-wallet]
+verify_jwt = false
+
+[functions.xrpl-asset-search]
+verify_jwt = false
+
+[functions.validate-xrpl-asset]
+verify_jwt = false
