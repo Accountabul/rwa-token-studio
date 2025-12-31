@@ -8,6 +8,7 @@ import { EscrowConditionType, escrowConditionLabel } from "@/types/escrow";
 import { mockWallets } from "@/data/mockWallets";
 import { toast } from "@/hooks/use-toast";
 import { XRPLAssetSelector } from "@/components/shared/XRPLAssetSelector";
+import { SelectedAssetDisplay } from "@/components/shared/SelectedAssetDisplay";
 import { XRPLAsset, createXRPAsset, formatAssetWithIssuer } from "@/types/xrplAsset";
 
 interface CreateEscrowDialogProps {
@@ -90,6 +91,14 @@ export const CreateEscrowDialog: React.FC<CreateEscrowDialogProps> = ({ open, on
                   </SelectContent>
                 </Select>
               </div>
+              
+              {/* Selected Asset Preview */}
+              {asset && (
+                <SelectedAssetDisplay
+                  asset={asset}
+                  label="Selected Asset"
+                />
+              )}
             </>
           )}
 
@@ -157,35 +166,39 @@ export const CreateEscrowDialog: React.FC<CreateEscrowDialogProps> = ({ open, on
           )}
 
           {step === 4 && (
-            <div className="space-y-3 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Asset</span>
-                <span className="font-medium">{formatAssetWithIssuer(asset)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Amount</span>
-                <span className="font-medium">{amount} {asset.currency}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Destination</span>
-                <span className="font-mono text-xs">{destinationAddress.slice(0, 12)}...</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Condition</span>
-                <span className="font-medium">{escrowConditionLabel[conditionType]}</span>
-              </div>
-              {finishAfter && (
+            <div className="space-y-4">
+              {/* Selected Asset Confirmation */}
+              <SelectedAssetDisplay
+                asset={asset}
+                label="Escrowed Asset"
+              />
+              
+              <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Unlock Date</span>
-                  <span className="font-medium">{finishAfter}</span>
+                  <span className="text-muted-foreground">Amount</span>
+                  <span className="font-medium">{amount} {asset.currency}</span>
                 </div>
-              )}
-              {cancelAfter && (
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Expiration</span>
-                  <span className="font-medium">{cancelAfter}</span>
+                  <span className="text-muted-foreground">Destination</span>
+                  <span className="font-mono text-xs">{destinationAddress.slice(0, 12)}...</span>
                 </div>
-              )}
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Condition</span>
+                  <span className="font-medium">{escrowConditionLabel[conditionType]}</span>
+                </div>
+                {finishAfter && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Unlock Date</span>
+                    <span className="font-medium">{finishAfter}</span>
+                  </div>
+                )}
+                {cancelAfter && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Expiration</span>
+                    <span className="font-medium">{cancelAfter}</span>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>

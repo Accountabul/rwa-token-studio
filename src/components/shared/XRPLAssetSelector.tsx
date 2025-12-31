@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Check, ChevronsUpDown, Copy, Loader2, Search, X } from "lucide-react";
+import { Check, ChevronsUpDown, Copy, ExternalLink, Loader2, Search, Coins } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   Command,
   CommandEmpty,
   CommandGroup,
-  CommandInput,
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
@@ -20,11 +19,10 @@ import { toast } from "sonner";
 import {
   XRPLAsset,
   XRPLAssetSearchResult,
-  formatAssetWithIssuer,
-  shortenAddress,
   createXRPAsset,
 } from "@/types/xrplAsset";
 import { searchXRPLAssets, XRPLNetwork } from "@/lib/xrplAssetApi";
+import { buildExplorerLink } from "@/lib/xrplExplorer";
 
 interface XRPLAssetSelectorProps {
   value: XRPLAsset | null;
@@ -64,7 +62,7 @@ export const XRPLAssetSelector: React.FC<XRPLAssetSelectorProps> = ({
         const assets = await searchXRPLAssets(searchQuery, {
           network,
           includeXRP: !excludeXRP,
-          limit: 20,
+          limit: 25,
         });
         console.log("[XRPLAssetSelector] Got results:", assets.length);
         setResults(assets);
@@ -115,19 +113,37 @@ export const XRPLAssetSelector: React.FC<XRPLAssetSelectorProps> = ({
     toast.success("Issuer address copied");
   }, []);
 
-  const handleClear = useCallback((e: React.MouseEvent) => {
+  const handleOpenExplorer = useCallback((result: XRPLAssetSearchResult, e: React.MouseEvent) => {
     e.stopPropagation();
-    onChange(createXRPAsset()); // Reset to XRP
-  }, [onChange]);
+    try {
+      if (result.type === "XRP") {
+        const url = network === "testnet" 
+          ? "https://testnet.xrpl.org" 
+          : "https://xrpscan.com";
+        window.open(url, "_blank", "noopener,noreferrer");
+        return;
+      }
+      if (!result.issuer) return;
+      const url = buildExplorerLink({
+        type: "TOKEN_IOU",
+        currencyCode: result.currency,
+        issuer: result.issuer,
+        network,
+      });
+      window.open(url, "_blank", "noopener,noreferrer");
+    } catch (err) {
+      console.error("Failed to open explorer:", err);
+    }
+  }, [network]);
 
   const getAssetTypeBadge = (type: string) => {
     switch (type) {
       case "XRP":
-        return <Badge variant="secondary" className="text-[10px] px-1 py-0">Native</Badge>;
+        return <Badge variant="secondary" className="text-[10px] px-1.5 py-0 shrink-0">Native</Badge>;
       case "IOU":
-        return <Badge variant="outline" className="text-[10px] px-1 py-0">IOU</Badge>;
+        return <Badge variant="outline" className="text-[10px] px-1.5 py-0 shrink-0">IOU</Badge>;
       case "MPT":
-        return <Badge variant="outline" className="text-[10px] px-1 py-0 border-primary/50">MPT</Badge>;
+        return <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-primary/50 shrink-0">MPT</Badge>;
       default:
         return null;
     }
@@ -150,12 +166,11 @@ export const XRPLAssetSelector: React.FC<XRPLAssetSelectorProps> = ({
           {value ? (
             <div className="flex items-center gap-2 truncate">
               <span className="font-medium">{value.currency}</span>
-              {value.type !== "XRP" && value.issuer && (
-                <span className="text-xs text-muted-foreground font-mono">
-                  {shortenAddress(value.issuer)}
+              {value.name && value.name !== value.currency && (
+                <span className="text-xs text-muted-foreground truncate">
+                  — {value.name}
                 </span>
               )}
-              {getAssetTypeBadge(value.type)}
             </div>
           ) : (
             <span>{placeholder}</span>
@@ -163,19 +178,19 @@ export const XRPLAssetSelector: React.FC<XRPLAssetSelectorProps> = ({
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[320px] p-0" align="start">
+      <PopoverContent className="w-[520px] p-0" align="start">
         <Command shouldFilter={false}>
           <div className="flex items-center border-b px-3">
             <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
             <input
-              placeholder="Search by ticker or name..."
+              placeholder="Search by ticker, name, or issuer address..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="flex h-10 w-full bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground"
             />
             {isLoading && <Loader2 className="h-4 w-4 animate-spin opacity-50" />}
           </div>
-          <CommandList>
+          <CommandList className="max-h-[320px]">
             {error && (
               <div className="px-3 py-2 text-sm text-destructive">{error}</div>
             )}
@@ -196,41 +211,65 @@ export const XRPLAssetSelector: React.FC<XRPLAssetSelectorProps> = ({
                     key={key}
                     value={key}
                     onSelect={() => handleSelect(result)}
-                    className="flex items-center justify-between cursor-pointer"
+                    className="flex items-center gap-2 cursor-pointer py-2.5 px-2"
                   >
-                    <div className="flex items-center gap-2 flex-1 min-w-0">
-                      <Check
-                        className={cn(
-                          "h-4 w-4 shrink-0",
-                          isSelected ? "opacity-100" : "opacity-0"
-                        )}
-                      />
-                      <div className="flex flex-col min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">{result.currency}</span>
-                          {result.name && result.name !== result.currency && (
-                            <span className="text-xs text-muted-foreground truncate">
-                              {result.name}
-                            </span>
-                          )}
-                        </div>
-                        {result.issuer && (
-                          <div className="flex items-center gap-1">
-                            <span className="text-xs text-muted-foreground font-mono">
-                              {shortenAddress(result.issuer, 6)}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={(e) => handleCopyIssuer(result.issuer!, e)}
-                              className="p-0.5 hover:bg-muted rounded"
-                            >
-                              <Copy className="h-3 w-3 text-muted-foreground" />
-                            </button>
-                          </div>
-                        )}
-                      </div>
+                    {/* Checkmark */}
+                    <Check
+                      className={cn(
+                        "h-4 w-4 shrink-0",
+                        isSelected ? "opacity-100" : "opacity-0"
+                      )}
+                    />
+                    
+                    {/* Logo placeholder */}
+                    <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center shrink-0">
+                      {result.icon ? (
+                        <img src={result.icon} alt="" className="w-5 h-5 rounded-full" />
+                      ) : (
+                        <Coins className="w-3.5 h-3.5 text-muted-foreground" />
+                      )}
                     </div>
-                    {getAssetTypeBadge(result.type)}
+                    
+                    {/* Asset info - single line with full issuer */}
+                    <div className="flex items-center gap-1.5 flex-1 min-w-0 overflow-x-auto text-sm">
+                      <span className="font-semibold shrink-0">{result.currency}</span>
+                      {result.name && result.name !== result.currency && (
+                        <>
+                          <span className="text-muted-foreground">—</span>
+                          <span className="text-muted-foreground shrink-0">{result.name}</span>
+                        </>
+                      )}
+                      {result.issuer && (
+                        <>
+                          <span className="text-muted-foreground shrink-0">·</span>
+                          <span className="text-muted-foreground shrink-0">Issuer:</span>
+                          <span className="font-mono text-xs">{result.issuer}</span>
+                        </>
+                      )}
+                    </div>
+                    
+                    {/* Actions + Badge */}
+                    <div className="flex items-center gap-1 shrink-0">
+                      {result.issuer && (
+                        <button
+                          type="button"
+                          onClick={(e) => handleCopyIssuer(result.issuer!, e)}
+                          className="p-1 hover:bg-muted rounded"
+                          title="Copy issuer address"
+                        >
+                          <Copy className="h-3.5 w-3.5 text-muted-foreground" />
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={(e) => handleOpenExplorer(result, e)}
+                        className="p-1 hover:bg-muted rounded"
+                        title="View in explorer"
+                      >
+                        <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
+                      </button>
+                      {getAssetTypeBadge(result.type)}
+                    </div>
                   </CommandItem>
                 );
               })}
