@@ -14,6 +14,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { XRPLAssetSelector } from "@/components/shared/XRPLAssetSelector";
+import { SelectedAssetDisplay } from "@/components/shared/SelectedAssetDisplay";
 import { XRPLAsset, createXRPAsset, formatAssetWithIssuer } from "@/types/xrplAsset";
 
 export function CreateCheckDialog() {
@@ -49,6 +50,8 @@ export function CreateCheckDialog() {
     setExpiration("");
   };
 
+  const canCreate = destination && amount && asset;
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -57,7 +60,7 @@ export function CreateCheckDialog() {
           Create Check
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Create Check</DialogTitle>
           <DialogDescription>
@@ -106,12 +109,20 @@ export function CreateCheckDialog() {
               Leave empty for no expiration
             </p>
           </div>
+
+          {/* Selected Asset Confirmation */}
+          {canCreate && asset && (
+            <SelectedAssetDisplay
+              asset={asset}
+              label="Selected Asset"
+            />
+          )}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => setOpen(false)}>
             Cancel
           </Button>
-          <Button onClick={handleCreate}>Create Check</Button>
+          <Button onClick={handleCreate} disabled={!canCreate}>Create Check</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -7,13 +7,13 @@ const corsHeaders = {
 
 // Common assets for fallback
 const COMMON_ASSETS = [
-  { type: "XRP", currency: "XRP", name: "XRP (Native)" },
-  { type: "IOU", currency: "RLUSD", issuer: "rMxCKbEDwqr76QuheSUMdEGf4B9xJ8m5De", name: "Ripple USD" },
-  { type: "IOU", currency: "USD", issuer: "rhub8VRN55s94qWKDv6jmDy1pUykJzF3wq", name: "GateHub USD" },
-  { type: "IOU", currency: "EUR", issuer: "rhub8VRN55s94qWKDv6jmDy1pUykJzF3wq", name: "GateHub EUR" },
-  { type: "IOU", currency: "BTC", issuer: "rchGBxcD1A1C2tdxF6papQYZ8kjRKMYcL", name: "GateHub BTC" },
-  { type: "IOU", currency: "ETH", issuer: "rchGBxcD1A1C2tdxF6papQYZ8kjRKMYcL", name: "GateHub ETH" },
-  { type: "IOU", currency: "GBP", issuer: "r4GN9eEoz9K4BhMQXe4H1eYNtvtkwGdt8g", name: "Bitstamp GBP" },
+  { type: "XRP", currency: "XRP", name: "XRP (Native)", logoUrl: "https://xrpl.org/img/xrp-logo.svg" },
+  { type: "IOU", currency: "RLUSD", issuer: "rMxCKbEDwqr76QuheSUMdEGf4B9xJ8m5De", name: "Ripple USD", logoUrl: null },
+  { type: "IOU", currency: "USD", issuer: "rhub8VRN55s94qWKDv6jmDy1pUykJzF3wq", name: "GateHub USD", logoUrl: null },
+  { type: "IOU", currency: "EUR", issuer: "rhub8VRN55s94qWKDv6jmDy1pUykJzF3wq", name: "GateHub EUR", logoUrl: null },
+  { type: "IOU", currency: "BTC", issuer: "rchGBxcD1A1C2tdxF6papQYZ8kjRKMYcL", name: "GateHub BTC", logoUrl: null },
+  { type: "IOU", currency: "ETH", issuer: "rchGBxcD1A1C2tdxF6papQYZ8kjRKMYcL", name: "GateHub ETH", logoUrl: null },
+  { type: "IOU", currency: "GBP", issuer: "r4GN9eEoz9K4BhMQXe4H1eYNtvtkwGdt8g", name: "Bitstamp GBP", logoUrl: null },
 ];
 
 // In-memory cache
@@ -27,7 +27,7 @@ serve(async (req) => {
   }
 
   try {
-    const { query, network = "mainnet", limit = 20 } = await req.json();
+    const { query, network = "mainnet", limit = 25 } = await req.json();
     const searchQuery = (query || "").toLowerCase().trim();
     
     console.log(`[xrpl-asset-search] Searching for: "${searchQuery}" on ${network}`);
@@ -50,8 +50,8 @@ serve(async (req) => {
       assets = [...COMMON_ASSETS];
     } else {
       // Always check if XRP matches
-      if ("xrp".includes(searchQuery)) {
-        assets.push({ type: "XRP", currency: "XRP", name: "XRP (Native)" });
+      if ("xrp".includes(searchQuery) || "native".includes(searchQuery)) {
+        assets.push({ type: "XRP", currency: "XRP", name: "XRP (Native)", logoUrl: "https://xrpl.org/img/xrp-logo.svg" });
       }
       
       // Try to fetch from XRPSCAN or Bithomp API
@@ -64,7 +64,8 @@ serve(async (req) => {
         const filteredCommon = COMMON_ASSETS.filter(
           (a) =>
             a.currency.toLowerCase().includes(searchQuery) ||
-            (a.name && a.name.toLowerCase().includes(searchQuery))
+            (a.name && a.name.toLowerCase().includes(searchQuery)) ||
+            (a.issuer && a.issuer.toLowerCase().includes(searchQuery))
         );
         assets.push(...filteredCommon);
       }
@@ -103,14 +104,22 @@ serve(async (req) => {
 });
 
 /**
+ * Check if query looks like an XRPL address (starts with 'r')
+ */
+function isAddressQuery(query: string): boolean {
+  return query.startsWith("r") && query.length >= 6;
+}
+
+/**
  * Fetch assets from XRPL indexer
- * Using XRPSCAN API for token discovery
+ * Supports search by: currency code, name, or issuer address
  */
 async function fetchFromIndexer(
   query: string,
   network: string
 ): Promise<typeof COMMON_ASSETS> {
   const assets: typeof COMMON_ASSETS = [];
+  const isAddressSearch = isAddressQuery(query);
   
   // Use XRPSCAN API - supports mainnet and testnet
   const xrpscanBase = network === "testnet" 
@@ -135,17 +144,20 @@ async function fetchFromIndexer(
           const currency = token.currency || token.currencyCode || "";
           const name = token.name || token.issuerName || "";
           const issuer = token.issuer || "";
+          const icon = token.icon || token.logo || null;
           
-          // Match by currency code or name
-          if (
-            currency.toLowerCase().includes(queryLower) ||
-            name.toLowerCase().includes(queryLower)
-          ) {
+          // Match by currency code, name, OR issuer address (full or partial)
+          const matchesCurrency = currency.toLowerCase().includes(queryLower);
+          const matchesName = name.toLowerCase().includes(queryLower);
+          const matchesIssuer = issuer.toLowerCase().includes(queryLower);
+          
+          if (matchesCurrency || matchesName || matchesIssuer) {
             assets.push({
               type: "IOU",
               currency: currency,
               issuer: issuer,
               name: name || currency,
+              logoUrl: icon,
             });
           }
         }
@@ -166,7 +178,7 @@ async function fetchFromIndexer(
     try {
       console.log(`[xrpl-asset-search] Trying Bithomp: ${bithompBase}/tokens`);
       const response = await fetch(
-        `${bithompBase}/tokens?search=${encodeURIComponent(query)}&limit=15`,
+        `${bithompBase}/tokens?search=${encodeURIComponent(query)}&limit=20`,
         { headers: { "Accept": "application/json" } }
       );
       
@@ -184,6 +196,7 @@ async function fetchFromIndexer(
                 currency: token.currency || token.currencyCode || query.toUpperCase(),
                 issuer: token.issuer,
                 name: token.name || token.currency || query.toUpperCase(),
+                logoUrl: token.icon || token.logo || null,
               });
             }
           }
@@ -194,13 +207,14 @@ async function fetchFromIndexer(
     }
   }
   
-  // If still no results, filter common assets
+  // If still no results, filter common assets by currency, name, OR issuer
   if (assets.length === 0) {
     const filtered = COMMON_ASSETS.filter(
       (a) =>
         a.type !== "XRP" &&
         (a.currency.toLowerCase().includes(query) ||
-          (a.name && a.name.toLowerCase().includes(query)))
+          (a.name && a.name.toLowerCase().includes(query)) ||
+          (a.issuer && a.issuer.toLowerCase().includes(query)))
     );
     assets.push(...filtered);
   }

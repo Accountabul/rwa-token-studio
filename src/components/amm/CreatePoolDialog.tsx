@@ -15,7 +15,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { XRPLAssetSelector } from "@/components/shared/XRPLAssetSelector";
-import { XRPLAsset, createXRPAsset, formatAssetWithIssuer, shortenAddress } from "@/types/xrplAsset";
+import { SelectedAssetDisplay } from "@/components/shared/SelectedAssetDisplay";
+import { XRPLAsset, createXRPAsset, formatAssetWithIssuer } from "@/types/xrplAsset";
 
 export function CreatePoolDialog() {
   const { toast } = useToast();
@@ -65,7 +66,7 @@ export function CreatePoolDialog() {
           Create Pool
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>Create AMM Pool</DialogTitle>
           <DialogDescription>
@@ -140,15 +141,19 @@ export function CreatePoolDialog() {
             </p>
           </div>
 
-          {/* Summary */}
-          {canCreate && (
-            <div className="p-3 rounded-lg bg-muted/50 space-y-2">
-              <p className="text-sm font-medium">Pool Summary</p>
-              <div className="text-sm text-muted-foreground space-y-1">
-                <p>
-                  {asset1Amount} {formatAssetWithIssuer(asset1)} + {asset2Amount} {formatAssetWithIssuer(asset2)}
-                </p>
-                <p>
+          {/* Selected Assets Confirmation */}
+          {canCreate && asset2 && (
+            <div className="space-y-3">
+              <SelectedAssetDisplay
+                asset={asset1}
+                label={`Asset 1: ${asset1Amount} ${asset1.currency}`}
+              />
+              <SelectedAssetDisplay
+                asset={asset2}
+                label={`Asset 2: ${asset2Amount} ${asset2.currency}`}
+              />
+              <div className="p-3 rounded-lg bg-muted/50 text-center">
+                <p className="text-sm text-muted-foreground">
                   Initial price: 1 {asset1.currency} = {initialPrice} {asset2?.currency}
                 </p>
               </div>

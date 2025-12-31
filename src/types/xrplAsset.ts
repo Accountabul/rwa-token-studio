@@ -39,6 +39,7 @@ export interface XRPLAssetSearchResult {
   // Additional metadata from indexer
   domain?: string;
   icon?: string;
+  logoUrl?: string;
 }
 
 /**
