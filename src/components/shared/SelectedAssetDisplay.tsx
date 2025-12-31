@@ -54,33 +54,34 @@ export const SelectedAssetDisplay: React.FC<SelectedAssetDisplayProps> = ({
   return (
     <div className={`p-3 rounded-lg border bg-muted/30 ${className || ""}`}>
       <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">{label}</p>
-      <div className="flex items-center gap-2">
+      <div className="flex items-start gap-2">
         {/* Logo */}
-        <div className="w-7 h-7 rounded-full bg-background border flex items-center justify-center shrink-0">
+        <div className="w-7 h-7 rounded-full bg-background border flex items-center justify-center shrink-0 mt-0.5">
           <Coins className="w-4 h-4 text-muted-foreground" />
         </div>
         
-        {/* Asset info - single line */}
-        <div className="flex items-center gap-1.5 flex-1 min-w-0 overflow-x-auto text-sm">
-          <span className="font-semibold shrink-0">{asset.currency}</span>
-          {asset.name && asset.name !== asset.currency && (
-            <>
-              <span className="text-muted-foreground">—</span>
-              <span className="text-muted-foreground shrink-0">{asset.name}</span>
-            </>
-          )}
+        {/* Asset info - wraps on small screens */}
+        <div className="flex-1 min-w-0 text-sm">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="font-semibold">{asset.currency}</span>
+            {asset.name && asset.name !== asset.currency && (
+              <>
+                <span className="text-muted-foreground">—</span>
+                <span className="text-muted-foreground">{asset.name}</span>
+              </>
+            )}
+            {asset.type === "XRP" && (
+              <>
+                <span className="text-muted-foreground">·</span>
+                <span className="text-xs text-muted-foreground">Native Asset</span>
+              </>
+            )}
+          </div>
           {asset.type !== "XRP" && asset.issuer && (
-            <>
-              <span className="text-muted-foreground shrink-0">·</span>
-              <span className="text-muted-foreground shrink-0">Issuer:</span>
-              <span className="font-mono text-xs text-foreground">{asset.issuer}</span>
-            </>
-          )}
-          {asset.type === "XRP" && (
-            <>
-              <span className="text-muted-foreground shrink-0">·</span>
-              <span className="text-xs text-muted-foreground shrink-0">Native Asset</span>
-            </>
+            <div className="flex items-center gap-1.5 mt-1">
+              <span className="text-muted-foreground text-xs">Issuer:</span>
+              <span className="font-mono text-xs text-foreground break-all">{asset.issuer}</span>
+            </div>
           )}
         </div>
         
