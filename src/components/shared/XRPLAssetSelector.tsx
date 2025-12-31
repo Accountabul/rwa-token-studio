@@ -51,20 +51,22 @@ export const XRPLAssetSelector: React.FC<XRPLAssetSelectorProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Debounced search
+  // Load assets when popover opens or search query changes
   useEffect(() => {
-    const timer = setTimeout(async () => {
-      if (!open) return;
-      
+    if (!open) return;
+    
+    const loadAssets = async () => {
       setIsLoading(true);
       setError(null);
       
       try {
+        console.log("[XRPLAssetSelector] Searching for:", searchQuery);
         const assets = await searchXRPLAssets(searchQuery, {
           network,
           includeXRP: !excludeXRP,
           limit: 20,
         });
+        console.log("[XRPLAssetSelector] Got results:", assets.length);
         setResults(assets);
       } catch (err) {
         console.error("Asset search failed:", err);
@@ -76,15 +78,22 @@ export const XRPLAssetSelector: React.FC<XRPLAssetSelectorProps> = ({
       } finally {
         setIsLoading(false);
       }
-    }, 300);
+    };
 
-    return () => clearTimeout(timer);
+    // Debounce for typing, immediate for initial load
+    if (searchQuery === "" && results.length === 0) {
+      loadAssets();
+    } else {
+      const timer = setTimeout(loadAssets, 300);
+      return () => clearTimeout(timer);
+    }
   }, [searchQuery, open, network, excludeXRP]);
 
-  // Load initial results when opening
+  // Reset search when opening
   useEffect(() => {
-    if (open && results.length === 0) {
+    if (open) {
       setSearchQuery("");
+      setResults([]);
     }
   }, [open]);
 
