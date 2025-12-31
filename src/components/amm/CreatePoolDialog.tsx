@@ -14,19 +14,20 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { XRPLAssetSelector } from "@/components/shared/XRPLAssetSelector";
+import { XRPLAsset, createXRPAsset, formatAssetWithIssuer, shortenAddress } from "@/types/xrplAsset";
 
 export function CreatePoolDialog() {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
-  const [asset1Currency, setAsset1Currency] = useState("XRP");
+  const [asset1, setAsset1] = useState<XRPLAsset>(createXRPAsset());
   const [asset1Amount, setAsset1Amount] = useState("");
-  const [asset2Currency, setAsset2Currency] = useState("");
-  const [asset2Issuer, setAsset2Issuer] = useState("");
+  const [asset2, setAsset2] = useState<XRPLAsset | null>(null);
   const [asset2Amount, setAsset2Amount] = useState("");
   const [tradingFee, setTradingFee] = useState("0.3");
 
   const handleCreate = () => {
-    if (!asset1Amount || !asset2Amount || !asset2Currency) {
+    if (!asset1Amount || !asset2Amount || !asset2) {
       toast({
         title: "Missing Fields",
         description: "Please fill in all required fields",
@@ -37,20 +38,24 @@ export function CreatePoolDialog() {
 
     toast({
       title: "AMM Pool Created",
-      description: `Created ${asset1Currency}/${asset2Currency} pool with ${tradingFee}% fee`,
+      description: `Created ${asset1.currency}/${asset2.currency} pool with ${tradingFee}% fee`,
     });
     setOpen(false);
     resetForm();
   };
 
   const resetForm = () => {
-    setAsset1Currency("XRP");
+    setAsset1(createXRPAsset());
     setAsset1Amount("");
-    setAsset2Currency("");
-    setAsset2Issuer("");
+    setAsset2(null);
     setAsset2Amount("");
     setTradingFee("0.3");
   };
+
+  const canCreate = asset1Amount && asset2Amount && asset2;
+  const initialPrice = canCreate 
+    ? (parseFloat(asset2Amount) / parseFloat(asset1Amount)).toFixed(4) 
+    : null;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -71,19 +76,14 @@ export function CreatePoolDialog() {
           {/* Asset 1 */}
           <div className="p-4 rounded-lg border space-y-3">
             <Label className="text-xs text-muted-foreground uppercase tracking-wide">Asset 1</Label>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-3">
               <div className="space-y-2">
-                <Label>Currency</Label>
-                <Select value={asset1Currency} onValueChange={setAsset1Currency}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="XRP">XRP</SelectItem>
-                    <SelectItem value="USD">USD (IOU)</SelectItem>
-                    <SelectItem value="EUR">EUR (IOU)</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Label>Asset</Label>
+                <XRPLAssetSelector
+                  value={asset1}
+                  onChange={setAsset1}
+                  placeholder="Select first asset"
+                />
               </div>
               <div className="space-y-2">
                 <Label>Amount</Label>
@@ -101,36 +101,23 @@ export function CreatePoolDialog() {
           <div className="p-4 rounded-lg border space-y-3">
             <Label className="text-xs text-muted-foreground uppercase tracking-wide">Asset 2</Label>
             <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label>Currency Code</Label>
-                  <Input
-                    placeholder="e.g., USD, TST"
-                    value={asset2Currency}
-                    onChange={(e) => setAsset2Currency(e.target.value.toUpperCase())}
-                    maxLength={3}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Amount</Label>
-                  <Input
-                    type="number"
-                    placeholder="0.00"
-                    value={asset2Amount}
-                    onChange={(e) => setAsset2Amount(e.target.value)}
-                  />
-                </div>
+              <div className="space-y-2">
+                <Label>Asset</Label>
+                <XRPLAssetSelector
+                  value={asset2}
+                  onChange={setAsset2}
+                  placeholder="Select second asset"
+                />
               </div>
-              {asset2Currency && asset2Currency !== "XRP" && (
-                <div className="space-y-2">
-                  <Label>Issuer Address</Label>
-                  <Input
-                    placeholder="rXXXXXXXXXXXXXXXXXXXXXXXXXX"
-                    value={asset2Issuer}
-                    onChange={(e) => setAsset2Issuer(e.target.value)}
-                  />
-                </div>
-              )}
+              <div className="space-y-2">
+                <Label>Amount</Label>
+                <Input
+                  type="number"
+                  placeholder="0.00"
+                  value={asset2Amount}
+                  onChange={(e) => setAsset2Amount(e.target.value)}
+                />
+              </div>
             </div>
           </div>
 
@@ -154,15 +141,17 @@ export function CreatePoolDialog() {
           </div>
 
           {/* Summary */}
-          {asset1Amount && asset2Amount && asset2Currency && (
-            <div className="p-3 rounded-lg bg-muted/50 space-y-1">
+          {canCreate && (
+            <div className="p-3 rounded-lg bg-muted/50 space-y-2">
               <p className="text-sm font-medium">Pool Summary</p>
-              <p className="text-sm text-muted-foreground">
-                {asset1Amount} {asset1Currency} + {asset2Amount} {asset2Currency}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Initial price: 1 {asset1Currency} = {(parseFloat(asset2Amount) / parseFloat(asset1Amount)).toFixed(4)} {asset2Currency}
-              </p>
+              <div className="text-sm text-muted-foreground space-y-1">
+                <p>
+                  {asset1Amount} {formatAssetWithIssuer(asset1)} + {asset2Amount} {formatAssetWithIssuer(asset2)}
+                </p>
+                <p>
+                  Initial price: 1 {asset1.currency} = {initialPrice} {asset2?.currency}
+                </p>
+              </div>
             </div>
           )}
         </div>
@@ -170,7 +159,7 @@ export function CreatePoolDialog() {
           <Button variant="outline" onClick={() => setOpen(false)}>
             Cancel
           </Button>
-          <Button onClick={handleCreate}>Create Pool</Button>
+          <Button onClick={handleCreate} disabled={!canCreate}>Create Pool</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

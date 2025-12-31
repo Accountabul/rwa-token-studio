@@ -83,7 +83,7 @@ export function CreateChannelDialog() {
               onChange={(e) => setAmount(e.target.value)}
             />
             <p className="text-xs text-muted-foreground">
-              Maximum amount that can be sent through this channel
+              Payment channels on XRPL only support XRP (native asset)
             </p>
           </div>
           <div className="space-y-2">

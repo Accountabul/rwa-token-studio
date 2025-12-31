@@ -4,10 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { EscrowAssetType, EscrowConditionType, escrowAssetTypeLabel, escrowConditionLabel } from "@/types/escrow";
+import { EscrowConditionType, escrowConditionLabel } from "@/types/escrow";
 import { mockWallets } from "@/data/mockWallets";
 import { toast } from "@/hooks/use-toast";
+import { XRPLAssetSelector } from "@/components/shared/XRPLAssetSelector";
+import { XRPLAsset, createXRPAsset, formatAssetWithIssuer } from "@/types/xrplAsset";
 
 interface CreateEscrowDialogProps {
   open: boolean;
@@ -16,7 +17,7 @@ interface CreateEscrowDialogProps {
 
 export const CreateEscrowDialog: React.FC<CreateEscrowDialogProps> = ({ open, onOpenChange }) => {
   const [step, setStep] = useState(1);
-  const [assetType, setAssetType] = useState<EscrowAssetType>("XRP");
+  const [asset, setAsset] = useState<XRPLAsset>(createXRPAsset());
   const [amount, setAmount] = useState("");
   const [destinationAddress, setDestinationAddress] = useState("");
   const [senderWalletId, setSenderWalletId] = useState("");
@@ -37,7 +38,7 @@ export const CreateEscrowDialog: React.FC<CreateEscrowDialogProps> = ({ open, on
 
   const resetForm = () => {
     setStep(1);
-    setAssetType("XRP");
+    setAsset(createXRPAsset());
     setAmount("");
     setDestinationAddress("");
     setSenderWalletId("");
@@ -46,7 +47,7 @@ export const CreateEscrowDialog: React.FC<CreateEscrowDialogProps> = ({ open, on
     setCancelAfter("");
   };
 
-  const canProceedStep1 = assetType && senderWalletId;
+  const canProceedStep1 = asset && senderWalletId;
   const canProceedStep2 = amount && destinationAddress;
   const canProceedStep3 = conditionType && (finishAfter || cancelAfter);
 
@@ -64,15 +65,15 @@ export const CreateEscrowDialog: React.FC<CreateEscrowDialogProps> = ({ open, on
           {step === 1 && (
             <>
               <div className="space-y-2">
-                <Label>Asset Type</Label>
-                <RadioGroup value={assetType} onValueChange={(v) => setAssetType(v as EscrowAssetType)} className="flex gap-4">
-                  {(["XRP", "IOU", "MPT"] as EscrowAssetType[]).map((type) => (
-                    <div key={type} className="flex items-center space-x-2">
-                      <RadioGroupItem value={type} id={type} />
-                      <Label htmlFor={type} className="cursor-pointer">{escrowAssetTypeLabel[type]}</Label>
-                    </div>
-                  ))}
-                </RadioGroup>
+                <Label>Asset</Label>
+                <XRPLAssetSelector
+                  value={asset}
+                  onChange={setAsset}
+                  placeholder="Select asset for escrow"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Select the asset to be held in escrow (XRP or any issued token)
+                </p>
               </div>
               <div className="space-y-2">
                 <Label>Sender Wallet</Label>
@@ -102,6 +103,9 @@ export const CreateEscrowDialog: React.FC<CreateEscrowDialogProps> = ({ open, on
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                 />
+                <p className="text-xs text-muted-foreground">
+                  Amount of {asset.currency} to escrow
+                </p>
               </div>
               <div className="space-y-2">
                 <Label>Destination Address</Label>
@@ -155,12 +159,12 @@ export const CreateEscrowDialog: React.FC<CreateEscrowDialogProps> = ({ open, on
           {step === 4 && (
             <div className="space-y-3 text-sm">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Asset Type</span>
-                <span className="font-medium">{escrowAssetTypeLabel[assetType]}</span>
+                <span className="text-muted-foreground">Asset</span>
+                <span className="font-medium">{formatAssetWithIssuer(asset)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Amount</span>
-                <span className="font-medium">{amount}</span>
+                <span className="font-medium">{amount} {asset.currency}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Destination</span>
