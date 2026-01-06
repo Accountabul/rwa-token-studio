@@ -1,0 +1,457 @@
+import { Role } from "@/types/tokenization";
+import { EntityPermissionMatrix, EntityType, ActionType, PIIFieldRule } from "./types";
+
+// ============================================================================
+// PERMISSION MATRICES BY ENTITY
+// ============================================================================
+
+export const PROJECT_PERMISSIONS: EntityPermissionMatrix = {
+  entity: "PROJECT",
+  actions: {
+    VIEW: ["SUPER_ADMIN", "TOKENIZATION_MANAGER", "COMPLIANCE_OFFICER", "VALUATION_OFFICER", "AUDITOR"],
+    VIEW_LIST: ["SUPER_ADMIN", "TOKENIZATION_MANAGER", "COMPLIANCE_OFFICER", "VALUATION_OFFICER", "AUDITOR"],
+    CREATE: ["SUPER_ADMIN", "TOKENIZATION_MANAGER"],
+    UPDATE: ["SUPER_ADMIN", "TOKENIZATION_MANAGER"],
+    DELETE: ["SUPER_ADMIN"],
+    APPROVE: ["SUPER_ADMIN", "COMPLIANCE_OFFICER"],
+    EXPORT: ["SUPER_ADMIN", "COMPLIANCE_OFFICER", "AUDITOR"],
+  },
+  piiFields: [
+    {
+      fieldName: "ownerName",
+      accessByRole: {
+        SUPER_ADMIN: "FULL",
+        TOKENIZATION_MANAGER: "FULL",
+        COMPLIANCE_OFFICER: "MASKED",
+        VALUATION_OFFICER: "FULL",
+        FINANCE_OFFICER: "FULL",
+        AUDITOR: "MASKED",
+      },
+      defaultAccess: "HIDDEN",
+      maskPattern: "{first} {lastInitial}.",
+    },
+  ],
+};
+
+export const TOKEN_PERMISSIONS: EntityPermissionMatrix = {
+  entity: "TOKEN",
+  actions: {
+    VIEW: ["SUPER_ADMIN", "TOKENIZATION_MANAGER", "COMPLIANCE_OFFICER", "CUSTODY_OFFICER", "VALUATION_OFFICER"],
+    VIEW_LIST: ["SUPER_ADMIN", "TOKENIZATION_MANAGER", "COMPLIANCE_OFFICER", "CUSTODY_OFFICER", "VALUATION_OFFICER", "AUDITOR"],
+    CREATE: ["SUPER_ADMIN", "TOKENIZATION_MANAGER"],
+    UPDATE: ["SUPER_ADMIN", "TOKENIZATION_MANAGER"],
+    DELETE: ["SUPER_ADMIN"],
+    APPROVE: ["SUPER_ADMIN"],
+    EXPORT: ["SUPER_ADMIN", "COMPLIANCE_OFFICER"],
+    FREEZE: ["SUPER_ADMIN", "COMPLIANCE_OFFICER"],
+    UNFREEZE: ["SUPER_ADMIN", "COMPLIANCE_OFFICER"],
+    CLAWBACK: ["SUPER_ADMIN"],
+    DISTRIBUTE: ["SUPER_ADMIN", "TOKENIZATION_MANAGER"],
+    LOCK: ["SUPER_ADMIN", "COMPLIANCE_OFFICER"],
+    UNLOCK: ["SUPER_ADMIN", "COMPLIANCE_OFFICER"],
+    MINT: ["SUPER_ADMIN", "TOKENIZATION_MANAGER"],
+    BURN: ["SUPER_ADMIN", "TOKENIZATION_MANAGER"],
+    RETIRE: ["SUPER_ADMIN"],
+  },
+};
+
+export const WALLET_PERMISSIONS: EntityPermissionMatrix = {
+  entity: "WALLET",
+  actions: {
+    VIEW: ["SUPER_ADMIN", "CUSTODY_OFFICER", "TOKENIZATION_MANAGER", "COMPLIANCE_OFFICER"],
+    VIEW_LIST: ["SUPER_ADMIN", "CUSTODY_OFFICER", "TOKENIZATION_MANAGER", "COMPLIANCE_OFFICER", "AUDITOR"],
+    CREATE: ["SUPER_ADMIN", "CUSTODY_OFFICER"],
+    UPDATE: ["SUPER_ADMIN", "CUSTODY_OFFICER"],
+    DELETE: [],
+    FREEZE: ["SUPER_ADMIN", "COMPLIANCE_OFFICER"],
+    EXPORT: ["SUPER_ADMIN", "AUDITOR"],
+    SIGN: ["SUPER_ADMIN", "CUSTODY_OFFICER"],
+  },
+  piiFields: [
+    {
+      fieldName: "encrypted_seed",
+      accessByRole: {},
+      defaultAccess: "HIDDEN", // Never exposed to anyone
+    },
+    {
+      fieldName: "contact_email",
+      accessByRole: {
+        SUPER_ADMIN: "FULL",
+        CUSTODY_OFFICER: "FULL",
+      },
+      defaultAccess: "HIDDEN",
+    },
+    {
+      fieldName: "contact_phone",
+      accessByRole: {
+        SUPER_ADMIN: "FULL",
+        CUSTODY_OFFICER: "FULL",
+      },
+      defaultAccess: "HIDDEN",
+    },
+  ],
+};
+
+export const ESCROW_PERMISSIONS: EntityPermissionMatrix = {
+  entity: "ESCROW",
+  actions: {
+    VIEW: ["SUPER_ADMIN", "TOKENIZATION_MANAGER", "COMPLIANCE_OFFICER", "CUSTODY_OFFICER"],
+    VIEW_LIST: ["SUPER_ADMIN", "TOKENIZATION_MANAGER", "COMPLIANCE_OFFICER", "CUSTODY_OFFICER", "AUDITOR"],
+    CREATE: ["SUPER_ADMIN", "CUSTODY_OFFICER"],
+    UPDATE: [],
+    DELETE: [],
+    CANCEL: ["SUPER_ADMIN", "CUSTODY_OFFICER"],
+    COMPLETE: ["SUPER_ADMIN", "CUSTODY_OFFICER"],
+    EXPORT: ["SUPER_ADMIN", "AUDITOR"],
+    EXECUTE: ["SUPER_ADMIN", "CUSTODY_OFFICER"],
+  },
+};
+
+export const INVESTOR_PERMISSIONS: EntityPermissionMatrix = {
+  entity: "INVESTOR",
+  actions: {
+    VIEW: ["SUPER_ADMIN", "COMPLIANCE_OFFICER", "FINANCE_OFFICER"],
+    VIEW_LIST: ["SUPER_ADMIN", "COMPLIANCE_OFFICER", "FINANCE_OFFICER", "AUDITOR"],
+    CREATE: ["SUPER_ADMIN"],
+    UPDATE: ["SUPER_ADMIN", "COMPLIANCE_OFFICER"],
+    DELETE: [],
+    APPROVE: ["SUPER_ADMIN", "COMPLIANCE_OFFICER"], // KYC approval
+    REJECT: ["SUPER_ADMIN", "COMPLIANCE_OFFICER"],
+    EXPORT: ["SUPER_ADMIN", "FINANCE_OFFICER"],
+  },
+  piiFields: [
+    {
+      fieldName: "email",
+      accessByRole: {
+        SUPER_ADMIN: "FULL",
+        COMPLIANCE_OFFICER: "MASKED",
+        FINANCE_OFFICER: "FULL",
+      },
+      defaultAccess: "HIDDEN",
+      maskPattern: "{first}***@{domain}",
+    },
+    {
+      fieldName: "phone",
+      accessByRole: {
+        SUPER_ADMIN: "FULL",
+        COMPLIANCE_OFFICER: "MASKED",
+        FINANCE_OFFICER: "FULL",
+      },
+      defaultAccess: "HIDDEN",
+      maskPattern: "***-***-{last4}",
+    },
+    {
+      fieldName: "ssn_last4",
+      accessByRole: {
+        SUPER_ADMIN: "FULL",
+        FINANCE_OFFICER: "FULL",
+      },
+      defaultAccess: "HIDDEN",
+    },
+    {
+      fieldName: "date_of_birth",
+      accessByRole: {
+        SUPER_ADMIN: "FULL",
+        FINANCE_OFFICER: "FULL",
+        COMPLIANCE_OFFICER: "MASKED",
+      },
+      defaultAccess: "HIDDEN",
+      maskPattern: "{year}-XX-XX",
+    },
+    {
+      fieldName: "address_json",
+      accessByRole: {
+        SUPER_ADMIN: "FULL",
+        FINANCE_OFFICER: "FULL",
+        COMPLIANCE_OFFICER: "MASKED",
+      },
+      defaultAccess: "HIDDEN",
+    },
+  ],
+};
+
+export const BUSINESS_PERMISSIONS: EntityPermissionMatrix = {
+  entity: "BUSINESS",
+  actions: {
+    VIEW: ["SUPER_ADMIN", "FINANCE_OFFICER"],
+    VIEW_LIST: ["SUPER_ADMIN", "FINANCE_OFFICER", "AUDITOR"],
+    CREATE: ["SUPER_ADMIN"],
+    UPDATE: ["SUPER_ADMIN", "FINANCE_OFFICER"],
+    DELETE: ["SUPER_ADMIN"],
+    APPROVE: ["SUPER_ADMIN"],
+    FREEZE: ["SUPER_ADMIN"],
+    EXPORT: ["SUPER_ADMIN", "AUDITOR"],
+  },
+  piiFields: [
+    {
+      fieldName: "ein",
+      accessByRole: {
+        SUPER_ADMIN: "FULL",
+        FINANCE_OFFICER: "FULL",
+        COMPLIANCE_OFFICER: "MASKED",
+      },
+      defaultAccess: "HIDDEN",
+      maskPattern: "**-***{last4}",
+    },
+  ],
+};
+
+export const WORK_ORDER_PERMISSIONS: EntityPermissionMatrix = {
+  entity: "WORK_ORDER",
+  actions: {
+    VIEW: ["SUPER_ADMIN", "FINANCE_OFFICER"],
+    VIEW_LIST: ["SUPER_ADMIN", "FINANCE_OFFICER", "AUDITOR"],
+    CREATE: ["SUPER_ADMIN", "TOKENIZATION_MANAGER"],
+    UPDATE: ["SUPER_ADMIN", "TOKENIZATION_MANAGER"],
+    DELETE: [],
+    APPROVE: ["SUPER_ADMIN", "FINANCE_OFFICER"],
+    REJECT: ["SUPER_ADMIN", "FINANCE_OFFICER"],
+    EXPORT: ["SUPER_ADMIN", "AUDITOR"],
+  },
+};
+
+export const PAYOUT_REQUEST_PERMISSIONS: EntityPermissionMatrix = {
+  entity: "PAYOUT_REQUEST",
+  actions: {
+    VIEW: ["SUPER_ADMIN", "FINANCE_OFFICER", "COMPLIANCE_OFFICER"],
+    VIEW_LIST: ["SUPER_ADMIN", "FINANCE_OFFICER", "COMPLIANCE_OFFICER", "AUDITOR"],
+    CREATE: ["SUPER_ADMIN", "FINANCE_OFFICER", "TOKENIZATION_MANAGER", "CUSTODY_OFFICER"],
+    UPDATE: [],
+    DELETE: [],
+    APPROVE: ["SUPER_ADMIN", "FINANCE_OFFICER"],
+    REJECT: ["SUPER_ADMIN", "FINANCE_OFFICER"],
+    EXECUTE: ["SUPER_ADMIN", "FINANCE_OFFICER"],
+    EXPORT: ["SUPER_ADMIN", "AUDITOR"],
+  },
+};
+
+export const REPORT_PERMISSIONS: EntityPermissionMatrix = {
+  entity: "REPORT",
+  actions: {
+    VIEW: ["SUPER_ADMIN", "FINANCE_OFFICER", "COMPLIANCE_OFFICER", "AUDITOR"],
+    VIEW_LIST: ["SUPER_ADMIN", "FINANCE_OFFICER", "COMPLIANCE_OFFICER", "AUDITOR"],
+    CREATE: [],
+    UPDATE: [],
+    DELETE: [],
+    EXPORT: ["SUPER_ADMIN", "FINANCE_OFFICER", "COMPLIANCE_OFFICER", "AUDITOR"],
+  },
+};
+
+export const AUDIT_LOG_PERMISSIONS: EntityPermissionMatrix = {
+  entity: "AUDIT_LOG",
+  actions: {
+    VIEW: ["SUPER_ADMIN", "COMPLIANCE_OFFICER", "FINANCE_OFFICER", "AUDITOR"],
+    VIEW_LIST: ["SUPER_ADMIN", "COMPLIANCE_OFFICER", "FINANCE_OFFICER", "AUDITOR"],
+    CREATE: [],
+    UPDATE: [],
+    DELETE: [],
+    EXPORT: ["SUPER_ADMIN", "AUDITOR"],
+  },
+};
+
+export const LEDGER_ENTRY_PERMISSIONS: EntityPermissionMatrix = {
+  entity: "LEDGER_ENTRY",
+  actions: {
+    VIEW: ["SUPER_ADMIN", "FINANCE_OFFICER"],
+    VIEW_LIST: ["SUPER_ADMIN", "FINANCE_OFFICER", "AUDITOR"],
+    CREATE: [],
+    UPDATE: [],
+    DELETE: [],
+    EXPORT: ["SUPER_ADMIN", "FINANCE_OFFICER"],
+  },
+};
+
+export const TAX_PROFILE_PERMISSIONS: EntityPermissionMatrix = {
+  entity: "TAX_PROFILE",
+  actions: {
+    VIEW: ["SUPER_ADMIN", "FINANCE_OFFICER"],
+    VIEW_LIST: ["SUPER_ADMIN", "FINANCE_OFFICER"],
+    CREATE: ["SUPER_ADMIN", "FINANCE_OFFICER"],
+    UPDATE: ["SUPER_ADMIN", "FINANCE_OFFICER"],
+    DELETE: [],
+    EXPORT: ["SUPER_ADMIN", "FINANCE_OFFICER"],
+  },
+  piiFields: [
+    {
+      fieldName: "tinLast4",
+      accessByRole: {
+        SUPER_ADMIN: "FULL",
+        FINANCE_OFFICER: "FULL",
+      },
+      defaultAccess: "HIDDEN",
+    },
+    {
+      fieldName: "addressJson",
+      accessByRole: {
+        SUPER_ADMIN: "FULL",
+        FINANCE_OFFICER: "FULL",
+        COMPLIANCE_OFFICER: "MASKED",
+      },
+      defaultAccess: "HIDDEN",
+    },
+  ],
+};
+
+export const CHECK_PERMISSIONS: EntityPermissionMatrix = {
+  entity: "CHECK",
+  actions: {
+    VIEW: ["SUPER_ADMIN", "FINANCE_OFFICER", "CUSTODY_OFFICER"],
+    VIEW_LIST: ["SUPER_ADMIN", "FINANCE_OFFICER", "CUSTODY_OFFICER", "AUDITOR"],
+    CREATE: ["SUPER_ADMIN", "FINANCE_OFFICER"],
+    UPDATE: [],
+    DELETE: [],
+    CANCEL: ["SUPER_ADMIN", "FINANCE_OFFICER"],
+    EXECUTE: ["SUPER_ADMIN", "CUSTODY_OFFICER"],
+    EXPORT: ["SUPER_ADMIN", "AUDITOR"],
+  },
+};
+
+export const PAYMENT_CHANNEL_PERMISSIONS: EntityPermissionMatrix = {
+  entity: "PAYMENT_CHANNEL",
+  actions: {
+    VIEW: ["SUPER_ADMIN", "CUSTODY_OFFICER"],
+    VIEW_LIST: ["SUPER_ADMIN", "CUSTODY_OFFICER", "AUDITOR"],
+    CREATE: ["SUPER_ADMIN", "CUSTODY_OFFICER"],
+    UPDATE: [],
+    DELETE: [],
+    CANCEL: ["SUPER_ADMIN", "CUSTODY_OFFICER"],
+    EXECUTE: ["SUPER_ADMIN", "CUSTODY_OFFICER"],
+    EXPORT: ["SUPER_ADMIN", "AUDITOR"],
+  },
+};
+
+export const AMM_POOL_PERMISSIONS: EntityPermissionMatrix = {
+  entity: "AMM_POOL",
+  actions: {
+    VIEW: ["SUPER_ADMIN", "CUSTODY_OFFICER", "TOKENIZATION_MANAGER"],
+    VIEW_LIST: ["SUPER_ADMIN", "CUSTODY_OFFICER", "TOKENIZATION_MANAGER", "AUDITOR"],
+    CREATE: ["SUPER_ADMIN", "CUSTODY_OFFICER"],
+    UPDATE: [],
+    DELETE: [],
+    EXECUTE: ["SUPER_ADMIN", "CUSTODY_OFFICER"],
+    EXPORT: ["SUPER_ADMIN", "AUDITOR"],
+  },
+};
+
+export const CONTRACT_PERMISSIONS: EntityPermissionMatrix = {
+  entity: "CONTRACT",
+  actions: {
+    VIEW: ["SUPER_ADMIN", "TOKENIZATION_MANAGER", "COMPLIANCE_OFFICER"],
+    VIEW_LIST: ["SUPER_ADMIN", "TOKENIZATION_MANAGER", "COMPLIANCE_OFFICER", "AUDITOR"],
+    CREATE: ["SUPER_ADMIN", "TOKENIZATION_MANAGER"],
+    UPDATE: ["SUPER_ADMIN", "TOKENIZATION_MANAGER"],
+    DELETE: [],
+    APPROVE: ["SUPER_ADMIN", "COMPLIANCE_OFFICER"],
+    EXECUTE: ["SUPER_ADMIN"],
+    EXPORT: ["SUPER_ADMIN", "AUDITOR"],
+  },
+};
+
+export const KNOWLEDGE_BASE_PERMISSIONS: EntityPermissionMatrix = {
+  entity: "KNOWLEDGE_BASE",
+  actions: {
+    VIEW: ["SUPER_ADMIN", "TOKENIZATION_MANAGER", "COMPLIANCE_OFFICER", "CUSTODY_OFFICER", "VALUATION_OFFICER", "FINANCE_OFFICER", "AUDITOR"],
+    VIEW_LIST: ["SUPER_ADMIN", "TOKENIZATION_MANAGER", "COMPLIANCE_OFFICER", "CUSTODY_OFFICER", "VALUATION_OFFICER", "FINANCE_OFFICER", "AUDITOR"],
+    CREATE: ["SUPER_ADMIN", "TOKENIZATION_MANAGER", "COMPLIANCE_OFFICER"],
+    UPDATE: ["SUPER_ADMIN", "TOKENIZATION_MANAGER", "COMPLIANCE_OFFICER"],
+    DELETE: ["SUPER_ADMIN"],
+    APPROVE: ["SUPER_ADMIN", "COMPLIANCE_OFFICER"],
+  },
+};
+
+export const MULTI_SIGN_TX_PERMISSIONS: EntityPermissionMatrix = {
+  entity: "MULTI_SIGN_TX",
+  actions: {
+    VIEW: ["SUPER_ADMIN", "TOKENIZATION_MANAGER", "COMPLIANCE_OFFICER", "CUSTODY_OFFICER"],
+    VIEW_LIST: ["SUPER_ADMIN", "TOKENIZATION_MANAGER", "COMPLIANCE_OFFICER", "CUSTODY_OFFICER"],
+    CREATE: [],
+    UPDATE: [],
+    DELETE: [],
+    SIGN: ["SUPER_ADMIN", "CUSTODY_OFFICER"],
+    REJECT: ["SUPER_ADMIN", "CUSTODY_OFFICER", "COMPLIANCE_OFFICER"],
+    EXECUTE: ["SUPER_ADMIN", "CUSTODY_OFFICER"],
+  },
+};
+
+export const BATCH_TRANSACTION_PERMISSIONS: EntityPermissionMatrix = {
+  entity: "BATCH_TRANSACTION",
+  actions: {
+    VIEW: ["SUPER_ADMIN", "TOKENIZATION_MANAGER", "CUSTODY_OFFICER"],
+    VIEW_LIST: ["SUPER_ADMIN", "TOKENIZATION_MANAGER", "CUSTODY_OFFICER", "AUDITOR"],
+    CREATE: ["SUPER_ADMIN", "TOKENIZATION_MANAGER"],
+    UPDATE: ["SUPER_ADMIN", "TOKENIZATION_MANAGER"],
+    DELETE: ["SUPER_ADMIN"],
+    APPROVE: ["SUPER_ADMIN"],
+    EXECUTE: ["SUPER_ADMIN", "CUSTODY_OFFICER"],
+    EXPORT: ["SUPER_ADMIN", "AUDITOR"],
+  },
+};
+
+// ============================================================================
+// MASTER PERMISSION MATRIX
+// ============================================================================
+
+export const PERMISSION_MATRIX: Record<EntityType, EntityPermissionMatrix> = {
+  PROJECT: PROJECT_PERMISSIONS,
+  TOKEN: TOKEN_PERMISSIONS,
+  WALLET: WALLET_PERMISSIONS,
+  ESCROW: ESCROW_PERMISSIONS,
+  INVESTOR: INVESTOR_PERMISSIONS,
+  BUSINESS: BUSINESS_PERMISSIONS,
+  WORK_ORDER: WORK_ORDER_PERMISSIONS,
+  PAYOUT_REQUEST: PAYOUT_REQUEST_PERMISSIONS,
+  REPORT: REPORT_PERMISSIONS,
+  AUDIT_LOG: AUDIT_LOG_PERMISSIONS,
+  LEDGER_ENTRY: LEDGER_ENTRY_PERMISSIONS,
+  TAX_PROFILE: TAX_PROFILE_PERMISSIONS,
+  CHECK: CHECK_PERMISSIONS,
+  PAYMENT_CHANNEL: PAYMENT_CHANNEL_PERMISSIONS,
+  AMM_POOL: AMM_POOL_PERMISSIONS,
+  CONTRACT: CONTRACT_PERMISSIONS,
+  KNOWLEDGE_BASE: KNOWLEDGE_BASE_PERMISSIONS,
+  MULTI_SIGN_TX: MULTI_SIGN_TX_PERMISSIONS,
+  BATCH_TRANSACTION: BATCH_TRANSACTION_PERMISSIONS,
+};
+
+// ============================================================================
+// LEGACY COMPATIBILITY EXPORTS
+// ============================================================================
+
+// Token permissions in old format (for backward compatibility)
+export const tokenPermissions: Record<string, Role[]> = {
+  viewTokens: TOKEN_PERMISSIONS.actions.VIEW_LIST || [],
+  viewTokenDetails: TOKEN_PERMISSIONS.actions.VIEW || [],
+  createToken: TOKEN_PERMISSIONS.actions.CREATE || [],
+  updateToken: TOKEN_PERMISSIONS.actions.UPDATE || [],
+  deleteToken: TOKEN_PERMISSIONS.actions.DELETE || [],
+  issueToken: TOKEN_PERMISSIONS.actions.MINT || [],
+  mintToken: TOKEN_PERMISSIONS.actions.MINT || [],
+  burnToken: TOKEN_PERMISSIONS.actions.BURN || [],
+  freezeToken: TOKEN_PERMISSIONS.actions.FREEZE || [],
+  unfreezeToken: TOKEN_PERMISSIONS.actions.UNFREEZE || [],
+  clawbackToken: TOKEN_PERMISSIONS.actions.CLAWBACK || [],
+  distributeTokens: TOKEN_PERMISSIONS.actions.DISTRIBUTE || [],
+  lockToken: TOKEN_PERMISSIONS.actions.LOCK || [],
+  unlockToken: TOKEN_PERMISSIONS.actions.UNLOCK || [],
+  retireToken: TOKEN_PERMISSIONS.actions.RETIRE || [],
+  exportTokens: TOKEN_PERMISSIONS.actions.EXPORT || [],
+};
+
+// Escrow permissions in old format
+export const escrowPermissions: Record<string, Role[]> = {
+  viewEscrows: ESCROW_PERMISSIONS.actions.VIEW_LIST || [],
+  viewEscrowDetails: ESCROW_PERMISSIONS.actions.VIEW || [],
+  createEscrow: ESCROW_PERMISSIONS.actions.CREATE || [],
+  cancelEscrow: ESCROW_PERMISSIONS.actions.CANCEL || [],
+  completeEscrow: ESCROW_PERMISSIONS.actions.COMPLETE || [],
+  executeEscrow: ESCROW_PERMISSIONS.actions.EXECUTE || [],
+  exportEscrows: ESCROW_PERMISSIONS.actions.EXPORT || [],
+};
+
+// Multi-sign permissions in old format
+export const multiSignPermissions: Record<string, Role[]> = {
+  viewPendingTx: MULTI_SIGN_TX_PERMISSIONS.actions.VIEW_LIST || [],
+  signTransaction: MULTI_SIGN_TX_PERMISSIONS.actions.SIGN || [],
+  rejectTransaction: MULTI_SIGN_TX_PERMISSIONS.actions.REJECT || [],
+  updateSignerList: ["SUPER_ADMIN"],
+};
