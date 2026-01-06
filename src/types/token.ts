@@ -409,15 +409,5 @@ export const roleDefaultCapabilities: Record<WalletRole, Partial<WalletCapabilit
   },
 };
 
-// Role permissions for token actions
-export const tokenPermissions: Record<string, Role[]> = {
-  viewTokens: ["SUPER_ADMIN", "TOKENIZATION_MANAGER", "COMPLIANCE_OFFICER", "CUSTODY_OFFICER", "VALUATION_OFFICER"],
-  createDraft: ["SUPER_ADMIN", "TOKENIZATION_MANAGER"],
-  issueToken: ["SUPER_ADMIN"],
-  mintBurn: ["SUPER_ADMIN", "TOKENIZATION_MANAGER"],
-  freezeUnfreeze: ["SUPER_ADMIN", "COMPLIANCE_OFFICER"],
-  authorizeWallet: ["SUPER_ADMIN", "CUSTODY_OFFICER"],
-  distribute: ["SUPER_ADMIN", "TOKENIZATION_MANAGER", "CUSTODY_OFFICER"],
-  viewAuditLog: ["SUPER_ADMIN", "TOKENIZATION_MANAGER", "COMPLIANCE_OFFICER", "CUSTODY_OFFICER", "VALUATION_OFFICER"],
-  exportAuditLog: ["SUPER_ADMIN", "COMPLIANCE_OFFICER"],
-};
+// Role permissions for token actions - Re-exported from centralized permissions
+export { tokenPermissions } from "@/permissions";

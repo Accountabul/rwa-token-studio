@@ -314,6 +314,8 @@ export interface ReportsDashboardMetrics {
 // ============================================
 // ROLE PERMISSIONS
 // ============================================
+// Note: Full permission matrix is now centralized in src/permissions/
+// This interface and matrix are kept for backward compatibility
 
 export interface RolePermissions {
   viewAuditLogs: boolean;
@@ -325,70 +327,32 @@ export interface RolePermissions {
   exportTaxData: boolean;
 }
 
+// Import centralized permissions for deriving legacy format
+import {
+  hasPermission,
+  EntityType,
+  ActionType,
+} from "@/permissions";
+
+// Helper to derive legacy permissions from centralized matrix
+const deriveRolePermissions = (role: Role): RolePermissions => ({
+  viewAuditLogs: hasPermission(role, "AUDIT_LOG", "VIEW"),
+  viewLedger: hasPermission(role, "LEDGER_ENTRY", "VIEW"),
+  viewTaxProfiles: hasPermission(role, "TAX_PROFILE", "VIEW"),
+  viewTaxIds: hasPermission(role, "TAX_PROFILE", "VIEW"), // Same as viewTaxProfiles
+  runReports: hasPermission(role, "REPORT", "VIEW"),
+  exportReports: hasPermission(role, "REPORT", "EXPORT"),
+  exportTaxData: hasPermission(role, "TAX_PROFILE", "EXPORT"),
+});
+
 export const rolePermissionsMatrix: Record<Role, RolePermissions> = {
-  SUPER_ADMIN: {
-    viewAuditLogs: true,
-    viewLedger: true,
-    viewTaxProfiles: true,
-    viewTaxIds: true,
-    runReports: true,
-    exportReports: true,
-    exportTaxData: true,
-  },
-  FINANCE_OFFICER: {
-    viewAuditLogs: true,
-    viewLedger: true,
-    viewTaxProfiles: true,
-    viewTaxIds: true,
-    runReports: true,
-    exportReports: true,
-    exportTaxData: true,
-  },
-  COMPLIANCE_OFFICER: {
-    viewAuditLogs: true,
-    viewLedger: false,
-    viewTaxProfiles: false,
-    viewTaxIds: false,
-    runReports: true,
-    exportReports: true,
-    exportTaxData: false,
-  },
-  AUDITOR: {
-    viewAuditLogs: true,
-    viewLedger: true,
-    viewTaxProfiles: false,
-    viewTaxIds: false,
-    runReports: false,
-    exportReports: true,
-    exportTaxData: false,
-  },
-  TOKENIZATION_MANAGER: {
-    viewAuditLogs: true,
-    viewLedger: false,
-    viewTaxProfiles: false,
-    viewTaxIds: false,
-    runReports: true,
-    exportReports: true,
-    exportTaxData: false,
-  },
-  CUSTODY_OFFICER: {
-    viewAuditLogs: true,
-    viewLedger: false,
-    viewTaxProfiles: false,
-    viewTaxIds: false,
-    runReports: false,
-    exportReports: false,
-    exportTaxData: false,
-  },
-  VALUATION_OFFICER: {
-    viewAuditLogs: false,
-    viewLedger: false,
-    viewTaxProfiles: false,
-    viewTaxIds: false,
-    runReports: false,
-    exportReports: false,
-    exportTaxData: false,
-  },
+  SUPER_ADMIN: deriveRolePermissions("SUPER_ADMIN"),
+  FINANCE_OFFICER: deriveRolePermissions("FINANCE_OFFICER"),
+  COMPLIANCE_OFFICER: deriveRolePermissions("COMPLIANCE_OFFICER"),
+  AUDITOR: deriveRolePermissions("AUDITOR"),
+  TOKENIZATION_MANAGER: deriveRolePermissions("TOKENIZATION_MANAGER"),
+  CUSTODY_OFFICER: deriveRolePermissions("CUSTODY_OFFICER"),
+  VALUATION_OFFICER: deriveRolePermissions("VALUATION_OFFICER"),
 };
 
 // ============================================
