@@ -77,10 +77,5 @@ export const escrowConditionLabel: Record<EscrowConditionType, string> = {
   TIME_AND_CRYPTO: "Time + Crypto",
 };
 
-// Role permissions for escrow actions
-export const escrowPermissions: Record<string, Role[]> = {
-  viewEscrows: ["SUPER_ADMIN", "TOKENIZATION_MANAGER", "COMPLIANCE_OFFICER", "CUSTODY_OFFICER"],
-  createEscrow: ["SUPER_ADMIN", "CUSTODY_OFFICER"],
-  completeEscrow: ["SUPER_ADMIN", "CUSTODY_OFFICER"],
-  cancelEscrow: ["SUPER_ADMIN", "CUSTODY_OFFICER", "COMPLIANCE_OFFICER"],
-};
+// Role permissions for escrow actions - Re-exported from centralized permissions
+export { escrowPermissions } from "@/permissions";

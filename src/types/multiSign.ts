@@ -87,10 +87,5 @@ export const multiSignTxTypeLabel: Record<MultiSignTxType, string> = {
   OTHER: "Other",
 };
 
-// Role permissions for multi-sign actions
-export const multiSignPermissions: Record<string, Role[]> = {
-  viewPendingTx: ["SUPER_ADMIN", "TOKENIZATION_MANAGER", "COMPLIANCE_OFFICER", "CUSTODY_OFFICER"],
-  signTransaction: ["SUPER_ADMIN", "CUSTODY_OFFICER"],
-  rejectTransaction: ["SUPER_ADMIN", "CUSTODY_OFFICER", "COMPLIANCE_OFFICER"],
-  updateSignerList: ["SUPER_ADMIN"],
-};
+// Role permissions for multi-sign actions - Re-exported from centralized permissions
+export { multiSignPermissions } from "@/permissions";
