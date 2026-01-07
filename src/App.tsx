@@ -3,7 +3,10 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import Index from "./pages/Index";
+import Auth from "./pages/Auth";
 import Investors from "./pages/Investors";
 import InvestorProfile from "./pages/InvestorProfile";
 import KnowledgeBase from "./pages/KnowledgeBase";
@@ -34,31 +37,181 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/investors" element={<Investors />} />
-          <Route path="/investors/:investorId" element={<InvestorProfile />} />
-          <Route path="/knowledge-base" element={<KnowledgeBase />} />
-          <Route path="/tokens" element={<Tokens />} />
-          <Route path="/tokens/create" element={<TokenCreate />} />
-          <Route path="/escrows" element={<Escrows />} />
-          <Route path="/escrows/:escrowId" element={<EscrowDetailsPage />} />
-          <Route path="/wallets" element={<Wallets />} />
-          <Route path="/checks" element={<Checks />} />
-          <Route path="/checks/:checkId" element={<CheckDetailsPage />} />
-          <Route path="/channels" element={<PaymentChannels />} />
-          <Route path="/channels/:channelId" element={<ChannelDetailsPage />} />
-          <Route path="/amm" element={<AMM />} />
-          <Route path="/amm/:poolId" element={<PoolDetailsPage />} />
-          <Route path="/contracts" element={<SmartContracts />} />
-          <Route path="/contracts/:contractId" element={<ContractDetailsPage />} />
-          <Route path="/batch" element={<BatchTransactions />} />
-          <Route path="/batch/new" element={<BatchBuilderPage />} />
-          <Route path="/batch/:batchId" element={<BatchDetailsPage />} />
-          <Route path="/reports" element={<ReportsLogs />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AuthProvider>
+          <Routes>
+            <Route path="/auth" element={<Auth />} />
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <Index />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/investors"
+              element={
+                <ProtectedRoute>
+                  <Investors />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/investors/:investorId"
+              element={
+                <ProtectedRoute>
+                  <InvestorProfile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/knowledge-base"
+              element={
+                <ProtectedRoute>
+                  <KnowledgeBase />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/tokens"
+              element={
+                <ProtectedRoute>
+                  <Tokens />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/tokens/create"
+              element={
+                <ProtectedRoute>
+                  <TokenCreate />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/escrows"
+              element={
+                <ProtectedRoute>
+                  <Escrows />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/escrows/:escrowId"
+              element={
+                <ProtectedRoute>
+                  <EscrowDetailsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/wallets"
+              element={
+                <ProtectedRoute>
+                  <Wallets />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/checks"
+              element={
+                <ProtectedRoute>
+                  <Checks />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/checks/:checkId"
+              element={
+                <ProtectedRoute>
+                  <CheckDetailsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/channels"
+              element={
+                <ProtectedRoute>
+                  <PaymentChannels />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/channels/:channelId"
+              element={
+                <ProtectedRoute>
+                  <ChannelDetailsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/amm"
+              element={
+                <ProtectedRoute>
+                  <AMM />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/amm/:poolId"
+              element={
+                <ProtectedRoute>
+                  <PoolDetailsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/contracts"
+              element={
+                <ProtectedRoute>
+                  <SmartContracts />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/contracts/:contractId"
+              element={
+                <ProtectedRoute>
+                  <ContractDetailsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/batch"
+              element={
+                <ProtectedRoute>
+                  <BatchTransactions />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/batch/new"
+              element={
+                <ProtectedRoute>
+                  <BatchBuilderPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/batch/:batchId"
+              element={
+                <ProtectedRoute>
+                  <BatchDetailsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/reports"
+              element={
+                <ProtectedRoute>
+                  <ReportsLogs />
+                </ProtectedRoute>
+              }
+            />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
