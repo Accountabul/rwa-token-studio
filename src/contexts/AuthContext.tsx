@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { Role } from "@/types/tokenization";
+import { auditService } from "@/domain/services/AuditService";
 
 interface Profile {
   id: string;
@@ -110,10 +111,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
+    
+    // Log sign-in event on success
+    if (!error && data.user) {
+      // Fetch roles to include in audit log
+      const { data: userRoles } = await supabase.rpc("get_user_roles", {
+        _user_id: data.user.id,
+      });
+      
+      auditService.logSignIn(
+        data.user.id,
+        data.user.email || email,
+        (userRoles as string[]) || []
+      ).catch(console.error); // Don't block sign-in on audit failure
+    }
+    
     return { error: error as Error | null };
   };
 
@@ -134,6 +150,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signOut = async () => {
+    // Log sign-out event before signing out
+    if (user) {
+      auditService.logSignOut(
+        user.id,
+        profile?.email || user.email || "Unknown",
+        roles[0] as Role
+      ).catch(console.error); // Don't block sign-out on audit failure
+    }
+    
     await supabase.auth.signOut();
   };
 

@@ -271,6 +271,152 @@ export class AuditService {
       metadata: { walletAddress },
     });
   }
+
+  // ============================================
+  // AUTH AUDIT LOGGING METHODS
+  // ============================================
+
+  /**
+   * Log a user sign-in event
+   */
+  async logSignIn(
+    userId: string,
+    email: string,
+    roles: string[],
+    sourceIp?: string,
+    userAgent?: string
+  ): Promise<ExtendedAuditEntry> {
+    return this.writeEvent({
+      entityType: "AUTH_SESSION",
+      entityId: userId,
+      entityName: email,
+      action: "AUTH_SIGNED_IN",
+      actorUserId: userId,
+      actorName: email,
+      actorRole: roles[0] as CreateAuditEventParams['actorRole'] ?? "AUDITOR", // Fallback for users without roles
+      source: "UI",
+      severity: "INFO",
+      classification: "INTERNAL",
+      sourceIp,
+      userAgent,
+      metadata: { roles, email },
+    });
+  }
+
+  /**
+   * Log a user sign-out event
+   */
+  async logSignOut(
+    userId: string,
+    email: string,
+    role?: CreateAuditEventParams['actorRole']
+  ): Promise<ExtendedAuditEntry> {
+    return this.writeEvent({
+      entityType: "AUTH_SESSION",
+      entityId: userId,
+      entityName: email,
+      action: "AUTH_SIGNED_OUT",
+      actorUserId: userId,
+      actorName: email,
+      actorRole: role ?? "AUDITOR",
+      source: "UI",
+      severity: "INFO",
+      classification: "INTERNAL",
+    });
+  }
+
+  /**
+   * Log a role assignment event (including bootstrap)
+   */
+  async logRoleAssigned(
+    targetUserId: string,
+    targetEmail: string,
+    role: string,
+    grantedByUserId: string,
+    grantedByName: string,
+    grantedByRole: CreateAuditEventParams['actorRole'],
+    source: "UI" | "API" | "ADMIN_SEED" = "UI"
+  ): Promise<ExtendedAuditEntry> {
+    return this.writeEvent({
+      entityType: "USER_ROLE",
+      entityId: targetUserId,
+      entityName: targetEmail,
+      action: "ROLE_ASSIGNED",
+      actorUserId: grantedByUserId,
+      actorName: grantedByName,
+      actorRole: grantedByRole,
+      source: source === "ADMIN_SEED" ? "BATCH_JOB" : source, // Map ADMIN_SEED to BATCH_JOB
+      severity: "HIGH",
+      classification: "RESTRICTED",
+      metadata: {
+        assignedRole: role,
+        targetUserId,
+        targetEmail,
+        grantMethod: source,
+      },
+    });
+  }
+
+  /**
+   * Log a role revocation event
+   */
+  async logRoleRevoked(
+    targetUserId: string,
+    targetEmail: string,
+    role: string,
+    revokedByUserId: string,
+    revokedByName: string,
+    revokedByRole: CreateAuditEventParams['actorRole'],
+    reason?: string
+  ): Promise<ExtendedAuditEntry> {
+    return this.writeEvent({
+      entityType: "USER_ROLE",
+      entityId: targetUserId,
+      entityName: targetEmail,
+      action: "ROLE_REVOKED",
+      actorUserId: revokedByUserId,
+      actorName: revokedByName,
+      actorRole: revokedByRole,
+      severity: "HIGH",
+      classification: "RESTRICTED",
+      metadata: {
+        revokedRole: role,
+        targetUserId,
+        targetEmail,
+        reason,
+      },
+    });
+  }
+
+  /**
+   * Log an access denied event
+   */
+  async logAccessDenied(
+    userId: string,
+    userName: string,
+    userRoles: string[],
+    requestedRoute: string,
+    requiredEntity: string,
+    requiredAction: string
+  ): Promise<ExtendedAuditEntry> {
+    return this.writeEvent({
+      entityType: "AUTH_SESSION",
+      entityId: userId,
+      entityName: userName,
+      action: "ACCESS_DENIED",
+      actorUserId: userId,
+      actorName: userName,
+      actorRole: userRoles[0] as CreateAuditEventParams['actorRole'] ?? "AUDITOR",
+      severity: "WARN",
+      classification: "INTERNAL",
+      metadata: {
+        requestedRoute,
+        requiredEntity,
+        requiredAction,
+        userRoles,
+      },
+    });
+  }
 }
 
 // Default singleton instance using mock repository

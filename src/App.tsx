@@ -7,6 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import AccessDenied from "./pages/AccessDenied";
 import Investors from "./pages/Investors";
 import InvestorProfile from "./pages/InvestorProfile";
 import KnowledgeBase from "./pages/KnowledgeBase";
@@ -40,6 +41,7 @@ const App = () => (
         <AuthProvider>
           <Routes>
             <Route path="/auth" element={<Auth />} />
+            <Route path="/access-denied" element={<AccessDenied />} />
             <Route
               path="/"
               element={
