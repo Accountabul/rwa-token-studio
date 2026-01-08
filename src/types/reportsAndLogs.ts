@@ -20,7 +20,9 @@ export type AuditEntityType =
   | "WORK_ORDER"
   | "CONTRACT_CALL"
   | "MULTI_SIGN_TX"
-  | "HOLDER_AUTH";
+  | "HOLDER_AUTH"
+  | "AUTH_SESSION"
+  | "USER_ROLE";
 
 export type AuditAction =
   | "CREATE"
@@ -56,7 +58,13 @@ export type AuditAction =
   | "FUND"
   | "SYNC"
   | "SUSPEND"
-  | "ARCHIVE";
+  | "ARCHIVE"
+  // Auth-specific actions
+  | "AUTH_SIGNED_IN"
+  | "AUTH_SIGNED_OUT"
+  | "ROLE_ASSIGNED"
+  | "ROLE_REVOKED"
+  | "ACCESS_DENIED";
 
 export type AuditSource = "UI" | "API" | "WEBHOOK" | "BATCH_JOB" | "LLM_AGENT";
 export type AuditSeverity = "INFO" | "WARN" | "HIGH";

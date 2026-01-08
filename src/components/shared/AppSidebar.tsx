@@ -2,6 +2,8 @@ import React from "react";
 import { useLocation } from "react-router-dom";
 import { Role, roleLabel } from "@/types/tokenization";
 import { useAuth } from "@/contexts/AuthContext";
+import { hasPermission } from "@/permissions";
+import { NAV_ITEMS } from "@/config/routePermissions";
 import { cn } from "@/lib/utils";
 import { 
   LayoutDashboard, 
@@ -20,7 +22,8 @@ import {
   Code,
   Layers,
   LogOut,
-  User
+  User,
+  LucideIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -29,20 +32,21 @@ interface AppSidebarProps {
   onRoleChange: (role: Role) => void;
 }
 
-const navItems = [
-  { label: "Tokenization Projects", icon: LayoutDashboard, href: "/" },
-  { label: "Token Registry", icon: Coins, href: "/tokens" },
-  { label: "Escrows", icon: Lock, href: "/escrows" },
-  { label: "Wallet Management", icon: Wallet, href: "/wallets" },
-  { label: "Checks", icon: FileCheck, href: "/checks" },
-  { label: "Payment Channels", icon: ArrowLeftRight, href: "/channels" },
-  { label: "AMM Pools", icon: Waves, href: "/amm" },
-  { label: "Smart Contracts", icon: Code, href: "/contracts" },
-  { label: "Batch Transactions", icon: Layers, href: "/batch" },
-  { label: "Investor Onboarding", icon: Users, href: "/investors" },
-  { label: "Knowledge Base", icon: BookOpen, href: "/knowledge-base" },
-  { label: "Reporting & Logs", icon: FileText, href: "/reports" },
-];
+// Icon mapping for nav items
+const iconMap: Record<string, LucideIcon> = {
+  LayoutDashboard,
+  Coins,
+  Lock,
+  Wallet,
+  FileCheck,
+  ArrowLeftRight,
+  Waves,
+  Code,
+  Layers,
+  Users,
+  BookOpen,
+  FileText,
+};
 
 const allRoles: Role[] = [
   "SUPER_ADMIN",
@@ -57,6 +61,16 @@ const allRoles: Role[] = [
 export const AppSidebar: React.FC<AppSidebarProps> = ({ role, onRoleChange }) => {
   const location = useLocation();
   const { profile, roles, signOut } = useAuth();
+
+  // Filter nav items based on user's actual roles
+  const visibleNavItems = React.useMemo(() => {
+    // If no roles, show nothing (or could show a subset)
+    if (roles.length === 0) return [];
+
+    return NAV_ITEMS.filter((item) =>
+      roles.some((userRole) => hasPermission(userRole, item.entity, item.action))
+    );
+  }, [roles]);
 
   const isActive = (href?: string) => {
     if (!href) return false;
@@ -92,20 +106,30 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ role, onRoleChange }) =>
 
       {/* Navigation */}
       <nav className="px-3 py-4 flex-1 space-y-1 overflow-y-auto">
-        {navItems.map((item) => (
-          <a
-            key={item.label}
-            href={item.href || "#"}
-            className={cn(
-              "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
-              isActive(item.href) && "bg-sidebar-accent/10 text-sidebar-accent",
-              !isActive(item.href) && "text-sidebar-foreground/70 hover:bg-sidebar-foreground/5 hover:text-sidebar-foreground"
-            )}
-          >
-            <item.icon className="w-4 h-4" />
-            <span>{item.label}</span>
-          </a>
-        ))}
+        {visibleNavItems.length > 0 ? (
+          visibleNavItems.map((item) => {
+            const IconComponent = iconMap[item.icon] || LayoutDashboard;
+            return (
+              <a
+                key={item.label}
+                href={item.href}
+                className={cn(
+                  "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
+                  isActive(item.href) && "bg-sidebar-accent/10 text-sidebar-accent",
+                  !isActive(item.href) && "text-sidebar-foreground/70 hover:bg-sidebar-foreground/5 hover:text-sidebar-foreground"
+                )}
+              >
+                <IconComponent className="w-4 h-4" />
+                <span>{item.label}</span>
+              </a>
+            );
+          })
+        ) : (
+          <div className="px-3 py-4 text-sm text-sidebar-muted text-center">
+            <p>No accessible pages.</p>
+            <p className="text-xs mt-1">Contact an admin to be assigned a role.</p>
+          </div>
+        )}
       </nav>
 
       {/* User Info & Roles */}
@@ -126,7 +150,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ role, onRoleChange }) =>
         </div>
 
         {/* Assigned Roles */}
-        {roles.length > 0 && (
+        {roles.length > 0 ? (
           <div className="space-y-1.5">
             <div className="flex items-center gap-2 text-[10px] uppercase tracking-wider text-sidebar-muted font-medium">
               <Shield className="w-3 h-3" />
@@ -136,16 +160,31 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ role, onRoleChange }) =>
               {roles.map((r) => (
                 <span
                   key={r}
-                  className="inline-flex px-2 py-0.5 text-[10px] font-medium rounded bg-sidebar-accent/10 text-sidebar-accent"
+                  className={cn(
+                    "inline-flex px-2 py-0.5 text-[10px] font-medium rounded",
+                    r === "SUPER_ADMIN"
+                      ? "bg-amber-500/20 text-amber-400"
+                      : "bg-sidebar-accent/10 text-sidebar-accent"
+                  )}
                 >
                   {roleLabel[r]}
                 </span>
               ))}
             </div>
           </div>
+        ) : (
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2 text-[10px] uppercase tracking-wider text-sidebar-muted font-medium">
+              <Shield className="w-3 h-3" />
+              <span>Roles</span>
+            </div>
+            <p className="text-xs text-sidebar-muted italic">
+              No roles assigned yet
+            </p>
+          </div>
         )}
 
-        {/* Dev Mode Role Override */}
+        {/* Dev Mode Role Override - ONLY in development */}
         {import.meta.env.DEV && (
           <div className="space-y-1.5 pt-2 border-t border-sidebar-border/50">
             <div className="flex items-center gap-2 text-[10px] uppercase tracking-wider text-amber-500/70 font-medium">
