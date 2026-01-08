@@ -8,6 +8,7 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import AccessDenied from "./pages/AccessDenied";
+import ResetPassword from "./pages/ResetPassword";
 import Investors from "./pages/Investors";
 import InvestorProfile from "./pages/InvestorProfile";
 import KnowledgeBase from "./pages/KnowledgeBase";
@@ -42,6 +43,7 @@ const App = () => (
           <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route path="/access-denied" element={<AccessDenied />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route
               path="/"
               element={
