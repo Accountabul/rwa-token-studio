@@ -36,12 +36,15 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   const entity = requiredEntity || routePermission?.entity;
   const action = requiredAction || routePermission?.action;
 
-  // Check if user has permission through any of their roles
   const hasAccess = React.useMemo(() => {
     if (!entity || !action) return true; // No permission required
-    if (roles.length === 0) return false; // No roles = no access
+
+    // Allow authenticated users with no roles to land on the home page,
+    // where we can show the "No roles assigned" state instead of trapping them.
+    if (roles.length === 0) return location.pathname === "/";
+
     return roles.some((role) => hasPermission(role, entity, action));
-  }, [roles, entity, action]);
+  }, [roles, entity, action, location.pathname]);
 
   // Log access denied events (only once per route)
   useEffect(() => {
