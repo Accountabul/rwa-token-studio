@@ -94,10 +94,10 @@ const AccessDenied: React.FC = () => {
             <Button
               variant="outline"
               className="flex-1"
-              onClick={() => navigate(-1)}
+              onClick={() => navigate("/auth")}
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Go Back
+              Back to Sign In
             </Button>
             <Button className="flex-1" onClick={() => navigate("/")}>
               Go to Dashboard
