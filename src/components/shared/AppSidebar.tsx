@@ -46,6 +46,7 @@ const iconMap: Record<string, LucideIcon> = {
   Users,
   BookOpen,
   FileText,
+  Shield,
 };
 
 const allRoles: Role[] = [
@@ -61,6 +62,9 @@ const allRoles: Role[] = [
 export const AppSidebar: React.FC<AppSidebarProps> = ({ role, onRoleChange }) => {
   const location = useLocation();
   const { profile, roles, signOut } = useAuth();
+
+  // Check if user is SUPER_ADMIN
+  const isSuperAdmin = roles.includes("SUPER_ADMIN");
 
   // Filter nav items based on user's actual roles
   const visibleNavItems = React.useMemo(() => {
@@ -128,6 +132,26 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ role, onRoleChange }) =>
           <div className="px-3 py-4 text-sm text-sidebar-muted text-center">
             <p>No accessible pages.</p>
             <p className="text-xs mt-1">Contact an admin to be assigned a role.</p>
+          </div>
+        )}
+
+        {/* Admin Section - Only visible to SUPER_ADMIN */}
+        {isSuperAdmin && (
+          <div className="mt-6 pt-4 border-t border-sidebar-border/50">
+            <div className="px-3 py-2 text-[10px] uppercase tracking-wider text-amber-500/70 font-medium">
+              Administration
+            </div>
+            <a
+              href="/admin/users"
+              className={cn(
+                "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
+                isActive("/admin/users") && "bg-amber-500/10 text-amber-500",
+                !isActive("/admin/users") && "text-sidebar-foreground/70 hover:bg-sidebar-foreground/5 hover:text-sidebar-foreground"
+              )}
+            >
+              <Shield className="w-4 h-4" />
+              <span>User Management</span>
+            </a>
           </div>
         )}
       </nav>
