@@ -29,6 +29,7 @@ import BatchTransactions from "./pages/BatchTransactions";
 import BatchBuilderPage from "./pages/BatchBuilderPage";
 import BatchDetailsPage from "./pages/BatchDetailsPage";
 import ReportsLogs from "./pages/ReportsLogs";
+import AdminUsers from "./pages/AdminUsers";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -209,6 +210,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <ReportsLogs />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/users"
+              element={
+                <ProtectedRoute>
+                  <AdminUsers />
                 </ProtectedRoute>
               }
             />

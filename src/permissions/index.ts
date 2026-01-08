@@ -42,6 +42,7 @@ export {
   KNOWLEDGE_BASE_PERMISSIONS,
   MULTI_SIGN_TX_PERMISSIONS,
   BATCH_TRANSACTION_PERMISSIONS,
+  USER_ROLE_PERMISSIONS,
   // Legacy compatibility exports
   tokenPermissions,
   escrowPermissions,

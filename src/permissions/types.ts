@@ -20,7 +20,8 @@ export type EntityType =
   | "CONTRACT"
   | "KNOWLEDGE_BASE"
   | "MULTI_SIGN_TX"
-  | "BATCH_TRANSACTION";
+  | "BATCH_TRANSACTION"
+  | "USER_ROLE";
 
 // All actions that can be performed
 export type ActionType =

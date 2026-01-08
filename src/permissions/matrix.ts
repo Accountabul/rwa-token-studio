@@ -387,6 +387,17 @@ export const BATCH_TRANSACTION_PERMISSIONS: EntityPermissionMatrix = {
   },
 };
 
+export const USER_ROLE_PERMISSIONS: EntityPermissionMatrix = {
+  entity: "USER_ROLE",
+  actions: {
+    VIEW: ["SUPER_ADMIN"],
+    VIEW_LIST: ["SUPER_ADMIN"],
+    CREATE: ["SUPER_ADMIN"],
+    UPDATE: ["SUPER_ADMIN"],
+    DELETE: ["SUPER_ADMIN"],
+  },
+};
+
 // ============================================================================
 // MASTER PERMISSION MATRIX
 // ============================================================================
@@ -411,6 +422,7 @@ export const PERMISSION_MATRIX: Record<EntityType, EntityPermissionMatrix> = {
   KNOWLEDGE_BASE: KNOWLEDGE_BASE_PERMISSIONS,
   MULTI_SIGN_TX: MULTI_SIGN_TX_PERMISSIONS,
   BATCH_TRANSACTION: BATCH_TRANSACTION_PERMISSIONS,
+  USER_ROLE: USER_ROLE_PERMISSIONS,
 };
 
 // ============================================================================

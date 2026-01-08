@@ -36,6 +36,8 @@ export const ROUTE_PERMISSIONS: Record<string, RoutePermission> = {
   "/batch/:batchId": { entity: "BATCH_TRANSACTION", action: "VIEW", label: "Batch Details" },
   "/knowledge-base": { entity: "KNOWLEDGE_BASE", action: "VIEW_LIST", label: "Knowledge Base" },
   "/reports": { entity: "REPORT", action: "VIEW", label: "Reports & Logs" },
+  // Admin routes
+  "/admin/users": { entity: "USER_ROLE", action: "VIEW_LIST", label: "User Management" },
 };
 
 /**
