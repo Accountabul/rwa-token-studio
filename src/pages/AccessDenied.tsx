@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
-import { ShieldX, Home, Mail, LogIn } from "lucide-react";
+import { ShieldX, Home, Mail, LogIn, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -16,7 +16,7 @@ interface AccessDeniedState {
 const AccessDenied: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { roles, profile } = useAuth();
+  const { roles, profile, signOut } = useAuth();
 
   const state = location.state as AccessDeniedState | undefined;
   const requestedRoute = state?.requestedRoute || "the requested page";
@@ -106,18 +106,31 @@ const AccessDenied: React.FC = () => {
             </div>
 
             {/* Actions */}
-            <div className="flex gap-3">
+            <div className="flex flex-col gap-3">
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => navigate("/")}
+                >
+                  <Home className="w-4 h-4 mr-2" />
+                  Home
+                </Button>
+                <Button className="flex-1" onClick={() => navigate("/auth")}>
+                  <LogIn className="w-4 h-4 mr-2" />
+                  Sign In
+                </Button>
+              </div>
+
               <Button
                 variant="outline"
-                className="flex-1"
-                onClick={() => navigate("/")}
+                onClick={async () => {
+                  await signOut();
+                  navigate("/auth");
+                }}
               >
-                <Home className="w-4 h-4 mr-2" />
-                Home
-              </Button>
-              <Button className="flex-1" onClick={() => navigate("/auth")}>
-                <LogIn className="w-4 h-4 mr-2" />
-                Sign In
+                <LogOut className="w-4 h-4 mr-2" />
+                Sign Out
               </Button>
             </div>
 
