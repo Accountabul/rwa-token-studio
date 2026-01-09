@@ -8,6 +8,7 @@ import { WorkOrderService, workOrderService } from "./services/WorkOrderService"
 import { PayeeService, payeeService } from "./services/PayeeService";
 import { PayoutRequestService, payoutRequestService } from "./services/PayoutRequestService";
 import { WalletService, walletService } from "./services/WalletService";
+import { ApprovalService, approvalService } from "./services/ApprovalService";
 
 /**
  * Service container for dependency injection
@@ -22,6 +23,7 @@ export interface ServiceContainer {
   payeeService: PayeeService;
   payoutRequestService: PayoutRequestService;
   walletService: WalletService;
+  approvalService: ApprovalService;
 }
 
 /**
@@ -37,6 +39,7 @@ const defaultServices: ServiceContainer = {
   payeeService,
   payoutRequestService,
   walletService,
+  approvalService,
 };
 
 /**
@@ -148,4 +151,12 @@ export function usePayoutRequestService(): PayoutRequestService {
 export function useWalletService(): WalletService {
   const { walletService } = useContext(ServiceContext);
   return walletService;
+}
+
+/**
+ * Hook to access approval service
+ */
+export function useApprovalService(): ApprovalService {
+  const { approvalService } = useContext(ServiceContext);
+  return approvalService;
 }

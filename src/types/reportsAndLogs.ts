@@ -22,7 +22,8 @@ export type AuditEntityType =
   | "MULTI_SIGN_TX"
   | "HOLDER_AUTH"
   | "AUTH_SESSION"
-  | "USER_ROLE";
+  | "USER_ROLE"
+  | "APPROVAL";
 
 export type AuditAction =
   | "CREATE"

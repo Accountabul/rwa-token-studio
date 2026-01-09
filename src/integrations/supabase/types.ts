@@ -14,6 +14,110 @@ export type Database = {
   }
   public: {
     Tables: {
+      approval_signatures: {
+        Row: {
+          approval_id: string
+          approved: boolean
+          approver_id: string
+          approver_name: string
+          approver_role: string
+          id: string
+          notes: string | null
+          signed_at: string
+        }
+        Insert: {
+          approval_id: string
+          approved: boolean
+          approver_id: string
+          approver_name: string
+          approver_role: string
+          id?: string
+          notes?: string | null
+          signed_at?: string
+        }
+        Update: {
+          approval_id?: string
+          approved?: boolean
+          approver_id?: string
+          approver_name?: string
+          approver_role?: string
+          id?: string
+          notes?: string | null
+          signed_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approval_signatures_approval_id_fkey"
+            columns: ["approval_id"]
+            isOneToOne: false
+            referencedRelation: "pending_approvals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pending_approvals: {
+        Row: {
+          action_type: string
+          created_at: string
+          current_approvals: number
+          entity_id: string
+          entity_name: string | null
+          entity_type: string
+          executed_at: string | null
+          executed_by: string | null
+          expires_at: string
+          id: string
+          payload: Json
+          rejection_reason: string | null
+          requested_at: string
+          requested_by: string
+          requested_by_name: string
+          requested_by_role: string
+          required_approvers: number
+          status: string
+        }
+        Insert: {
+          action_type: string
+          created_at?: string
+          current_approvals?: number
+          entity_id: string
+          entity_name?: string | null
+          entity_type: string
+          executed_at?: string | null
+          executed_by?: string | null
+          expires_at?: string
+          id?: string
+          payload?: Json
+          rejection_reason?: string | null
+          requested_at?: string
+          requested_by: string
+          requested_by_name: string
+          requested_by_role: string
+          required_approvers?: number
+          status?: string
+        }
+        Update: {
+          action_type?: string
+          created_at?: string
+          current_approvals?: number
+          entity_id?: string
+          entity_name?: string | null
+          entity_type?: string
+          executed_at?: string | null
+          executed_by?: string | null
+          expires_at?: string
+          id?: string
+          payload?: Json
+          rejection_reason?: string | null
+          requested_at?: string
+          requested_by?: string
+          requested_by_name?: string
+          requested_by_role?: string
+          required_approvers?: number
+          status?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -229,6 +333,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_approve: { Args: { _user_id: string }; Returns: boolean }
       get_user_roles: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"][]
