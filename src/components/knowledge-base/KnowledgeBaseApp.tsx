@@ -59,6 +59,7 @@ export function KnowledgeBaseApp() {
       xrpl_explorer: 0,
       portfolio_holdings: 0,
       system_roles: 0,
+      role_workflows: 0,
     };
     entries.forEach((e) => {
       counts[e.category]++;

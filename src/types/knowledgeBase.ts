@@ -9,7 +9,8 @@ export type KBCategory =
   | "token_registry"
   | "xrpl_explorer"
   | "portfolio_holdings"
-  | "system_roles";
+  | "system_roles"
+  | "role_workflows";
 
 export const kbCategoryLabel: Record<KBCategory, string> = {
   projects_assets: "Projects & Assets",
@@ -21,6 +22,7 @@ export const kbCategoryLabel: Record<KBCategory, string> = {
   xrpl_explorer: "XRPL Explorer",
   portfolio_holdings: "Portfolio & Holdings",
   system_roles: "System Roles & Permissions",
+  role_workflows: "Role Workflows & SOPs",
 };
 
 export const kbCategoryDescription: Record<KBCategory, string> = {
@@ -33,6 +35,7 @@ export const kbCategoryDescription: Record<KBCategory, string> = {
   xrpl_explorer: "Defines XRPL explorer integration and on-chain verification",
   portfolio_holdings: "Defines investor portfolio metrics and asset holdings",
   system_roles: "Defines human roles, AI agents, access controls, and audit criteria for compliance review",
+  role_workflows: "Step-by-step procedures for each system role's daily operations",
 };
 
 export type KBEntryStatus = "draft" | "published";
