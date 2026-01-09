@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -27,6 +28,42 @@ serve(async (req) => {
   }
 
   try {
+    // =========================================================================
+    // SECURITY: JWT Verification
+    // =========================================================================
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      console.error('[xrpl-asset-search] Missing or invalid Authorization header');
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized - missing token' }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
+
+    // Verify JWT
+    const token = authHeader.replace('Bearer ', '');
+    const { data: claimsData, error: authError } = await supabase.auth.getClaims(token);
+
+    if (authError || !claimsData?.claims?.sub) {
+      console.error('[xrpl-asset-search] Token verification failed:', authError?.message);
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized - invalid token' }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    console.log(`[xrpl-asset-search] Authenticated user: ${claimsData.claims.sub}`);
+    // =========================================================================
+    // END SECURITY BLOCK
+    // =========================================================================
+
     const { query, network = "mainnet", limit = 25 } = await req.json();
     const searchQuery = (query || "").toLowerCase().trim();
     
@@ -93,6 +130,7 @@ serve(async (req) => {
   } catch (error) {
     console.error("[xrpl-asset-search] Error:", error);
     const message = error instanceof Error ? error.message : "Unknown error";
+    // Return error with fallback assets for graceful degradation
     return new Response(
       JSON.stringify({ error: message, assets: COMMON_ASSETS }),
       {

@@ -240,6 +240,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      has_wallet_role: { Args: { _user_id: string }; Returns: boolean }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {

@@ -82,6 +82,9 @@ const VALID_ROLES = [
   "COMPLIANCE", "COLD_STORAGE", "HOT_WALLET"
 ];
 
+// Roles that can provision wallets
+const WALLET_PROVISION_ROLES = ['SUPER_ADMIN', 'CUSTODY_OFFICER'];
+
 serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -90,9 +93,76 @@ serve(async (req) => {
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+    // =========================================================================
+    // SECURITY: JWT Verification and Role Check
+    // =========================================================================
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      console.error('[provision-wallet] Missing or invalid Authorization header');
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized - missing token' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Create client with user's auth token for validation
+    const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
+
+    // Verify JWT and get claims
+    const token = authHeader.replace('Bearer ', '');
+    const { data: claimsData, error: authError } = await supabaseAuth.auth.getClaims(token);
+
+    if (authError || !claimsData?.claims?.sub) {
+      console.error('[provision-wallet] Token verification failed:', authError?.message);
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized - invalid token' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const userId = claimsData.claims.sub;
+    console.log(`[provision-wallet] Authenticated user: ${userId}`);
+
+    // Use service role client to check user roles (bypasses RLS)
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
     
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const { data: userRoles, error: rolesError } = await supabaseAdmin
+      .rpc('get_user_roles', { _user_id: userId });
+
+    if (rolesError) {
+      console.error('[provision-wallet] Failed to fetch user roles:', rolesError.message);
+      return new Response(
+        JSON.stringify({ error: 'Failed to verify permissions' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Check if user has required role
+    const hasPermission = userRoles?.some((role: string) => 
+      WALLET_PROVISION_ROLES.includes(role)
+    );
+
+    if (!hasPermission) {
+      console.error(`[provision-wallet] User ${userId} lacks required role. Has: ${userRoles?.join(', ')}`);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Forbidden - insufficient permissions',
+          required: WALLET_PROVISION_ROLES,
+          current: userRoles 
+        }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log(`[provision-wallet] User ${userId} authorized with roles: ${userRoles?.join(', ')}`);
+    // =========================================================================
+    // END SECURITY BLOCK
+    // =========================================================================
 
     const body: ProvisionRequest = await req.json();
     
@@ -146,7 +216,7 @@ serve(async (req) => {
     console.log(`[provision-wallet] Wallet created: ${faucetData.account.classicAddress}`);
 
     // Encrypt the seed for storage
-    const encryptionKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!.slice(0, 32);
+    const encryptionKey = supabaseServiceKey.slice(0, 32);
     const encryptedSeed = encryptSeed(faucetData.account.secret, encryptionKey);
 
     // Build wallet data object with all fields
@@ -200,7 +270,8 @@ serve(async (req) => {
     if (body.multiSignQuorum) walletData.multi_sign_quorum = body.multiSignQuorum;
     if (body.multiSignSigners) walletData.multi_sign_signers = body.multiSignSigners;
 
-    const { data: wallet, error: dbError } = await supabase
+    // Use service role to insert (bypasses RLS since we already verified permissions)
+    const { data: wallet, error: dbError } = await supabaseAdmin
       .from('wallets')
       .insert(walletData)
       .select()
