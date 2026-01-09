@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -16,6 +17,42 @@ serve(async (req) => {
   }
 
   try {
+    // =========================================================================
+    // SECURITY: JWT Verification
+    // =========================================================================
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      console.error('[validate-xrpl-asset] Missing or invalid Authorization header');
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized - missing token' }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
+
+    // Verify JWT
+    const token = authHeader.replace('Bearer ', '');
+    const { data: claimsData, error: authError } = await supabase.auth.getClaims(token);
+
+    if (authError || !claimsData?.claims?.sub) {
+      console.error('[validate-xrpl-asset] Token verification failed:', authError?.message);
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized - invalid token' }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    console.log(`[validate-xrpl-asset] Authenticated user: ${claimsData.claims.sub}`);
+    // =========================================================================
+    // END SECURITY BLOCK
+    // =========================================================================
+
     const { asset, network = "mainnet" } = await req.json();
     
     console.log(`[validate-xrpl-asset] Validating: ${asset?.currency} (${asset?.type})`);
@@ -99,13 +136,13 @@ serve(async (req) => {
     
   } catch (error) {
     console.error("[validate-xrpl-asset] Error:", error);
-    // Fail open - allow transaction to proceed, let ledger reject if invalid
+    // FAIL CLOSED - do not allow unverified operations for security
     return new Response(
       JSON.stringify({ 
-        valid: true, 
-        warning: "Validation service unavailable, proceeding without verification" 
+        valid: false, 
+        error: "Validation service unavailable - operation blocked for safety" 
       }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
@@ -150,6 +187,7 @@ function isValidCurrencyCode(currency: string): boolean {
 
 /**
  * Verify issuer account exists on the XRPL
+ * FAIL CLOSED: Returns false on any error for security
  */
 async function verifyIssuerAccount(issuer: string, network: string): Promise<boolean> {
   const rpcUrl = network === "mainnet"
@@ -170,7 +208,7 @@ async function verifyIssuerAccount(issuer: string, network: string): Promise<boo
     
     if (!response.ok) {
       console.log("[validate-xrpl-asset] RPC request failed");
-      return true; // Fail open
+      return false; // FAIL CLOSED - do not allow unverified
     }
     
     const data = await response.json();
@@ -185,12 +223,13 @@ async function verifyIssuerAccount(issuer: string, network: string): Promise<boo
       return false;
     }
     
-    // Unknown response, fail open
-    return true;
+    // Unknown response - FAIL CLOSED
+    console.log("[validate-xrpl-asset] Unknown RPC response, failing closed");
+    return false;
     
   } catch (err) {
     console.error("[validate-xrpl-asset] RPC error:", err);
-    // Fail open on network errors
-    return true;
+    // FAIL CLOSED on network errors for security
+    return false;
   }
 }
