@@ -1,53 +1,29 @@
-import React from "react";
-import { useLocation } from "react-router-dom";
+import React, { useState, useMemo, useCallback } from "react";
+import { useLocation, Link } from "react-router-dom";
 import { Role, roleLabel } from "@/types/tokenization";
 import { useAuth } from "@/contexts/AuthContext";
 import { hasPermission } from "@/permissions";
-import { NAV_ITEMS } from "@/config/routePermissions";
+import { NAV_DEPARTMENTS, NavDepartment, NavItem } from "@/config/navigationDepartments";
 import { cn } from "@/lib/utils";
-import { 
-  LayoutDashboard, 
-  Users, 
-  FileText, 
-  Shield, 
-  ChevronDown,
+import {
   Hexagon,
-  BookOpen,
-  Coins,
-  Lock,
-  Wallet,
-  FileCheck,
-  ArrowLeftRight,
-  Waves,
-  Code,
-  Layers,
+  ChevronDown,
+  ChevronRight,
   LogOut,
   User,
-  LucideIcon
+  Shield,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 interface AppSidebarProps {
   role: Role;
   onRoleChange: (role: Role) => void;
 }
-
-// Icon mapping for nav items
-const iconMap: Record<string, LucideIcon> = {
-  LayoutDashboard,
-  Coins,
-  Lock,
-  Wallet,
-  FileCheck,
-  ArrowLeftRight,
-  Waves,
-  Code,
-  Layers,
-  Users,
-  BookOpen,
-  FileText,
-  Shield,
-};
 
 const allRoles: Role[] = [
   "SUPER_ADMIN",
@@ -66,21 +42,53 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ role, onRoleChange }) =>
   // Check if user is SUPER_ADMIN
   const isSuperAdmin = roles.includes("SUPER_ADMIN");
 
-  // Filter nav items based on user's actual roles
-  const visibleNavItems = React.useMemo(() => {
-    // If no roles, show nothing (or could show a subset)
-    if (roles.length === 0) return [];
-
-    return NAV_ITEMS.filter((item) =>
-      roles.some((userRole) => hasPermission(userRole, item.entity, item.action))
-    );
-  }, [roles]);
-
-  const isActive = (href?: string) => {
-    if (!href) return false;
+  // Helper to check if a path is active
+  const isActive = useCallback((href: string) => {
     if (href === "/") return location.pathname === "/";
     return location.pathname.startsWith(href);
-  };
+  }, [location.pathname]);
+
+  // Find which department contains the active route
+  const activeDepartmentId = useMemo(() => {
+    for (const dept of NAV_DEPARTMENTS) {
+      if (dept.items.some(item => isActive(item.href))) {
+        return dept.id;
+      }
+    }
+    return null;
+  }, [isActive]);
+
+  // Track expanded departments - auto-expand active department
+  const [expandedDepts, setExpandedDepts] = useState<Set<string>>(() => {
+    return new Set(activeDepartmentId ? [activeDepartmentId] : []);
+  });
+
+  // Toggle department expansion
+  const toggleDept = useCallback((deptId: string) => {
+    setExpandedDepts(prev => {
+      const next = new Set(prev);
+      if (next.has(deptId)) {
+        next.delete(deptId);
+      } else {
+        next.add(deptId);
+      }
+      return next;
+    });
+  }, []);
+
+  // Filter departments and items based on user's roles
+  const visibleDepartments = useMemo(() => {
+    if (roles.length === 0) return [];
+
+    return NAV_DEPARTMENTS
+      .map(dept => ({
+        ...dept,
+        items: dept.items.filter(item =>
+          roles.some(userRole => hasPermission(userRole, item.entity, item.action))
+        )
+      }))
+      .filter(dept => dept.items.length > 0);
+  }, [roles]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -108,26 +116,21 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ role, onRoleChange }) =>
         </div>
       </div>
 
-      {/* Navigation */}
-      <nav className="px-3 py-4 flex-1 space-y-1 overflow-y-auto">
-        {visibleNavItems.length > 0 ? (
-          visibleNavItems.map((item) => {
-            const IconComponent = iconMap[item.icon] || LayoutDashboard;
-            return (
-              <a
-                key={item.label}
-                href={item.href}
-                className={cn(
-                  "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
-                  isActive(item.href) && "bg-sidebar-accent/10 text-sidebar-accent",
-                  !isActive(item.href) && "text-sidebar-foreground/70 hover:bg-sidebar-foreground/5 hover:text-sidebar-foreground"
-                )}
-              >
-                <IconComponent className="w-4 h-4" />
-                <span>{item.label}</span>
-              </a>
-            );
-          })
+      {/* Navigation - Department-based */}
+      <nav className="px-3 py-4 flex-1 overflow-y-auto">
+        {visibleDepartments.length > 0 ? (
+          <div className="space-y-1">
+            {visibleDepartments.map((dept) => (
+              <DepartmentGroup
+                key={dept.id}
+                department={dept}
+                isExpanded={expandedDepts.has(dept.id)}
+                onToggle={() => toggleDept(dept.id)}
+                isActive={isActive}
+                hasActiveChild={dept.items.some(item => isActive(item.href))}
+              />
+            ))}
+          </div>
         ) : (
           <div className="px-3 py-4 text-sm text-sidebar-muted text-center">
             <p>No accessible pages.</p>
@@ -138,20 +141,44 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ role, onRoleChange }) =>
         {/* Admin Section - Only visible to SUPER_ADMIN */}
         {isSuperAdmin && (
           <div className="mt-6 pt-4 border-t border-sidebar-border/50">
-            <div className="px-3 py-2 text-[10px] uppercase tracking-wider text-amber-500/70 font-medium">
-              Administration
-            </div>
-            <a
-              href="/admin/users"
-              className={cn(
-                "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
-                isActive("/admin/users") && "bg-amber-500/10 text-amber-500",
-                !isActive("/admin/users") && "text-sidebar-foreground/70 hover:bg-sidebar-foreground/5 hover:text-sidebar-foreground"
-              )}
+            <Collapsible
+              open={expandedDepts.has("admin")}
+              onOpenChange={() => toggleDept("admin")}
             >
-              <Shield className="w-4 h-4" />
-              <span>User Management</span>
-            </a>
+              <CollapsibleTrigger asChild>
+                <button
+                  className={cn(
+                    "w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200",
+                    "text-amber-500/90 hover:bg-amber-500/10",
+                    isActive("/admin") && "bg-amber-500/10"
+                  )}
+                >
+                  <Shield className="w-4 h-4" />
+                  <span className="flex-1 text-left">Administration</span>
+                  <ChevronDown
+                    className={cn(
+                      "w-3.5 h-3.5 transition-transform duration-200",
+                      expandedDepts.has("admin") && "rotate-180"
+                    )}
+                  />
+                </button>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="mt-1 ml-4 pl-2 border-l border-sidebar-border/30 space-y-0.5">
+                  <Link
+                    to="/admin/users"
+                    className={cn(
+                      "block px-3 py-2 rounded-lg text-sm transition-all duration-200",
+                      isActive("/admin/users")
+                        ? "text-amber-500 bg-amber-500/10 font-medium"
+                        : "text-sidebar-foreground/70 hover:bg-sidebar-foreground/5 hover:text-sidebar-foreground"
+                    )}
+                  >
+                    User Management
+                  </Link>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
           </div>
         )}
       </nav>
@@ -243,5 +270,70 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ role, onRoleChange }) =>
         </Button>
       </div>
     </aside>
+  );
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Department Group Component
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface DepartmentGroupProps {
+  department: NavDepartment;
+  isExpanded: boolean;
+  onToggle: () => void;
+  isActive: (href: string) => boolean;
+  hasActiveChild: boolean;
+}
+
+const DepartmentGroup: React.FC<DepartmentGroupProps> = ({
+  department,
+  isExpanded,
+  onToggle,
+  isActive,
+  hasActiveChild,
+}) => {
+  const Icon = department.icon;
+
+  return (
+    <Collapsible open={isExpanded} onOpenChange={onToggle}>
+      <CollapsibleTrigger asChild>
+        <button
+          className={cn(
+            "w-full flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
+            hasActiveChild
+              ? "text-sidebar-accent bg-sidebar-accent/5"
+              : "text-sidebar-foreground/80 hover:bg-sidebar-foreground/5 hover:text-sidebar-foreground"
+          )}
+        >
+          <Icon className="w-4 h-4 shrink-0" />
+          <span className="flex-1 text-left truncate">{department.label}</span>
+          <ChevronRight
+            className={cn(
+              "w-3.5 h-3.5 text-sidebar-muted transition-transform duration-200",
+              isExpanded && "rotate-90"
+            )}
+          />
+        </button>
+      </CollapsibleTrigger>
+
+      <CollapsibleContent>
+        <div className="mt-1 ml-4 pl-2 border-l border-sidebar-border/30 space-y-0.5">
+          {department.items.map((item) => (
+            <Link
+              key={item.href}
+              to={item.href}
+              className={cn(
+                "block px-3 py-2 rounded-lg text-sm transition-all duration-200",
+                isActive(item.href)
+                  ? "text-sidebar-accent bg-sidebar-accent/10 font-medium"
+                  : "text-sidebar-foreground/70 hover:bg-sidebar-foreground/5 hover:text-sidebar-foreground"
+              )}
+            >
+              {item.label}
+            </Link>
+          ))}
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
   );
 };
