@@ -528,19 +528,23 @@ const AdminUserDetail: React.FC = () => {
           <AssignRoleDialog
             open={assignDialogOpen}
             onOpenChange={setAssignDialogOpen}
-            userId={userId!}
-            userName={user.full_name}
+            user={{ id: userId!, email: user.email, full_name: user.full_name, roles: userRoles || [] }}
+            onSuccess={() => {
+              queryClient.invalidateQueries({ queryKey: ["admin-user-roles", userId] });
+              setAssignDialogOpen(false);
+            }}
           />
 
-          {selectedRole && (
-            <RevokeRoleDialog
-              open={revokeDialogOpen}
-              onOpenChange={setRevokeDialogOpen}
-              roleId={selectedRole.id}
-              roleName={roleLabel[selectedRole.role]}
-              userName={user.full_name}
-            />
-          )}
+          <RevokeRoleDialog
+            open={revokeDialogOpen}
+            onOpenChange={setRevokeDialogOpen}
+            user={{ id: userId!, email: user.email, full_name: user.full_name }}
+            roleToRevoke={selectedRole}
+            onSuccess={() => {
+              queryClient.invalidateQueries({ queryKey: ["admin-user-roles", userId] });
+              setRevokeDialogOpen(false);
+            }}
+          />
         </main>
       </div>
     </SidebarProvider>
