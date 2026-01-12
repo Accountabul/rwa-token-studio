@@ -391,4 +391,13 @@ export const PAYOUT_ROLE_PERMISSIONS: Record<Role, PayoutPermissions> = {
     canViewApprovalQueue: true, // Read-only
     canCreatePayee: false,
   },
+  HIRING_MANAGER: {
+    canCreateRequest: false,
+    canApproveRequest: false,
+    canRejectRequest: false,
+    canMarkPaid: false,
+    canVoidRequest: false,
+    canViewApprovalQueue: false,
+    canCreatePayee: false,
+  },
 };

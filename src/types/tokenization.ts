@@ -5,7 +5,8 @@ export type Role =
   | "CUSTODY_OFFICER"
   | "VALUATION_OFFICER"
   | "FINANCE_OFFICER"
-  | "AUDITOR";
+  | "AUDITOR"
+  | "HIRING_MANAGER";
 
 export type ProjectStatus =
   | "INTAKE_PENDING"
@@ -111,4 +112,21 @@ export const roleLabel: Record<Role, string> = {
   VALUATION_OFFICER: "Valuation/Appraisal Officer",
   FINANCE_OFFICER: "Finance Officer",
   AUDITOR: "Auditor (Read-Only)",
+  HIRING_MANAGER: "Hiring Manager",
 };
+
+// Privileged roles that require SUPER_ADMIN to assign
+export const PRIVILEGED_ROLES: Role[] = [
+  "SUPER_ADMIN",
+  "CUSTODY_OFFICER",
+  "COMPLIANCE_OFFICER",
+  "FINANCE_OFFICER",
+];
+
+// Basic roles that HIRING_MANAGER can assign
+export const BASIC_ROLES: Role[] = [
+  "TOKENIZATION_MANAGER",
+  "VALUATION_OFFICER",
+  "AUDITOR",
+  "HIRING_MANAGER",
+];

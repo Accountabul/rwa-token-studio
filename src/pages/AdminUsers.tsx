@@ -7,6 +7,8 @@ import { AppSidebar } from "@/components/shared/AppSidebar";
 import { Role, roleLabel } from "@/types/tokenization";
 import { UserProfile, UserRoleAssignment, UserStatus } from "@/types/userManagement";
 import { UserStatusBadge } from "@/components/admin/UserStatusBadge";
+import { InviteEmployeeDialog } from "@/components/admin/InviteEmployeeDialog";
+import { InvitationsTable } from "@/components/admin/InvitationsTable";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -39,7 +41,9 @@ const AdminUsers: React.FC = () => {
   const navigate = useNavigate();
   const [role, setRole] = React.useState<Role>("SUPER_ADMIN");
   const [activeTab, setActiveTab] = React.useState<string>("all");
+  const [mainTab, setMainTab] = React.useState<"users" | "invitations">("users");
   const [search, setSearch] = React.useState("");
+  const [inviteDialogOpen, setInviteDialogOpen] = React.useState(false);
 
   // Fetch all users
   const { data: users, isLoading: loadingUsers } = useQuery({
@@ -88,6 +92,18 @@ const AdminUsers: React.FC = () => {
     },
   });
 
+  // Fetch pending invitations count
+  const { data: pendingInvitationsCount } = useQuery({
+    queryKey: ["pending-invitations-count"],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("invitations")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "PENDING");
+      if (error) throw error;
+      return count || 0;
+    },
+  });
   // Compute stats
   const stats = React.useMemo(() => {
     if (!users) return { total: 0, active: 0, suspended: 0, terminated: 0 };
@@ -168,10 +184,16 @@ const AdminUsers: React.FC = () => {
                   Manage users, roles, and permissions across the platform
                 </p>
               </div>
-              <Button onClick={() => navigate("/admin/roles")} variant="outline">
-                <Shield className="w-4 h-4 mr-2" />
-                View Roles
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button onClick={() => setInviteDialogOpen(true)}>
+                  <UserPlus className="w-4 h-4 mr-2" />
+                  Invite Employee
+                </Button>
+                <Button onClick={() => navigate("/admin/roles")} variant="outline">
+                  <Shield className="w-4 h-4 mr-2" />
+                  View Roles
+                </Button>
+              </div>
             </div>
           </div>
 
@@ -250,19 +272,36 @@ const AdminUsers: React.FC = () => {
             </Card>
           )}
 
-          {/* User List */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>Users</CardTitle>
-                  <CardDescription>
-                    Click on a user to view details and manage access
-                  </CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
+          {/* Main Tabs: Users vs Invitations */}
+          <Tabs value={mainTab} onValueChange={(v) => setMainTab(v as "users" | "invitations")} className="space-y-4">
+            <TabsList>
+              <TabsTrigger value="users" className="gap-2">
+                <Users className="w-4 h-4" />
+                Users
+              </TabsTrigger>
+              <TabsTrigger value="invitations" className="gap-2">
+                <Mail className="w-4 h-4" />
+                Invitations
+                {pendingInvitationsCount && pendingInvitationsCount > 0 && (
+                  <Badge variant="secondary">{pendingInvitationsCount}</Badge>
+                )}
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="users">
+              {/* User List */}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle>Users</CardTitle>
+                      <CardDescription>
+                        Click on a user to view details and manage access
+                      </CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
               {/* Tabs and Search */}
               <div className="flex items-center justify-between mb-4 gap-4">
                 <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -397,9 +436,35 @@ const AdminUsers: React.FC = () => {
                     </TableBody>
                   </Table>
                 </div>
-              )}
-            </CardContent>
-          </Card>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="invitations">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Invitations</CardTitle>
+                    <CardDescription>
+                      Manage pending employee invitations
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <InvitationsTable />
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+
+        {/* Invite Dialog */}
+        <InviteEmployeeDialog
+          open={inviteDialogOpen}
+          onOpenChange={setInviteDialogOpen}
+        />
         </main>
       </div>
     </SidebarProvider>
