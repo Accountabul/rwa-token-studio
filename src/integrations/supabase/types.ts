@@ -417,6 +417,48 @@ export type Database = {
           },
         ]
       }
+      role_catalog: {
+        Row: {
+          backend_access: string[] | null
+          category: string
+          created_at: string | null
+          default_expiration_days: number | null
+          display_name: string
+          id: string
+          is_privileged: boolean | null
+          purpose: string
+          requires_approval: boolean | null
+          restrictions: string[] | null
+          role_code: Database["public"]["Enums"]["app_role"]
+        }
+        Insert: {
+          backend_access?: string[] | null
+          category: string
+          created_at?: string | null
+          default_expiration_days?: number | null
+          display_name: string
+          id?: string
+          is_privileged?: boolean | null
+          purpose: string
+          requires_approval?: boolean | null
+          restrictions?: string[] | null
+          role_code: Database["public"]["Enums"]["app_role"]
+        }
+        Update: {
+          backend_access?: string[] | null
+          category?: string
+          created_at?: string | null
+          default_expiration_days?: number | null
+          display_name?: string
+          id?: string
+          is_privileged?: boolean | null
+          purpose?: string
+          requires_approval?: boolean | null
+          restrictions?: string[] | null
+          role_code?: Database["public"]["Enums"]["app_role"]
+        }
+        Relationships: []
+      }
       role_permissions: {
         Row: {
           granted_at: string
@@ -442,6 +484,72 @@ export type Database = {
             columns: ["permission_id"]
             isOneToOne: false
             referencedRelation: "permissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      role_requests: {
+        Row: {
+          backend_access: string[] | null
+          category: string
+          created_at: string | null
+          created_role: Database["public"]["Enums"]["app_role"] | null
+          id: string
+          justification: string
+          purpose: string
+          requested_by: string
+          restrictions: string[] | null
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          role_name: string
+          status: string
+        }
+        Insert: {
+          backend_access?: string[] | null
+          category: string
+          created_at?: string | null
+          created_role?: Database["public"]["Enums"]["app_role"] | null
+          id?: string
+          justification: string
+          purpose: string
+          requested_by: string
+          restrictions?: string[] | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          role_name: string
+          status?: string
+        }
+        Update: {
+          backend_access?: string[] | null
+          category?: string
+          created_at?: string | null
+          created_role?: Database["public"]["Enums"]["app_role"] | null
+          id?: string
+          justification?: string
+          purpose?: string
+          requested_by?: string
+          restrictions?: string[] | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          role_name?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "role_requests_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "role_requests_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -656,6 +764,7 @@ export type Database = {
       }
       has_wallet_role: { Args: { _user_id: string }; Returns: boolean }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_system_admin: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       app_role:
