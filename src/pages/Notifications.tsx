@@ -48,48 +48,48 @@ const NotificationsPage: React.FC = () => {
             <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
               <Bell className="w-5 h-5 text-primary" />
             </div>
-                  <div>
-                    <h1 className="text-2xl font-semibold">Notifications</h1>
-                    <p className="text-sm text-muted-foreground">
-                      {unreadCount > 0
-                        ? `${unreadCount} unread notification${unreadCount !== 1 ? "s" : ""}`
-                        : "All caught up"}
-                    </p>
-                  </div>
-                </div>
+            <div>
+              <h1 className="text-2xl font-semibold">Notifications</h1>
+              <p className="text-sm text-muted-foreground">
+                {unreadCount > 0
+                  ? `${unreadCount} unread notification${unreadCount !== 1 ? "s" : ""}`
+                  : "All caught up"}
+              </p>
+            </div>
+          </div>
 
+          {unreadCount > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={() => markAllAsRead.mutate()}
+              disabled={markAllAsRead.isPending}
+            >
+              <Check className="w-4 h-4" />
+              Mark all as read
+            </Button>
+          )}
+        </div>
+
+        {/* Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <TabsList>
+              <TabsTrigger value="all" className="gap-2">
+                <Inbox className="w-4 h-4" />
+                All
+              </TabsTrigger>
+              <TabsTrigger value="unread" className="gap-2">
+                Unread
                 {unreadCount > 0 && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-2"
-                    onClick={() => markAllAsRead.mutate()}
-                    disabled={markAllAsRead.isPending}
-                  >
-                    <Check className="w-4 h-4" />
-                    Mark all as read
-                  </Button>
+                  <span className="ml-1 px-1.5 py-0.5 text-xs bg-primary text-primary-foreground rounded-full">
+                    {unreadCount}
+                  </span>
                 )}
-              </div>
-
-              {/* Tabs */}
-              <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <div className="flex items-center justify-between gap-4 flex-wrap">
-                  <TabsList>
-                    <TabsTrigger value="all" className="gap-2">
-                      <Inbox className="w-4 h-4" />
-                      All
-                    </TabsTrigger>
-                    <TabsTrigger value="unread" className="gap-2">
-                      Unread
-                      {unreadCount > 0 && (
-                        <span className="ml-1 px-1.5 py-0.5 text-xs bg-primary text-primary-foreground rounded-full">
-                          {unreadCount}
-                        </span>
-                      )}
-                    </TabsTrigger>
-                    <TabsTrigger value="archived">Archived</TabsTrigger>
-                  </TabsList>
+              </TabsTrigger>
+              <TabsTrigger value="archived">Archived</TabsTrigger>
+            </TabsList>
 
             <NotificationFilters
               filters={filters}
