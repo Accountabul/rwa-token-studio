@@ -355,14 +355,29 @@ const deriveRolePermissions = (role: Role): RolePermissions => ({
 });
 
 export const rolePermissionsMatrix: Record<Role, RolePermissions> = {
+  // Administration
   SUPER_ADMIN: deriveRolePermissions("SUPER_ADMIN"),
-  FINANCE_OFFICER: deriveRolePermissions("FINANCE_OFFICER"),
-  COMPLIANCE_OFFICER: deriveRolePermissions("COMPLIANCE_OFFICER"),
-  AUDITOR: deriveRolePermissions("AUDITOR"),
-  TOKENIZATION_MANAGER: deriveRolePermissions("TOKENIZATION_MANAGER"),
-  CUSTODY_OFFICER: deriveRolePermissions("CUSTODY_OFFICER"),
-  VALUATION_OFFICER: deriveRolePermissions("VALUATION_OFFICER"),
+  SYSTEM_ADMIN: deriveRolePermissions("SYSTEM_ADMIN"),
   HIRING_MANAGER: deriveRolePermissions("HIRING_MANAGER"),
+  OPERATIONS_ADMIN: deriveRolePermissions("OPERATIONS_ADMIN"),
+  // Tokenization
+  TOKENIZATION_MANAGER: deriveRolePermissions("TOKENIZATION_MANAGER"),
+  VALUATION_OFFICER: deriveRolePermissions("VALUATION_OFFICER"),
+  PROPERTY_OPERATIONS_MANAGER: deriveRolePermissions("PROPERTY_OPERATIONS_MANAGER"),
+  INVESTOR_OPERATIONS: deriveRolePermissions("INVESTOR_OPERATIONS"),
+  // Compliance
+  COMPLIANCE_OFFICER: deriveRolePermissions("COMPLIANCE_OFFICER"),
+  RISK_ANALYST: deriveRolePermissions("RISK_ANALYST"),
+  AUDITOR: deriveRolePermissions("AUDITOR"),
+  // Finance
+  FINANCE_OFFICER: deriveRolePermissions("FINANCE_OFFICER"),
+  ACCOUNTING_MANAGER: deriveRolePermissions("ACCOUNTING_MANAGER"),
+  CUSTODY_OFFICER: deriveRolePermissions("CUSTODY_OFFICER"),
+  // Engineering
+  BACKEND_ENGINEER: deriveRolePermissions("BACKEND_ENGINEER"),
+  PLATFORM_ENGINEER: deriveRolePermissions("PLATFORM_ENGINEER"),
+  SECURITY_ENGINEER: deriveRolePermissions("SECURITY_ENGINEER"),
+  QA_TEST_ENGINEER: deriveRolePermissions("QA_TEST_ENGINEER"),
 };
 
 // ============================================

@@ -1,12 +1,50 @@
+// ============================================================================
+// ROLE DEFINITIONS - Enterprise Role Catalog
+// ============================================================================
+
 export type Role =
+  // Administration & Internal Operations
   | "SUPER_ADMIN"
+  | "SYSTEM_ADMIN"
+  | "HIRING_MANAGER"
+  | "OPERATIONS_ADMIN"
+  // Tokenization Business
   | "TOKENIZATION_MANAGER"
-  | "COMPLIANCE_OFFICER"
-  | "CUSTODY_OFFICER"
   | "VALUATION_OFFICER"
-  | "FINANCE_OFFICER"
+  | "PROPERTY_OPERATIONS_MANAGER"
+  | "INVESTOR_OPERATIONS"
+  // Compliance, Risk & Oversight
+  | "COMPLIANCE_OFFICER"
+  | "RISK_ANALYST"
   | "AUDITOR"
-  | "HIRING_MANAGER";
+  // Finance & Accounting
+  | "FINANCE_OFFICER"
+  | "ACCOUNTING_MANAGER"
+  | "CUSTODY_OFFICER"
+  // Engineering & Product
+  | "BACKEND_ENGINEER"
+  | "PLATFORM_ENGINEER"
+  | "SECURITY_ENGINEER"
+  | "QA_TEST_ENGINEER";
+
+// Role categories for grouping in UI
+export type RoleCategory = "ADMINISTRATION" | "TOKENIZATION" | "COMPLIANCE" | "FINANCE" | "ENGINEERING";
+
+export const ROLE_CATEGORIES: Record<RoleCategory, Role[]> = {
+  ADMINISTRATION: ["SUPER_ADMIN", "SYSTEM_ADMIN", "HIRING_MANAGER", "OPERATIONS_ADMIN"],
+  TOKENIZATION: ["TOKENIZATION_MANAGER", "VALUATION_OFFICER", "PROPERTY_OPERATIONS_MANAGER", "INVESTOR_OPERATIONS"],
+  COMPLIANCE: ["COMPLIANCE_OFFICER", "RISK_ANALYST", "AUDITOR"],
+  FINANCE: ["FINANCE_OFFICER", "ACCOUNTING_MANAGER", "CUSTODY_OFFICER"],
+  ENGINEERING: ["BACKEND_ENGINEER", "PLATFORM_ENGINEER", "SECURITY_ENGINEER", "QA_TEST_ENGINEER"],
+};
+
+export const ROLE_CATEGORY_LABELS: Record<RoleCategory, string> = {
+  ADMINISTRATION: "Administration & Internal Operations",
+  TOKENIZATION: "Tokenization Business",
+  COMPLIANCE: "Compliance, Risk & Oversight",
+  FINANCE: "Finance & Accounting",
+  ENGINEERING: "Engineering & Product",
+};
 
 export type ProjectStatus =
   | "INTAKE_PENDING"
@@ -104,20 +142,37 @@ export const statusOrder: ProjectStatus[] = [
   "MINTED",
 ];
 
+// Role labels for display
 export const roleLabel: Record<Role, string> = {
-  SUPER_ADMIN: "Super Admin",
-  TOKENIZATION_MANAGER: "Tokenization Manager",
-  COMPLIANCE_OFFICER: "Compliance Officer",
-  CUSTODY_OFFICER: "Custody Officer",
-  VALUATION_OFFICER: "Valuation/Appraisal Officer",
-  FINANCE_OFFICER: "Finance Officer",
-  AUDITOR: "Auditor (Read-Only)",
+  // Administration
+  SUPER_ADMIN: "Super Administrator",
+  SYSTEM_ADMIN: "System Administrator",
   HIRING_MANAGER: "Hiring Manager",
+  OPERATIONS_ADMIN: "Operations Administrator",
+  // Tokenization
+  TOKENIZATION_MANAGER: "Tokenization Manager",
+  VALUATION_OFFICER: "Valuation Officer",
+  PROPERTY_OPERATIONS_MANAGER: "Property Operations Manager",
+  INVESTOR_OPERATIONS: "Investor Operations",
+  // Compliance
+  COMPLIANCE_OFFICER: "Compliance Officer",
+  RISK_ANALYST: "Risk Analyst",
+  AUDITOR: "Auditor",
+  // Finance
+  FINANCE_OFFICER: "Finance Officer",
+  ACCOUNTING_MANAGER: "Accounting Manager",
+  CUSTODY_OFFICER: "Custody Officer",
+  // Engineering
+  BACKEND_ENGINEER: "Backend Engineer",
+  PLATFORM_ENGINEER: "Platform Engineer",
+  SECURITY_ENGINEER: "Security Engineer",
+  QA_TEST_ENGINEER: "QA / Test Engineer",
 };
 
-// Privileged roles that require SUPER_ADMIN to assign
+// Privileged roles that require SUPER_ADMIN or SYSTEM_ADMIN to assign
 export const PRIVILEGED_ROLES: Role[] = [
   "SUPER_ADMIN",
+  "SYSTEM_ADMIN",
   "CUSTODY_OFFICER",
   "COMPLIANCE_OFFICER",
   "FINANCE_OFFICER",
@@ -127,6 +182,18 @@ export const PRIVILEGED_ROLES: Role[] = [
 export const BASIC_ROLES: Role[] = [
   "TOKENIZATION_MANAGER",
   "VALUATION_OFFICER",
+  "PROPERTY_OPERATIONS_MANAGER",
+  "INVESTOR_OPERATIONS",
+  "OPERATIONS_ADMIN",
+  "RISK_ANALYST",
   "AUDITOR",
+  "ACCOUNTING_MANAGER",
+  "BACKEND_ENGINEER",
+  "PLATFORM_ENGINEER",
+  "SECURITY_ENGINEER",
+  "QA_TEST_ENGINEER",
   "HIRING_MANAGER",
 ];
+
+// All roles list for iteration
+export const ALL_ROLES: Role[] = [...PRIVILEGED_ROLES, ...BASIC_ROLES.filter(r => !PRIVILEGED_ROLES.includes(r))];
