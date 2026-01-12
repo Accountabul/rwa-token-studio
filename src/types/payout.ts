@@ -328,6 +328,7 @@ export interface PayoutPermissions {
 }
 
 export const PAYOUT_ROLE_PERMISSIONS: Record<Role, PayoutPermissions> = {
+  // Administration
   SUPER_ADMIN: {
     canCreateRequest: true,
     canApproveRequest: true,
@@ -337,8 +338,17 @@ export const PAYOUT_ROLE_PERMISSIONS: Record<Role, PayoutPermissions> = {
     canViewApprovalQueue: true,
     canCreatePayee: true,
   },
-  TOKENIZATION_MANAGER: {
+  SYSTEM_ADMIN: {
     canCreateRequest: true,
+    canApproveRequest: true,
+    canRejectRequest: true,
+    canMarkPaid: true,
+    canVoidRequest: true,
+    canViewApprovalQueue: true,
+    canCreatePayee: true,
+  },
+  HIRING_MANAGER: {
+    canCreateRequest: false,
     canApproveRequest: false,
     canRejectRequest: false,
     canMarkPaid: false,
@@ -346,16 +356,17 @@ export const PAYOUT_ROLE_PERMISSIONS: Record<Role, PayoutPermissions> = {
     canViewApprovalQueue: false,
     canCreatePayee: false,
   },
-  COMPLIANCE_OFFICER: {
+  OPERATIONS_ADMIN: {
     canCreateRequest: false,
     canApproveRequest: false,
     canRejectRequest: false,
     canMarkPaid: false,
     canVoidRequest: false,
-    canViewApprovalQueue: true, // Read-only
+    canViewApprovalQueue: false,
     canCreatePayee: false,
   },
-  CUSTODY_OFFICER: {
+  // Tokenization
+  TOKENIZATION_MANAGER: {
     canCreateRequest: true,
     canApproveRequest: false,
     canRejectRequest: false,
@@ -373,14 +384,42 @@ export const PAYOUT_ROLE_PERMISSIONS: Record<Role, PayoutPermissions> = {
     canViewApprovalQueue: false,
     canCreatePayee: false,
   },
-  FINANCE_OFFICER: {
-    canCreateRequest: true,
-    canApproveRequest: true,
-    canRejectRequest: true,
-    canMarkPaid: true,
-    canVoidRequest: true,
-    canViewApprovalQueue: true,
-    canCreatePayee: true,
+  PROPERTY_OPERATIONS_MANAGER: {
+    canCreateRequest: false,
+    canApproveRequest: false,
+    canRejectRequest: false,
+    canMarkPaid: false,
+    canVoidRequest: false,
+    canViewApprovalQueue: false,
+    canCreatePayee: false,
+  },
+  INVESTOR_OPERATIONS: {
+    canCreateRequest: false,
+    canApproveRequest: false,
+    canRejectRequest: false,
+    canMarkPaid: false,
+    canVoidRequest: false,
+    canViewApprovalQueue: false,
+    canCreatePayee: false,
+  },
+  // Compliance
+  COMPLIANCE_OFFICER: {
+    canCreateRequest: false,
+    canApproveRequest: false,
+    canRejectRequest: false,
+    canMarkPaid: false,
+    canVoidRequest: false,
+    canViewApprovalQueue: true, // Read-only
+    canCreatePayee: false,
+  },
+  RISK_ANALYST: {
+    canCreateRequest: false,
+    canApproveRequest: false,
+    canRejectRequest: false,
+    canMarkPaid: false,
+    canVoidRequest: false,
+    canViewApprovalQueue: true, // Read-only
+    canCreatePayee: false,
   },
   AUDITOR: {
     canCreateRequest: false,
@@ -391,7 +430,63 @@ export const PAYOUT_ROLE_PERMISSIONS: Record<Role, PayoutPermissions> = {
     canViewApprovalQueue: true, // Read-only
     canCreatePayee: false,
   },
-  HIRING_MANAGER: {
+  // Finance
+  FINANCE_OFFICER: {
+    canCreateRequest: true,
+    canApproveRequest: true,
+    canRejectRequest: true,
+    canMarkPaid: true,
+    canVoidRequest: true,
+    canViewApprovalQueue: true,
+    canCreatePayee: true,
+  },
+  ACCOUNTING_MANAGER: {
+    canCreateRequest: false,
+    canApproveRequest: false,
+    canRejectRequest: false,
+    canMarkPaid: false,
+    canVoidRequest: false,
+    canViewApprovalQueue: true, // Read-only
+    canCreatePayee: false,
+  },
+  CUSTODY_OFFICER: {
+    canCreateRequest: true,
+    canApproveRequest: false,
+    canRejectRequest: false,
+    canMarkPaid: false,
+    canVoidRequest: false,
+    canViewApprovalQueue: false,
+    canCreatePayee: false,
+  },
+  // Engineering - no payout access
+  BACKEND_ENGINEER: {
+    canCreateRequest: false,
+    canApproveRequest: false,
+    canRejectRequest: false,
+    canMarkPaid: false,
+    canVoidRequest: false,
+    canViewApprovalQueue: false,
+    canCreatePayee: false,
+  },
+  PLATFORM_ENGINEER: {
+    canCreateRequest: false,
+    canApproveRequest: false,
+    canRejectRequest: false,
+    canMarkPaid: false,
+    canVoidRequest: false,
+    canViewApprovalQueue: false,
+    canCreatePayee: false,
+  },
+  SECURITY_ENGINEER: {
+    canCreateRequest: false,
+    canApproveRequest: false,
+    canRejectRequest: false,
+    canMarkPaid: false,
+    canVoidRequest: false,
+    canViewApprovalQueue: false,
+    canCreatePayee: false,
+  },
+  QA_TEST_ENGINEER: {
     canCreateRequest: false,
     canApproveRequest: false,
     canRejectRequest: false,
