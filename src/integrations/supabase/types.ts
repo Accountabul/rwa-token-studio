@@ -14,6 +14,130 @@ export type Database = {
   }
   public: {
     Tables: {
+      access_audit_log: {
+        Row: {
+          action: string
+          actor_id: string
+          created_at: string
+          id: string
+          ip_address: string | null
+          new_value: string | null
+          permission_code: string | null
+          previous_value: string | null
+          reason: string | null
+          role: Database["public"]["Enums"]["app_role"] | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          actor_id: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          new_value?: string | null
+          permission_code?: string | null
+          previous_value?: string | null
+          reason?: string | null
+          role?: Database["public"]["Enums"]["app_role"] | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          new_value?: string | null
+          permission_code?: string | null
+          previous_value?: string | null
+          reason?: string | null
+          role?: Database["public"]["Enums"]["app_role"] | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "access_audit_log_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "access_audit_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      access_requests: {
+        Row: {
+          expires_at: string | null
+          id: string
+          justification: string
+          requested_at: string
+          requested_permission_id: string | null
+          requested_role: Database["public"]["Enums"]["app_role"] | null
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          expires_at?: string | null
+          id?: string
+          justification: string
+          requested_at?: string
+          requested_permission_id?: string | null
+          requested_role?: Database["public"]["Enums"]["app_role"] | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          expires_at?: string | null
+          id?: string
+          justification?: string
+          requested_at?: string
+          requested_permission_id?: string | null
+          requested_role?: Database["public"]["Enums"]["app_role"] | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "access_requests_requested_permission_id_fkey"
+            columns: ["requested_permission_id"]
+            isOneToOne: false
+            referencedRelation: "permissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "access_requests_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "access_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       approval_signatures: {
         Row: {
           approval_id: string
@@ -118,32 +242,132 @@ export type Database = {
         }
         Relationships: []
       }
+      permissions: {
+        Row: {
+          category: string
+          code: string
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          requires_approval: boolean
+          requires_justification: boolean
+          risk_level: string
+        }
+        Insert: {
+          category: string
+          code: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          requires_approval?: boolean
+          requires_justification?: boolean
+          risk_level?: string
+        }
+        Update: {
+          category?: string
+          code?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          requires_approval?: boolean
+          requires_justification?: boolean
+          risk_level?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
           created_at: string
+          department: string | null
           email: string
+          employment_type: string | null
+          end_date: string | null
           full_name: string
           id: string
+          job_title: string | null
+          last_login_at: string | null
+          manager_id: string | null
+          start_date: string | null
+          status: string | null
+          suspension_reason: string | null
           updated_at: string
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          department?: string | null
           email: string
+          employment_type?: string | null
+          end_date?: string | null
           full_name: string
           id: string
+          job_title?: string | null
+          last_login_at?: string | null
+          manager_id?: string | null
+          start_date?: string | null
+          status?: string | null
+          suspension_reason?: string | null
           updated_at?: string
         }
         Update: {
           avatar_url?: string | null
           created_at?: string
+          department?: string | null
           email?: string
+          employment_type?: string | null
+          end_date?: string | null
           full_name?: string
           id?: string
+          job_title?: string | null
+          last_login_at?: string | null
+          manager_id?: string | null
+          start_date?: string | null
+          status?: string | null
+          suspension_reason?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_manager_id_fkey"
+            columns: ["manager_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      role_permissions: {
+        Row: {
+          granted_at: string
+          id: string
+          permission_id: string
+          role: Database["public"]["Enums"]["app_role"]
+        }
+        Insert: {
+          granted_at?: string
+          id?: string
+          permission_id: string
+          role: Database["public"]["Enums"]["app_role"]
+        }
+        Update: {
+          granted_at?: string
+          id?: string
+          permission_id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "role_permissions_permission_id_fkey"
+            columns: ["permission_id"]
+            isOneToOne: false
+            referencedRelation: "permissions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
