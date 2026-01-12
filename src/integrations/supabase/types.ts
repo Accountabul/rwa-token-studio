@@ -179,6 +179,83 @@ export type Database = {
           },
         ]
       }
+      invitations: {
+        Row: {
+          accepted_at: string | null
+          access_profile: string | null
+          created_at: string | null
+          department: string | null
+          email: string
+          employment_type: string | null
+          end_date: string | null
+          expires_at: string | null
+          first_name: string
+          id: string
+          initial_roles: Database["public"]["Enums"]["app_role"][] | null
+          invited_at: string | null
+          invited_by: string
+          job_title: string | null
+          justification: string | null
+          last_name: string
+          manager_id: string | null
+          phone: string | null
+          start_date: string | null
+          status: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          access_profile?: string | null
+          created_at?: string | null
+          department?: string | null
+          email: string
+          employment_type?: string | null
+          end_date?: string | null
+          expires_at?: string | null
+          first_name: string
+          id?: string
+          initial_roles?: Database["public"]["Enums"]["app_role"][] | null
+          invited_at?: string | null
+          invited_by: string
+          job_title?: string | null
+          justification?: string | null
+          last_name: string
+          manager_id?: string | null
+          phone?: string | null
+          start_date?: string | null
+          status?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          access_profile?: string | null
+          created_at?: string | null
+          department?: string | null
+          email?: string
+          employment_type?: string | null
+          end_date?: string | null
+          expires_at?: string | null
+          first_name?: string
+          id?: string
+          initial_roles?: Database["public"]["Enums"]["app_role"][] | null
+          invited_at?: string | null
+          invited_by?: string
+          job_title?: string | null
+          justification?: string | null
+          last_name?: string
+          manager_id?: string | null
+          phone?: string | null
+          start_date?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invitations_manager_id_fkey"
+            columns: ["manager_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pending_approvals: {
         Row: {
           action_type: string
@@ -558,6 +635,14 @@ export type Database = {
     }
     Functions: {
       can_approve: { Args: { _user_id: string }; Returns: boolean }
+      can_assign_role: {
+        Args: {
+          _assigner_id: string
+          _target_role: Database["public"]["Enums"]["app_role"]
+        }
+        Returns: boolean
+      }
+      can_manage_employees: { Args: { _user_id: string }; Returns: boolean }
       get_user_roles: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"][]

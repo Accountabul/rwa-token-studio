@@ -362,6 +362,7 @@ export const rolePermissionsMatrix: Record<Role, RolePermissions> = {
   TOKENIZATION_MANAGER: deriveRolePermissions("TOKENIZATION_MANAGER"),
   CUSTODY_OFFICER: deriveRolePermissions("CUSTODY_OFFICER"),
   VALUATION_OFFICER: deriveRolePermissions("VALUATION_OFFICER"),
+  HIRING_MANAGER: deriveRolePermissions("HIRING_MANAGER"),
 };
 
 // ============================================

@@ -1,7 +1,7 @@
 import React from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Role, roleLabel } from "@/types/tokenization";
+import { Role, roleLabel, PRIVILEGED_ROLES, BASIC_ROLES } from "@/types/tokenization";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import {
@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2, Shield } from "lucide-react";
+import { Loader2, Shield, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface UserWithRoles {
@@ -41,6 +41,7 @@ const ALL_ROLES: Role[] = [
   "VALUATION_OFFICER",
   "FINANCE_OFFICER",
   "AUDITOR",
+  "HIRING_MANAGER",
 ];
 
 export const AssignRoleDialog: React.FC<AssignRoleDialogProps> = ({
@@ -53,6 +54,24 @@ export const AssignRoleDialog: React.FC<AssignRoleDialogProps> = ({
   const [selectedRoles, setSelectedRoles] = React.useState<Role[]>([]);
   const [notes, setNotes] = React.useState("");
 
+  // Check if current user is SUPER_ADMIN
+  const { data: currentUserRoles } = useQuery({
+    queryKey: ["current-user-roles", currentUser?.id],
+    queryFn: async () => {
+      if (!currentUser?.id) return [];
+      const { data, error } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", currentUser.id)
+        .or("expires_at.is.null,expires_at.gt.now()");
+      if (error) throw error;
+      return data.map((r) => r.role as Role);
+    },
+    enabled: !!currentUser?.id,
+  });
+
+  const isSuperAdmin = currentUserRoles?.includes("SUPER_ADMIN") ?? false;
+
   // Reset form when dialog opens
   React.useEffect(() => {
     if (open) {
@@ -61,12 +80,20 @@ export const AssignRoleDialog: React.FC<AssignRoleDialogProps> = ({
     }
   }, [open]);
 
-  // Get roles that user doesn't already have
+  // Get roles that user doesn't already have AND that current user can assign
   const availableRoles = React.useMemo(() => {
-    if (!user) return ALL_ROLES;
-    const existingRoles = new Set(user.roles.map((r) => r.role));
-    return ALL_ROLES.filter((r) => !existingRoles.has(r));
-  }, [user]);
+    const existingRoles = new Set(user?.roles.map((r) => r.role) || []);
+    // Filter ALL_ROLES to exclude existing roles
+    const notAssigned = ALL_ROLES.filter((r) => !existingRoles.has(r));
+    // Further filter based on what the current user can assign
+    if (isSuperAdmin) {
+      return notAssigned;
+    }
+    // Non-admins (HIRING_MANAGER) can only assign basic roles
+    return notAssigned.filter((r) => BASIC_ROLES.includes(r));
+  }, [user, isSuperAdmin]);
+
+  const hasPrivilegedRole = selectedRoles.some((r) => PRIVILEGED_ROLES.includes(r));
 
   const assignRoleMutation = useMutation({
     mutationFn: async () => {
@@ -125,34 +152,53 @@ export const AssignRoleDialog: React.FC<AssignRoleDialogProps> = ({
               </p>
             ) : (
               <div className="space-y-2">
-                {availableRoles.map((role) => (
-                  <div
-                    key={role}
-                    className={cn(
-                      "flex items-center gap-3 p-3 rounded-lg border transition-colors cursor-pointer",
-                      selectedRoles.includes(role)
-                        ? "border-primary bg-primary/5"
-                        : "border-border hover:border-primary/50"
-                    )}
-                    onClick={() => toggleRole(role)}
-                  >
-                    <Checkbox
-                      checked={selectedRoles.includes(role)}
-                      onCheckedChange={() => toggleRole(role)}
-                    />
-                    <div className="flex-1">
-                      <p
-                        className={cn(
-                          "font-medium text-sm",
-                          role === "SUPER_ADMIN" && "text-amber-600"
+                {availableRoles.map((role) => {
+                  const isPrivileged = PRIVILEGED_ROLES.includes(role);
+                  return (
+                    <div
+                      key={role}
+                      className={cn(
+                        "flex items-center gap-3 p-3 rounded-lg border transition-colors cursor-pointer",
+                        selectedRoles.includes(role)
+                          ? isPrivileged
+                            ? "border-amber-500 bg-amber-500/10"
+                            : "border-primary bg-primary/5"
+                          : "border-border hover:border-primary/50"
+                      )}
+                      onClick={() => toggleRole(role)}
+                    >
+                      <Checkbox
+                        checked={selectedRoles.includes(role)}
+                        onCheckedChange={() => toggleRole(role)}
+                      />
+                      <div className="flex-1 flex items-center gap-2">
+                        <p className="font-medium text-sm">
+                          {roleLabel[role]}
+                        </p>
+                        {isPrivileged && (
+                          <Shield className="w-3.5 h-3.5 text-amber-500" />
                         )}
-                      >
-                        {roleLabel[role]}
-                      </p>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
+            )}
+
+            {hasPrivilegedRole && (
+              <div className="mt-3 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-start gap-2">
+                <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
+                <p className="text-xs text-amber-700 dark:text-amber-400">
+                  You are assigning a privileged role. This grants elevated access
+                  to sensitive operations and data.
+                </p>
+              </div>
+            )}
+
+            {!isSuperAdmin && (
+              <p className="text-xs text-muted-foreground mt-2">
+                Note: As a Hiring Manager, you can only assign basic roles.
+              </p>
             )}
           </div>
 
