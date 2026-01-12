@@ -667,6 +667,16 @@ export type Database = {
         | "FINANCE_OFFICER"
         | "AUDITOR"
         | "HIRING_MANAGER"
+        | "SYSTEM_ADMIN"
+        | "OPERATIONS_ADMIN"
+        | "PROPERTY_OPERATIONS_MANAGER"
+        | "INVESTOR_OPERATIONS"
+        | "RISK_ANALYST"
+        | "ACCOUNTING_MANAGER"
+        | "BACKEND_ENGINEER"
+        | "PLATFORM_ENGINEER"
+        | "SECURITY_ENGINEER"
+        | "QA_TEST_ENGINEER"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -803,6 +813,16 @@ export const Constants = {
         "FINANCE_OFFICER",
         "AUDITOR",
         "HIRING_MANAGER",
+        "SYSTEM_ADMIN",
+        "OPERATIONS_ADMIN",
+        "PROPERTY_OPERATIONS_MANAGER",
+        "INVESTOR_OPERATIONS",
+        "RISK_ANALYST",
+        "ACCOUNTING_MANAGER",
+        "BACKEND_ENGINEER",
+        "PLATFORM_ENGINEER",
+        "SECURITY_ENGINEER",
+        "QA_TEST_ENGINEER",
       ],
     },
   },
