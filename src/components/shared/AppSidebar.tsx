@@ -12,8 +12,10 @@ import {
   LogOut,
   User,
   Shield,
+  Bell,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 import {
   Collapsible,
   CollapsibleContent,
@@ -39,8 +41,10 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ role, onRoleChange }) =>
   const location = useLocation();
   const { profile, roles, signOut } = useAuth();
 
-  // Check if user is SUPER_ADMIN
-  const isSuperAdmin = roles.includes("SUPER_ADMIN");
+  // Check if user can access admin section
+  const canAccessAdmin = roles.some(r => 
+    ["SUPER_ADMIN", "SYSTEM_ADMIN", "HIRING_MANAGER"].includes(r)
+  );
 
   // Helper to check if a path is active
   const isActive = useCallback((href: string) => {
@@ -99,20 +103,23 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ role, onRoleChange }) =>
 
   return (
     <aside className="w-64 sidebar-gradient flex flex-col border-r border-sidebar-border shrink-0">
-      {/* Logo */}
+      {/* Logo & Notification Bell */}
       <div className="px-5 py-6 border-b border-sidebar-border">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl accent-gradient flex items-center justify-center shadow-glow">
-            <Hexagon className="w-5 h-5 text-primary-foreground" strokeWidth={2.5} />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl accent-gradient flex items-center justify-center shadow-glow">
+              <Hexagon className="w-5 h-5 text-primary-foreground" strokeWidth={2.5} />
+            </div>
+            <div>
+              <h1 className="text-base font-semibold text-sidebar-foreground tracking-tight">
+                Accountabul Codex
+              </h1>
+              <p className="text-[10px] text-sidebar-muted font-medium uppercase tracking-wider mt-0.5">
+                RWA Tokenization Engine
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-base font-semibold text-sidebar-foreground tracking-tight">
-              Accountabul Codex
-            </h1>
-            <p className="text-[10px] text-sidebar-muted font-medium uppercase tracking-wider mt-0.5">
-              RWA Tokenization Engine
-            </p>
-          </div>
+          <NotificationBell />
         </div>
       </div>
 
@@ -138,9 +145,25 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ role, onRoleChange }) =>
           </div>
         )}
 
-        {/* Admin Section - Only visible to SUPER_ADMIN */}
-        {isSuperAdmin && (
-          <div className="mt-6 pt-4 border-t border-sidebar-border/50">
+        {/* Notifications Link */}
+        <div className="mt-6 pt-4 border-t border-sidebar-border/50">
+          <Link
+            to="/notifications"
+            className={cn(
+              "flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all duration-200",
+              isActive("/notifications")
+                ? "text-sidebar-accent bg-sidebar-accent/10 font-medium"
+                : "text-sidebar-foreground/70 hover:bg-sidebar-foreground/5 hover:text-sidebar-foreground"
+            )}
+          >
+            <Bell className="w-4 h-4" />
+            <span>Notifications</span>
+          </Link>
+        </div>
+
+        {/* Admin Section - Visible to SUPER_ADMIN, SYSTEM_ADMIN, HIRING_MANAGER */}
+        {canAccessAdmin && (
+          <div className="mt-4 pt-4 border-t border-sidebar-border/50">
             <Collapsible
               open={expandedDepts.has("admin")}
               onOpenChange={() => toggleDept("admin")}
