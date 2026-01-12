@@ -179,6 +179,30 @@ export type Database = {
           },
         ]
       }
+      entity_subscriptions: {
+        Row: {
+          created_at: string
+          entity_id: string
+          entity_type: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       invitations: {
         Row: {
           accepted_at: string | null
@@ -255,6 +279,108 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      notification_preferences: {
+        Row: {
+          created_at: string
+          digest_frequency: string | null
+          email_enabled: boolean
+          event_type: string
+          id: string
+          in_app_enabled: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          digest_frequency?: string | null
+          email_enabled?: boolean
+          event_type: string
+          id?: string
+          in_app_enabled?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          digest_frequency?: string | null
+          email_enabled?: boolean
+          event_type?: string
+          id?: string
+          in_app_enabled?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          action_url: string | null
+          actor_name: string
+          actor_user_id: string
+          archived_at: string | null
+          channel: string
+          created_at: string
+          entity_id: string
+          entity_name: string | null
+          entity_type: string
+          event_type: string
+          id: string
+          metadata: Json | null
+          priority: string
+          read_at: string | null
+          recipient_role: Database["public"]["Enums"]["app_role"] | null
+          recipient_user_id: string | null
+          routing_reason: string
+          status: string
+          summary: string | null
+          title: string
+        }
+        Insert: {
+          action_url?: string | null
+          actor_name: string
+          actor_user_id: string
+          archived_at?: string | null
+          channel?: string
+          created_at?: string
+          entity_id: string
+          entity_name?: string | null
+          entity_type: string
+          event_type: string
+          id?: string
+          metadata?: Json | null
+          priority?: string
+          read_at?: string | null
+          recipient_role?: Database["public"]["Enums"]["app_role"] | null
+          recipient_user_id?: string | null
+          routing_reason: string
+          status?: string
+          summary?: string | null
+          title: string
+        }
+        Update: {
+          action_url?: string | null
+          actor_name?: string
+          actor_user_id?: string
+          archived_at?: string | null
+          channel?: string
+          created_at?: string
+          entity_id?: string
+          entity_name?: string | null
+          entity_type?: string
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          priority?: string
+          read_at?: string | null
+          recipient_role?: Database["public"]["Enums"]["app_role"] | null
+          recipient_user_id?: string | null
+          routing_reason?: string
+          status?: string
+          summary?: string | null
+          title?: string
+        }
+        Relationships: []
       }
       pending_approvals: {
         Row: {
@@ -751,6 +877,10 @@ export type Database = {
         Returns: boolean
       }
       can_manage_employees: { Args: { _user_id: string }; Returns: boolean }
+      get_unread_notification_count: {
+        Args: { _user_id: string }
+        Returns: number
+      }
       get_user_roles: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"][]
@@ -765,6 +895,11 @@ export type Database = {
       has_wallet_role: { Args: { _user_id: string }; Returns: boolean }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_system_admin: { Args: { _user_id: string }; Returns: boolean }
+      mark_all_notifications_read: { Args: never; Returns: undefined }
+      mark_notifications_read: {
+        Args: { _notification_ids: string[] }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role:
