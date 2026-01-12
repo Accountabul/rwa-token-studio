@@ -20,12 +20,7 @@ interface NotificationFiltersProps {
   onFiltersChange: (filters: Filters) => void;
 }
 
-const STATUS_OPTIONS: Array<{ value: NotificationStatus | "all"; label: string }> = [
-  { value: "all", label: "All" },
-  { value: "unread", label: "Unread" },
-  { value: "read", label: "Read" },
-  { value: "archived", label: "Archived" },
-];
+// Status is handled by tabs, so removed from filters
 
 const PRIORITY_OPTIONS: Array<{ value: NotificationPriority | "all"; label: string }> = [
   { value: "all", label: "All Priorities" },
@@ -52,14 +47,13 @@ export const NotificationFilters: React.FC<NotificationFiltersProps> = ({
   onFiltersChange,
 }) => {
   const activeFilterCount = [
-    filters.status && filters.status !== "all",
     filters.priority && filters.priority !== "all",
     filters.entityType && filters.entityType !== "all",
   ].filter(Boolean).length;
 
   const handleClearFilters = () => {
     onFiltersChange({
-      status: "all",
+      ...filters,
       priority: "all",
       entityType: "all",
     });
@@ -76,24 +70,6 @@ export const NotificationFilters: React.FC<NotificationFiltersProps> = ({
           </Badge>
         )}
       </div>
-
-      <Select
-        value={filters.status || "all"}
-        onValueChange={(value) =>
-          onFiltersChange({ ...filters, status: value as NotificationStatus | "all" })
-        }
-      >
-        <SelectTrigger className="w-[120px] h-9">
-          <SelectValue placeholder="Status" />
-        </SelectTrigger>
-        <SelectContent>
-          {STATUS_OPTIONS.map((option) => (
-            <SelectItem key={option.value} value={option.value}>
-              {option.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
 
       <Select
         value={filters.priority || "all"}
