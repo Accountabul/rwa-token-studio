@@ -48,12 +48,22 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ pageTitle, detailLabel
 
   // Handle admin routes specially
   if (pathname.startsWith("/admin")) {
+    const adminPageLabels: Record<string, string> = {
+      "/admin/users": "User Management",
+      "/admin/notifications": "Notifications",
+      "/admin/roles": "Role Management",
+    };
+    
+    // Find matching page label
+    const matchedPath = Object.keys(adminPageLabels).find(p => pathname.startsWith(p));
+    const adminPageTitle = pageTitle || (matchedPath ? adminPageLabels[matchedPath] : "Administration");
+    
     return (
       <nav className="flex items-center gap-1.5 text-sm text-muted-foreground mb-4">
         <span className="text-amber-500 font-medium">Administration</span>
         <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/50" />
         <span className="text-foreground font-medium">
-          {pageTitle || "User Management"}
+          {adminPageTitle}
         </span>
       </nav>
     );

@@ -241,7 +241,7 @@ const App = () => (
               }
             />
             <Route
-              path="/notifications"
+              path="/admin/notifications"
               element={
                 <ProtectedRoute>
                   <Notifications />

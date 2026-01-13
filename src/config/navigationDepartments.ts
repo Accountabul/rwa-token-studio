@@ -87,6 +87,7 @@ export const NAV_DEPARTMENTS: NavDepartment[] = [
     description: "Read-only, audit-first",
     items: [
       { label: "Reporting & Logs", href: "/reports", entity: "REPORT", action: "VIEW" },
+      { label: "Notifications", href: "/admin/notifications", entity: "NOTIFICATION", action: "VIEW" },
       // Future: Audit Trails, Financial Reports, Export Center
     ]
   },

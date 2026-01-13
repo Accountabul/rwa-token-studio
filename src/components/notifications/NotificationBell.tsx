@@ -34,7 +34,7 @@ export const NotificationBell: React.FC = () => {
 
   const handleViewAll = () => {
     setOpen(false);
-    navigate("/notifications");
+    navigate("/admin/notifications");
   };
 
   const handleMarkAllRead = () => {

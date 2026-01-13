@@ -145,21 +145,6 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ role, onRoleChange }) =>
           </div>
         )}
 
-        {/* Notifications Link */}
-        <div className="mt-6 pt-4 border-t border-sidebar-border/50">
-          <Link
-            to="/notifications"
-            className={cn(
-              "flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all duration-200",
-              isActive("/notifications")
-                ? "text-sidebar-accent bg-sidebar-accent/10 font-medium"
-                : "text-sidebar-foreground/70 hover:bg-sidebar-foreground/5 hover:text-sidebar-foreground"
-            )}
-          >
-            <Bell className="w-4 h-4" />
-            <span>Notifications</span>
-          </Link>
-        </div>
 
         {/* Admin Section - Visible to SUPER_ADMIN, SYSTEM_ADMIN, HIRING_MANAGER */}
         {canAccessAdmin && (

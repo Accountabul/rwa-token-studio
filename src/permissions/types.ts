@@ -21,7 +21,8 @@ export type EntityType =
   | "KNOWLEDGE_BASE"
   | "MULTI_SIGN_TX"
   | "BATCH_TRANSACTION"
-  | "USER_ROLE";
+  | "USER_ROLE"
+  | "NOTIFICATION";
 
 // All actions that can be performed
 export type ActionType =
