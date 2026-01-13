@@ -15,7 +15,7 @@ import {
   Bell,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { NotificationBell } from "@/components/notifications/NotificationBell";
+import { VeilNotificationButton } from "@/components/shared/VeilNotificationButton";
 import {
   Collapsible,
   CollapsibleContent,
@@ -119,7 +119,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ role, onRoleChange }) =>
               </p>
             </div>
           </div>
-          <NotificationBell />
+          <VeilNotificationButton />
         </div>
       </div>
 
