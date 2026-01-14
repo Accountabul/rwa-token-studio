@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { format } from "date-fns";
-import { Shield, Wallet, CheckCircle2, Clock, XCircle, Users, Server, Coins, Pencil, Tag } from "lucide-react";
+import { Shield, Wallet, CheckCircle2, Clock, XCircle, Users, Server, Coins, Pencil, Tag, AlertTriangle } from "lucide-react";
 import { IssuingWallet, walletPermissionLabel, walletRoleLabel, walletStatusLabel, riskTierLabel } from "@/types/token";
 import { MultiSignConfig } from "@/types/multiSign";
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +8,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ExplorerLinkBadge } from "@/components/tokens/ExplorerLinkBadge";
 import { EditWalletDialog } from "./EditWalletDialog";
+import { KeyStorageTypeBadge } from "@/components/custody/KeyStorageTypeBadge";
 import { cn } from "@/lib/utils";
+import { requiresMigration } from "@/types/custody";
 
 interface WalletCardProps {
   wallet: IssuingWallet;
@@ -107,6 +109,7 @@ export const WalletCard: React.FC<WalletCardProps> = ({ wallet, config, onSelect
                   <Badge variant="outline" className={cn("text-[10px]", walletStatusColors[wallet.status])}>
                     {walletStatusLabel[wallet.status]}
                   </Badge>
+                  <KeyStorageTypeBadge type={wallet.keyStorageType} size="sm" />
                   {wallet.riskTier && wallet.riskTier !== "MEDIUM" && (
                     <Badge variant="outline" className={cn("text-[10px]", riskColors[wallet.riskTier])}>
                       {riskTierLabel[wallet.riskTier]}
@@ -176,6 +179,21 @@ export const WalletCard: React.FC<WalletCardProps> = ({ wallet, config, onSelect
               </Badge>
             </div>
           </div>
+
+          {/* Legacy Wallet Warning */}
+          {requiresMigration(wallet.keyStorageType) && (
+            <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-xs font-medium text-amber-700">Migration Required</p>
+                  <p className="text-xs text-amber-600/80 mt-0.5">
+                    This wallet uses legacy database key storage. Migrate to vault-backed storage for enhanced security.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Multi-Sig Info */}
           {wallet.multiSignEnabled && config && (

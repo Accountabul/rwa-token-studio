@@ -1,9 +1,10 @@
-import React, { useState, useCallback, useEffect } from "react";
-import { Wallet, Shield, Clock, AlertCircle, Plus, RefreshCw } from "lucide-react";
+import React, { useState, useCallback, useEffect, useMemo } from "react";
+import { Wallet, Shield, Clock, AlertCircle, Plus, RefreshCw, AlertTriangle } from "lucide-react";
 import { Role } from "@/types/tokenization";
 import { mockPendingTransactions, mockMultiSignConfigs } from "@/data/mockPendingTransactions";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { WalletCard } from "./WalletCard";
 import { MultiSignApprovalQueue } from "./MultiSignApprovalQueue";
 import { MultiSignConfigPanel } from "./MultiSignConfigPanel";
@@ -11,6 +12,7 @@ import { ProvisionWalletDialog } from "./ProvisionWalletDialog";
 import { IssuingWallet } from "@/types/token";
 import { fetchWallets } from "@/lib/walletApi";
 import { toast } from "sonner";
+import { requiresMigration } from "@/types/custody";
 
 interface WalletDashboardProps {
   role: Role;
@@ -27,6 +29,12 @@ export const WalletDashboard: React.FC<WalletDashboardProps> = ({ role }) => {
   const pendingCount = mockPendingTransactions.filter((tx) => tx.status === "PENDING").length;
   const readyCount = mockPendingTransactions.filter((tx) => tx.status === "READY").length;
   const activeWallets = wallets.filter((w) => w.status === "ACTIVE").length;
+  
+  // Count legacy wallets requiring migration
+  const legacyWalletCount = useMemo(() => 
+    wallets.filter((w) => requiresMigration(w.keyStorageType)).length,
+    [wallets]
+  );
 
   const selectedWallet = selectedWalletId ? wallets.find((w) => w.id === selectedWalletId) : null;
   const selectedConfig = selectedWalletId ? mockMultiSignConfigs[selectedWalletId] : null;
@@ -93,6 +101,19 @@ export const WalletDashboard: React.FC<WalletDashboardProps> = ({ role }) => {
         </div>
       </div>
 
+      {/* Legacy Wallet Warning Banner */}
+      {legacyWalletCount > 0 && (
+        <Alert variant="destructive" className="bg-amber-500/10 border-amber-500/30">
+          <AlertTriangle className="h-4 w-4 text-amber-600" />
+          <AlertTitle className="text-amber-700">Legacy Wallets Detected</AlertTitle>
+          <AlertDescription className="text-amber-600">
+            {legacyWalletCount} wallet{legacyWalletCount > 1 ? 's' : ''} using legacy database key storage. 
+            These wallets should be migrated to vault-backed storage for enhanced security. 
+            Mainnet signing is disabled for legacy wallets.
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <StatCard
@@ -115,10 +136,10 @@ export const WalletDashboard: React.FC<WalletDashboardProps> = ({ role }) => {
           iconColor="text-amber-500"
         />
         <StatCard
-          icon={AlertCircle}
-          label="Ready to Execute"
-          value={readyCount}
-          iconColor="text-green-500"
+          icon={AlertTriangle}
+          label="Legacy Wallets"
+          value={legacyWalletCount}
+          iconColor={legacyWalletCount > 0 ? "text-amber-500" : "text-green-500"}
         />
       </div>
 
@@ -150,6 +171,7 @@ export const WalletDashboard: React.FC<WalletDashboardProps> = ({ role }) => {
                   config={mockMultiSignConfigs[wallet.id]}
                   onSelect={() => setSelectedWalletId(wallet.id)}
                   isSelected={selectedWalletId === wallet.id}
+                  onRefresh={handleRefresh}
                 />
               ))}
             </div>
