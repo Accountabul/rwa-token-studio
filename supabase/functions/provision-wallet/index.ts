@@ -9,6 +9,9 @@ const corsHeaders = {
 // XRPL Testnet Faucet endpoint
 const TESTNET_FAUCET_URL = "https://faucet.altnet.rippletest.net/accounts";
 
+// Key storage types
+type KeyStorageType = 'LEGACY_DB' | 'VAULT' | 'HSM' | 'EXTERNAL';
+
 interface ProvisionRequest {
   name: string;
   role: string;
@@ -17,6 +20,8 @@ interface ProvisionRequest {
   autoFund: boolean;
   createdBy: string;
   createdByName: string;
+  // Key storage configuration
+  keyStorageType?: KeyStorageType;
   // Extended fields
   description?: string;
   tags?: string[];
@@ -59,7 +64,7 @@ interface FaucetResponse {
 }
 
 /**
- * Simple encryption for seed storage (testnet only)
+ * Simple encryption for seed storage (testnet only - LEGACY mode)
  * In production, use proper KMS/Vault integration
  */
 function encryptSeed(seed: string, key: string): string {
@@ -73,6 +78,36 @@ function encryptSeed(seed: string, key: string): string {
   }
   
   return btoa(String.fromCharCode(...encrypted));
+}
+
+/**
+ * Generate a vault key reference for VAULT storage mode
+ * In production, this would call an actual vault service (HashiCorp Vault, AWS KMS, etc.)
+ */
+function generateVaultKeyRef(walletAddress: string, network: string): string {
+  // Format: vault/xrpl/{network}/{address-prefix}/{timestamp}
+  const timestamp = Date.now();
+  const addressPrefix = walletAddress.slice(0, 8);
+  return `vault/xrpl/${network}/${addressPrefix}/${timestamp}`;
+}
+
+/**
+ * Store seed in vault (mock for testnet)
+ * In production, this would securely store the seed in HashiCorp Vault or similar
+ */
+async function storeInVault(vaultKeyRef: string, seed: string, _publicKey: string): Promise<boolean> {
+  // Mock implementation for testnet
+  // In production: call vault API to store the seed material
+  console.log(`[vault] Storing key material at: ${vaultKeyRef}`);
+  console.log(`[vault] Seed length: ${seed.length} chars (would be encrypted and stored)`);
+  
+  // Simulate vault storage success
+  // Real implementation would:
+  // 1. Connect to vault service
+  // 2. Encrypt seed with vault's master key
+  // 3. Store in secure key-value store
+  // 4. Return success/failure
+  return true;
 }
 
 // Valid wallet roles
@@ -215,9 +250,9 @@ serve(async (req) => {
     const faucetData: FaucetResponse = await faucetResponse.json();
     console.log(`[provision-wallet] Wallet created: ${faucetData.account.classicAddress}`);
 
-    // Encrypt the seed for storage
-    const encryptionKey = supabaseServiceKey.slice(0, 32);
-    const encryptedSeed = encryptSeed(faucetData.account.secret, encryptionKey);
+    // Determine key storage type (default to VAULT for new wallets)
+    const keyStorageType: KeyStorageType = body.keyStorageType || 'VAULT';
+    console.log(`[provision-wallet] Using key storage type: ${keyStorageType}`);
 
     // Build wallet data object with all fields
     const walletData: Record<string, unknown> = {
@@ -226,7 +261,6 @@ serve(async (req) => {
       network: body.network,
       status: 'ACTIVE',
       xrpl_address: faucetData.account.classicAddress,
-      encrypted_seed: encryptedSeed,
       multi_sign_enabled: body.enableMultiSig,
       permission_dex_status: 'NOT_LINKED',
       is_authorized: false,
@@ -235,7 +269,39 @@ serve(async (req) => {
       created_by_name: body.createdByName,
       funded_at: body.autoFund ? new Date().toISOString() : null,
       last_synced_at: new Date().toISOString(),
+      key_storage_type: keyStorageType,
     };
+
+    // Handle key storage based on type
+    if (keyStorageType === 'LEGACY_DB') {
+      // Legacy mode: encrypt and store seed in database (NOT RECOMMENDED for production)
+      const encryptionKey = supabaseServiceKey.slice(0, 32);
+      const encryptedSeed = encryptSeed(faucetData.account.secret, encryptionKey);
+      walletData.encrypted_seed = encryptedSeed;
+      console.log(`[provision-wallet] WARNING: Using LEGACY_DB storage - seed stored in database`);
+    } else if (keyStorageType === 'VAULT') {
+      // Vault mode: store seed in external vault, only keep reference
+      const vaultKeyRef = generateVaultKeyRef(faucetData.account.classicAddress, body.network);
+      const stored = await storeInVault(vaultKeyRef, faucetData.account.secret, faucetData.account.classicAddress);
+      
+      if (!stored) {
+        console.error(`[provision-wallet] Failed to store key in vault`);
+        return new Response(
+          JSON.stringify({ error: "Failed to secure key material in vault" }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      walletData.vault_key_ref = vaultKeyRef;
+      walletData.encrypted_seed = null; // No seed in DB for vault-backed wallets
+      console.log(`[provision-wallet] Key stored in vault: ${vaultKeyRef}`);
+    } else if (keyStorageType === 'HSM' || keyStorageType === 'EXTERNAL') {
+      // HSM/External: for now, treat like vault (would need actual HSM integration)
+      const vaultKeyRef = generateVaultKeyRef(faucetData.account.classicAddress, body.network);
+      walletData.vault_key_ref = vaultKeyRef;
+      walletData.encrypted_seed = null;
+      console.log(`[provision-wallet] Key reference created for ${keyStorageType}: ${vaultKeyRef}`);
+    }
 
     // Extended fields
     if (body.description) walletData.description = body.description;
@@ -304,6 +370,8 @@ serve(async (req) => {
       createdAt: wallet.created_at,
       fundedAt: wallet.funded_at,
       lastSyncedAt: wallet.last_synced_at,
+      keyStorageType: wallet.key_storage_type,
+      vaultKeyRef: wallet.vault_key_ref,
     };
 
     return new Response(

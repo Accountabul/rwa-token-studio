@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
-import { Wallet, Loader2, Server, Shield, ChevronDown, ChevronUp } from "lucide-react";
+import { Wallet, Loader2, Server, Shield, ChevronDown, ChevronUp, Lock, AlertTriangle } from "lucide-react";
 import { 
   WalletRole, 
   XRPLNetwork, 
@@ -13,6 +13,7 @@ import {
   riskTierLabel,
   roleDefaultCapabilities,
 } from "@/types/token";
+import { KeyStorageType, keyStorageTypeLabel } from "@/types/custody";
 import { provisionWallet } from "@/lib/walletApi";
 import {
   Dialog,
@@ -39,6 +40,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
 import { WalletTagsInput } from "./WalletTagsInput";
 import { WalletCapabilitiesGrid, defaultCapabilities } from "./WalletCapabilitiesGrid";
@@ -56,11 +58,19 @@ interface FormData {
   network: XRPLNetwork;
   purposeCode: PurposeCode;
   riskTier: RiskTier;
+  keyStorageType: KeyStorageType;
   enableMultiSig: boolean;
   autoFund: boolean;
   businessUnit: string;
   jurisdiction: string;
 }
+
+const keyStorageTypes: { value: KeyStorageType; label: string; description: string; recommended: boolean }[] = [
+  { value: "VAULT", label: "Vault-Backed", description: "Keys stored in secure vault (recommended)", recommended: true },
+  { value: "HSM", label: "HSM", description: "Hardware Security Module (enterprise)", recommended: false },
+  { value: "LEGACY_DB", label: "Legacy Database", description: "Encrypted in database (not recommended)", recommended: false },
+  { value: "EXTERNAL", label: "External", description: "Managed externally (BYO key)", recommended: false },
+];
 
 const walletRoles = Object.entries(walletRoleLabel).map(([value, label]) => ({
   value: value as WalletRole,
@@ -111,6 +121,7 @@ export const ProvisionWalletDialog: React.FC<ProvisionWalletDialogProps> = ({
       network: "testnet",
       purposeCode: "GENERAL",
       riskTier: "MEDIUM",
+      keyStorageType: "VAULT", // Default to vault-backed for new wallets
       enableMultiSig: false,
       autoFund: true,
       businessUnit: "",
@@ -122,6 +133,7 @@ export const ProvisionWalletDialog: React.FC<ProvisionWalletDialogProps> = ({
   const autoFund = watch("autoFund");
   const selectedRole = watch("role");
   const selectedNetwork = watch("network");
+  const selectedKeyStorage = watch("keyStorageType");
 
   // Apply role defaults when role changes
   const applyRoleDefaults = () => {
@@ -141,6 +153,7 @@ export const ProvisionWalletDialog: React.FC<ProvisionWalletDialogProps> = ({
         autoFund: data.autoFund,
         createdBy: "current-user-id",
         createdByName: "Current User",
+        keyStorageType: data.keyStorageType,
         description: data.description || undefined,
         tags: tags.length > 0 ? tags : undefined,
         purposeCode: data.purposeCode,
@@ -249,6 +262,42 @@ export const ProvisionWalletDialog: React.FC<ProvisionWalletDialogProps> = ({
             <Label htmlFor="description">Description</Label>
             <Textarea id="description" placeholder="Purpose and notes..." rows={2} {...register("description")} />
           </div>
+
+          {/* Key Storage Type Selection */}
+          <div className="space-y-2">
+            <Label className="flex items-center gap-1.5">
+              <Lock className="w-3.5 h-3.5" /> Key Storage *
+            </Label>
+            <Select value={selectedKeyStorage} onValueChange={(v) => setValue("keyStorageType", v as KeyStorageType)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {keyStorageTypes.map((kst) => (
+                  <SelectItem key={kst.value} value={kst.value}>
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{kst.label}</span>
+                      {kst.recommended && (
+                        <span className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded">Recommended</span>
+                      )}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              {keyStorageTypes.find(k => k.value === selectedKeyStorage)?.description}
+            </p>
+          </div>
+
+          {/* Legacy storage warning */}
+          {selectedKeyStorage === "LEGACY_DB" && (
+            <Alert variant="destructive" className="border-destructive/50">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                <strong>Security Warning:</strong> Legacy database storage keeps encrypted keys in the database. 
+                This is not recommended for production wallets. Consider using Vault-Backed storage instead.
+              </AlertDescription>
+            </Alert>
+          )}
 
           {/* Options */}
           <div className="flex gap-6">
