@@ -687,6 +687,166 @@ export type Database = {
           },
         ]
       }
+      signing_audit_log: {
+        Row: {
+          amount: number | null
+          confirmed_at: string | null
+          currency: string | null
+          destination: string | null
+          destination_name: string | null
+          error_message: string | null
+          id: string
+          key_storage_type: string
+          metadata: Json | null
+          network: string
+          policy_id: string | null
+          policy_name: string | null
+          rejection_reason: string | null
+          requested_by: string
+          requested_by_name: string | null
+          requested_by_role: string | null
+          signed_at: string | null
+          status: string
+          submitted_at: string | null
+          tx_hash: string | null
+          tx_type: string
+          unsigned_tx_hash: string
+          wallet_address: string
+          wallet_id: string | null
+        }
+        Insert: {
+          amount?: number | null
+          confirmed_at?: string | null
+          currency?: string | null
+          destination?: string | null
+          destination_name?: string | null
+          error_message?: string | null
+          id?: string
+          key_storage_type: string
+          metadata?: Json | null
+          network: string
+          policy_id?: string | null
+          policy_name?: string | null
+          rejection_reason?: string | null
+          requested_by: string
+          requested_by_name?: string | null
+          requested_by_role?: string | null
+          signed_at?: string | null
+          status: string
+          submitted_at?: string | null
+          tx_hash?: string | null
+          tx_type: string
+          unsigned_tx_hash: string
+          wallet_address: string
+          wallet_id?: string | null
+        }
+        Update: {
+          amount?: number | null
+          confirmed_at?: string | null
+          currency?: string | null
+          destination?: string | null
+          destination_name?: string | null
+          error_message?: string | null
+          id?: string
+          key_storage_type?: string
+          metadata?: Json | null
+          network?: string
+          policy_id?: string | null
+          policy_name?: string | null
+          rejection_reason?: string | null
+          requested_by?: string
+          requested_by_name?: string | null
+          requested_by_role?: string | null
+          signed_at?: string | null
+          status?: string
+          submitted_at?: string | null
+          tx_hash?: string | null
+          tx_type?: string
+          unsigned_tx_hash?: string
+          wallet_address?: string
+          wallet_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "signing_audit_log_policy_id_fkey"
+            columns: ["policy_id"]
+            isOneToOne: false
+            referencedRelation: "signing_policies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "signing_audit_log_wallet_id_fkey"
+            columns: ["wallet_id"]
+            isOneToOne: false
+            referencedRelation: "wallets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "signing_audit_log_wallet_id_fkey"
+            columns: ["wallet_id"]
+            isOneToOne: false
+            referencedRelation: "wallets_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      signing_policies: {
+        Row: {
+          allowed_tx_types: string[]
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          max_amount_xrp: number | null
+          max_daily_txs: number | null
+          min_signers: number | null
+          network: string
+          policy_name: string
+          rate_limit_per_minute: number | null
+          requires_multi_sign: boolean | null
+          updated_at: string | null
+          updated_by: string | null
+          wallet_roles: string[]
+        }
+        Insert: {
+          allowed_tx_types?: string[]
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_amount_xrp?: number | null
+          max_daily_txs?: number | null
+          min_signers?: number | null
+          network: string
+          policy_name: string
+          rate_limit_per_minute?: number | null
+          requires_multi_sign?: boolean | null
+          updated_at?: string | null
+          updated_by?: string | null
+          wallet_roles?: string[]
+        }
+        Update: {
+          allowed_tx_types?: string[]
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_amount_xrp?: number | null
+          max_daily_txs?: number | null
+          min_signers?: number | null
+          network?: string
+          policy_name?: string
+          rate_limit_per_minute?: number | null
+          requires_multi_sign?: boolean | null
+          updated_at?: string | null
+          updated_by?: string | null
+          wallet_roles?: string[]
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           expires_at: string | null
@@ -746,8 +906,10 @@ export type Database = {
           identity_verified: boolean | null
           is_authorized: boolean
           jurisdiction: string | null
+          key_storage_type: string | null
           kyc_binding_id: string | null
           last_synced_at: string | null
+          legacy_seed_archived_at: string | null
           multi_sign_config_id: string | null
           multi_sign_enabled: boolean
           multi_sign_quorum: number | null
@@ -764,6 +926,7 @@ export type Database = {
           role: string
           status: string
           tags: string[] | null
+          vault_key_ref: string | null
           vc_issuer_capable: boolean | null
           verifiable_credentials: string[] | null
           xrpl_address: string
@@ -796,8 +959,10 @@ export type Database = {
           identity_verified?: boolean | null
           is_authorized?: boolean
           jurisdiction?: string | null
+          key_storage_type?: string | null
           kyc_binding_id?: string | null
           last_synced_at?: string | null
+          legacy_seed_archived_at?: string | null
           multi_sign_config_id?: string | null
           multi_sign_enabled?: boolean
           multi_sign_quorum?: number | null
@@ -814,6 +979,7 @@ export type Database = {
           role: string
           status?: string
           tags?: string[] | null
+          vault_key_ref?: string | null
           vc_issuer_capable?: boolean | null
           verifiable_credentials?: string[] | null
           xrpl_address: string
@@ -846,8 +1012,10 @@ export type Database = {
           identity_verified?: boolean | null
           is_authorized?: boolean
           jurisdiction?: string | null
+          key_storage_type?: string | null
           kyc_binding_id?: string | null
           last_synced_at?: string | null
+          legacy_seed_archived_at?: string | null
           multi_sign_config_id?: string | null
           multi_sign_enabled?: boolean
           multi_sign_quorum?: number | null
@@ -864,6 +1032,7 @@ export type Database = {
           role?: string
           status?: string
           tags?: string[] | null
+          vault_key_ref?: string | null
           vc_issuer_capable?: boolean | null
           verifiable_credentials?: string[] | null
           xrpl_address?: string
@@ -958,8 +1127,10 @@ export type Database = {
           identity_verified: boolean | null
           is_authorized: boolean | null
           jurisdiction: string | null
+          key_storage_type: string | null
           kyc_binding_id: string | null
           last_synced_at: string | null
+          legacy_seed_archived_at: string | null
           multi_sign_config_id: string | null
           multi_sign_enabled: boolean | null
           multi_sign_quorum: number | null
@@ -976,6 +1147,7 @@ export type Database = {
           role: string | null
           status: string | null
           tags: string[] | null
+          vault_key_ref: string | null
           vc_issuer_capable: boolean | null
           verifiable_credentials: string[] | null
           xrpl_address: string | null
@@ -1005,8 +1177,10 @@ export type Database = {
           identity_verified?: boolean | null
           is_authorized?: boolean | null
           jurisdiction?: string | null
+          key_storage_type?: string | null
           kyc_binding_id?: string | null
           last_synced_at?: string | null
+          legacy_seed_archived_at?: string | null
           multi_sign_config_id?: string | null
           multi_sign_enabled?: boolean | null
           multi_sign_quorum?: number | null
@@ -1023,6 +1197,7 @@ export type Database = {
           role?: string | null
           status?: string | null
           tags?: string[] | null
+          vault_key_ref?: string | null
           vc_issuer_capable?: boolean | null
           verifiable_credentials?: string[] | null
           xrpl_address?: string | null
@@ -1052,8 +1227,10 @@ export type Database = {
           identity_verified?: boolean | null
           is_authorized?: boolean | null
           jurisdiction?: string | null
+          key_storage_type?: string | null
           kyc_binding_id?: string | null
           last_synced_at?: string | null
+          legacy_seed_archived_at?: string | null
           multi_sign_config_id?: string | null
           multi_sign_enabled?: boolean | null
           multi_sign_quorum?: number | null
@@ -1070,6 +1247,7 @@ export type Database = {
           role?: string | null
           status?: string | null
           tags?: string[] | null
+          vault_key_ref?: string | null
           vc_issuer_capable?: boolean | null
           verifiable_credentials?: string[] | null
           xrpl_address?: string | null
@@ -1087,6 +1265,21 @@ export type Database = {
         Returns: boolean
       }
       can_manage_employees: { Args: { _user_id: string }; Returns: boolean }
+      check_signing_rate_limit: {
+        Args: { p_limit_per_minute: number; p_wallet_id: string }
+        Returns: boolean
+      }
+      get_signing_policy: {
+        Args: { p_network: string; p_tx_type: string; p_wallet_role: string }
+        Returns: {
+          max_amount_xrp: number
+          min_signers: number
+          policy_id: string
+          policy_name: string
+          rate_limit_per_minute: number
+          requires_multi_sign: boolean
+        }[]
+      }
       get_unread_notification_count: {
         Args: { _user_id: string }
         Returns: number

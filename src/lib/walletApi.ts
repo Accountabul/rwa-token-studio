@@ -8,6 +8,7 @@ import {
   DIDMethod,
   VerifiableCredentialType,
 } from "@/types/token";
+import { KeyStorageType } from "@/types/custody";
 import { supabase } from "@/integrations/supabase/client";
 
 export interface ProvisionWalletParams {
@@ -125,6 +126,7 @@ export async function provisionWallet(params: ProvisionWalletParams): Promise<Is
     multiSignEnabled: data.multiSignEnabled,
     permissionDexStatus: data.permissionDexStatus as "NOT_LINKED" | "PENDING" | "APPROVED" | "REJECTED",
     isAuthorized: data.isAuthorized,
+    keyStorageType: 'LEGACY_DB', // New wallets from current edge function are legacy until vault integration
     balance: data.balance,
     createdBy: data.createdBy,
     createdByName: data.createdByName,
@@ -243,6 +245,11 @@ function mapRowToWallet(row: Record<string, unknown>): IssuingWallet {
     multiSignConfigId: (row.multi_sign_config_id as string) || undefined,
     permissionDexStatus: row.permission_dex_status as "NOT_LINKED" | "PENDING" | "APPROVED" | "REJECTED",
     isAuthorized: row.is_authorized as boolean,
+    // Custody Layer (NEW)
+    keyStorageType: (row.key_storage_type as KeyStorageType) || 'LEGACY_DB',
+    vaultKeyRef: (row.vault_key_ref as string) || undefined,
+    legacySeedArchivedAt: (row.legacy_seed_archived_at as string) || undefined,
+    // Provisioning metadata
     balance: row.balance ? Number(row.balance) : undefined,
     createdBy: row.created_by as string,
     createdByName: (row.created_by_name as string) || undefined,

@@ -51,6 +51,7 @@ export class MockWalletRepository implements IWalletRepository {
       multiSignEnabled: params.enableMultiSig,
       permissionDexStatus: "NOT_LINKED",
       isAuthorized: false,
+      keyStorageType: "LEGACY_DB", // Mock uses legacy for now
       createdBy: params.createdBy,
       createdByName: params.createdByName,
       createdAt: now,
