@@ -1,33 +1,88 @@
 import React, { useState } from "react";
-import { format } from "date-fns";
-import { CheckCircle2, AlertTriangle, Loader2, Shield } from "lucide-react";
+import { CheckCircle2, AlertTriangle, Loader2, Shield, XCircle, Info } from "lucide-react";
 import { PendingMultiSignTx, multiSignTxTypeLabel } from "@/types/multiSign";
+import { SigningResponse } from "@/types/custody";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { signingService } from "@/domain/services/SigningService";
+import { getSigningErrorMessage, getSuggestedAction } from "@/lib/signingErrors";
+import { hashUnsignedTransaction } from "@/lib/xrplTransactionBuilder";
 import { toast } from "@/hooks/use-toast";
 
 interface SigningModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   transaction: PendingMultiSignTx;
+  onSignSuccess?: (response: SigningResponse) => void;
 }
 
-export const SigningModal: React.FC<SigningModalProps> = ({ open, onOpenChange, transaction }) => {
+export const SigningModal: React.FC<SigningModalProps> = ({ 
+  open, 
+  onOpenChange, 
+  transaction,
+  onSignSuccess,
+}) => {
   const [signing, setSigning] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [errorSuggestion, setErrorSuggestion] = useState<string | null>(null);
 
   const handleSign = async () => {
     setSigning(true);
-    // Simulate signing delay
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    setSigning(false);
-    onOpenChange(false);
-    toast({
-      title: "Transaction Signed",
-      description: "Your signature has been added to the transaction.",
-    });
+    setError(null);
+    setErrorSuggestion(null);
+
+    try {
+      // Build the unsigned tx hash from the blob
+      const unsignedTxHash = transaction.txBlob 
+        ? hashUnsignedTransaction(transaction.txBlob) 
+        : `MOCK_HASH_${Date.now()}`;
+
+      // Call the real signing service
+      const response = await signingService.signTransaction({
+        walletId: transaction.walletId,
+        txType: transaction.txType,
+        unsignedTxBlob: transaction.txBlob || "",
+        unsignedTxHash,
+        requestedBy: "current-user", // Would come from auth context
+        requestedByName: "Current User",
+        requestedByRole: "TOKENIZATION_MANAGER",
+        amount: transaction.amount,
+        currency: transaction.amountCurrency,
+        destination: transaction.destination,
+        destinationName: transaction.destinationName,
+      });
+
+      if (!response.success) {
+        const errorCode = response.errorCode;
+        setError(getSigningErrorMessage(errorCode));
+        if (errorCode) {
+          setErrorSuggestion(getSuggestedAction(errorCode));
+        }
+        setSigning(false);
+        return;
+      }
+
+      // Success!
+      setSigning(false);
+      onOpenChange(false);
+      onSignSuccess?.(response);
+      
+      toast({
+        title: "Transaction Signed",
+        description: response.policyApplied
+          ? `Policy applied: ${response.policyApplied}`
+          : "Your signature has been added to the transaction.",
+      });
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : "Unknown error occurred";
+      setError(errorMsg);
+      setErrorSuggestion("Try again or contact support.");
+      setSigning(false);
+    }
   };
 
   const progressPercent = (transaction.currentWeight / transaction.requiredWeight) * 100;
@@ -47,6 +102,19 @@ export const SigningModal: React.FC<SigningModalProps> = ({ open, onOpenChange, 
         </DialogHeader>
 
         <div className="py-4 space-y-4">
+          {/* Error Display */}
+          {error && (
+            <Alert variant="destructive">
+              <XCircle className="h-4 w-4" />
+              <AlertDescription className="ml-2">
+                <p className="font-medium">{error}</p>
+                {errorSuggestion && (
+                  <p className="text-sm mt-1 opacity-90">{errorSuggestion}</p>
+                )}
+              </AlertDescription>
+            </Alert>
+          )}
+
           {/* Transaction Type */}
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">Type</span>
@@ -117,6 +185,14 @@ export const SigningModal: React.FC<SigningModalProps> = ({ open, onOpenChange, 
               </div>
             </div>
           )}
+
+          {/* Audit Trail Info */}
+          <div className="flex items-start gap-2 p-3 bg-muted/50 border border-border rounded-lg">
+            <Info className="w-4 h-4 text-muted-foreground mt-0.5" />
+            <p className="text-xs text-muted-foreground">
+              This signature will be recorded in the signing audit log for compliance and security tracking.
+            </p>
+          </div>
 
           {/* Warning */}
           <div className="flex items-start gap-2 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
