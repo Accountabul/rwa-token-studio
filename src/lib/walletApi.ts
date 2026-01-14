@@ -188,10 +188,12 @@ export async function updateWallet(walletId: string, updates: UpdateWalletParams
 
 /**
  * Fetch all wallets from the database
+ * Uses wallets_safe view to exclude sensitive fields (encrypted_seed, contact PII)
  */
 export async function fetchWallets(): Promise<IssuingWallet[]> {
+  // Query the secure view that excludes encrypted_seed and contact PII
   const { data, error } = await supabase
-    .from('wallets')
+    .from('wallets_safe' as 'wallets')
     .select('*')
     .order('created_at', { ascending: false });
 
@@ -205,10 +207,12 @@ export async function fetchWallets(): Promise<IssuingWallet[]> {
 
 /**
  * Fetch a single wallet by ID
+ * Uses wallets_safe view to exclude sensitive fields (encrypted_seed, contact PII)
  */
 export async function fetchWalletById(walletId: string): Promise<IssuingWallet | null> {
+  // Query the secure view that excludes encrypted_seed and contact PII
   const { data, error } = await supabase
-    .from('wallets')
+    .from('wallets_safe' as 'wallets')
     .select('*')
     .eq('id', walletId)
     .single();

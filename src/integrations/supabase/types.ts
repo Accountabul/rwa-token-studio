@@ -177,6 +177,13 @@ export type Database = {
             referencedRelation: "pending_approvals"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "approval_signatures_approval_id_fkey"
+            columns: ["approval_id"]
+            isOneToOne: false
+            referencedRelation: "pending_approvals_status"
+            referencedColumns: ["id"]
+          },
         ]
       }
       entity_subscriptions: {
@@ -865,7 +872,210 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      pending_approvals_status: {
+        Row: {
+          action_type: string | null
+          created_at: string | null
+          current_approvals: number | null
+          entity_id: string | null
+          entity_name: string | null
+          entity_type: string | null
+          executed_at: string | null
+          executed_by: string | null
+          expires_at: string | null
+          id: string | null
+          rejection_reason: string | null
+          requested_at: string | null
+          requested_by: string | null
+          requested_by_name: string | null
+          requested_by_role: string | null
+          required_approvers: number | null
+          status: string | null
+        }
+        Insert: {
+          action_type?: string | null
+          created_at?: string | null
+          current_approvals?: number | null
+          entity_id?: string | null
+          entity_name?: string | null
+          entity_type?: string | null
+          executed_at?: string | null
+          executed_by?: string | null
+          expires_at?: string | null
+          id?: string | null
+          rejection_reason?: string | null
+          requested_at?: string | null
+          requested_by?: string | null
+          requested_by_name?: string | null
+          requested_by_role?: string | null
+          required_approvers?: number | null
+          status?: string | null
+        }
+        Update: {
+          action_type?: string | null
+          created_at?: string | null
+          current_approvals?: number | null
+          entity_id?: string | null
+          entity_name?: string | null
+          entity_type?: string | null
+          executed_at?: string | null
+          executed_by?: string | null
+          expires_at?: string | null
+          id?: string | null
+          rejection_reason?: string | null
+          requested_at?: string | null
+          requested_by?: string | null
+          requested_by_name?: string | null
+          requested_by_role?: string | null
+          required_approvers?: number | null
+          status?: string | null
+        }
+        Relationships: []
+      }
+      wallets_safe: {
+        Row: {
+          asset_class: string | null
+          balance: number | null
+          business_unit: string | null
+          can_authorize_holders: boolean | null
+          can_clawback: boolean | null
+          can_create_channels: boolean | null
+          can_create_escrows: boolean | null
+          can_freeze: boolean | null
+          can_issue_tokens: boolean | null
+          can_manage_amm: boolean | null
+          can_mint_nfts: boolean | null
+          created_at: string | null
+          created_by: string | null
+          created_by_name: string | null
+          description: string | null
+          did_document: string | null
+          did_method: string | null
+          expiration_date: string | null
+          external_ref_id: string | null
+          funded_at: string | null
+          id: string | null
+          identity_verified: boolean | null
+          is_authorized: boolean | null
+          jurisdiction: string | null
+          kyc_binding_id: string | null
+          last_synced_at: string | null
+          multi_sign_config_id: string | null
+          multi_sign_enabled: boolean | null
+          multi_sign_quorum: number | null
+          multi_sign_signers: number | null
+          name: string | null
+          network: string | null
+          permission_dex_status: string | null
+          project_ids: string[] | null
+          public_key: string | null
+          purpose_code: string | null
+          requires_destination_tag: boolean | null
+          review_frequency: string | null
+          risk_tier: string | null
+          role: string | null
+          status: string | null
+          tags: string[] | null
+          vc_issuer_capable: boolean | null
+          verifiable_credentials: string[] | null
+          xrpl_address: string | null
+        }
+        Insert: {
+          asset_class?: string | null
+          balance?: number | null
+          business_unit?: string | null
+          can_authorize_holders?: boolean | null
+          can_clawback?: boolean | null
+          can_create_channels?: boolean | null
+          can_create_escrows?: boolean | null
+          can_freeze?: boolean | null
+          can_issue_tokens?: boolean | null
+          can_manage_amm?: boolean | null
+          can_mint_nfts?: boolean | null
+          created_at?: string | null
+          created_by?: string | null
+          created_by_name?: string | null
+          description?: string | null
+          did_document?: string | null
+          did_method?: string | null
+          expiration_date?: string | null
+          external_ref_id?: string | null
+          funded_at?: string | null
+          id?: string | null
+          identity_verified?: boolean | null
+          is_authorized?: boolean | null
+          jurisdiction?: string | null
+          kyc_binding_id?: string | null
+          last_synced_at?: string | null
+          multi_sign_config_id?: string | null
+          multi_sign_enabled?: boolean | null
+          multi_sign_quorum?: number | null
+          multi_sign_signers?: number | null
+          name?: string | null
+          network?: string | null
+          permission_dex_status?: string | null
+          project_ids?: string[] | null
+          public_key?: string | null
+          purpose_code?: string | null
+          requires_destination_tag?: boolean | null
+          review_frequency?: string | null
+          risk_tier?: string | null
+          role?: string | null
+          status?: string | null
+          tags?: string[] | null
+          vc_issuer_capable?: boolean | null
+          verifiable_credentials?: string[] | null
+          xrpl_address?: string | null
+        }
+        Update: {
+          asset_class?: string | null
+          balance?: number | null
+          business_unit?: string | null
+          can_authorize_holders?: boolean | null
+          can_clawback?: boolean | null
+          can_create_channels?: boolean | null
+          can_create_escrows?: boolean | null
+          can_freeze?: boolean | null
+          can_issue_tokens?: boolean | null
+          can_manage_amm?: boolean | null
+          can_mint_nfts?: boolean | null
+          created_at?: string | null
+          created_by?: string | null
+          created_by_name?: string | null
+          description?: string | null
+          did_document?: string | null
+          did_method?: string | null
+          expiration_date?: string | null
+          external_ref_id?: string | null
+          funded_at?: string | null
+          id?: string | null
+          identity_verified?: boolean | null
+          is_authorized?: boolean | null
+          jurisdiction?: string | null
+          kyc_binding_id?: string | null
+          last_synced_at?: string | null
+          multi_sign_config_id?: string | null
+          multi_sign_enabled?: boolean | null
+          multi_sign_quorum?: number | null
+          multi_sign_signers?: number | null
+          name?: string | null
+          network?: string | null
+          permission_dex_status?: string | null
+          project_ids?: string[] | null
+          public_key?: string | null
+          purpose_code?: string | null
+          requires_destination_tag?: boolean | null
+          review_frequency?: string | null
+          risk_tier?: string | null
+          role?: string | null
+          status?: string | null
+          tags?: string[] | null
+          vc_issuer_capable?: boolean | null
+          verifiable_credentials?: string[] | null
+          xrpl_address?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       can_approve: { Args: { _user_id: string }; Returns: boolean }
