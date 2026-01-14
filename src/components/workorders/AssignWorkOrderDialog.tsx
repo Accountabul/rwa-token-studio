@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -18,16 +18,25 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { WorkOrder } from "@/types/workOrder";
-import { mockInvestors } from "@/data/mockInvestors";
 import { useWorkOrderService } from "@/domain/ServiceContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { Loader2 } from "lucide-react";
 
 interface AssignWorkOrderDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   workOrder: WorkOrder;
   onSuccess?: () => void;
+}
+
+interface Employee {
+  id: string;
+  full_name: string;
+  email: string;
+  job_title: string | null;
+  department: string | null;
 }
 
 export const AssignWorkOrderDialog: React.FC<AssignWorkOrderDialogProps> = ({
@@ -39,11 +48,41 @@ export const AssignWorkOrderDialog: React.FC<AssignWorkOrderDialogProps> = ({
   const { profile, roles } = useAuth();
   const workOrderService = useWorkOrderService();
 
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [loading, setLoading] = useState(true);
   const [assigneeId, setAssigneeId] = useState("");
   const [walletAddress, setWalletAddress] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const selectedAssignee = mockInvestors.find((i) => i.id === assigneeId);
+  // Fetch employees (technicians and other staff) from profiles
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      setLoading(true);
+      try {
+        // Fetch profiles - in production, you'd filter by TECHNICIAN role
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("id, full_name, email, job_title, department")
+          .eq("status", "ACTIVE")
+          .order("full_name");
+
+        if (error) throw error;
+        setEmployees(data || []);
+      } catch (error) {
+        console.error("Error fetching employees:", error);
+        // Fallback to empty list
+        setEmployees([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (open) {
+      fetchEmployees();
+    }
+  }, [open]);
+
+  const selectedEmployee = employees.find((e) => e.id === assigneeId);
 
   const handleAssigneeChange = (id: string) => {
     setAssigneeId(id);
@@ -51,14 +90,14 @@ export const AssignWorkOrderDialog: React.FC<AssignWorkOrderDialogProps> = ({
   };
 
   const handleSubmit = async () => {
-    if (!profile || !selectedAssignee) return;
+    if (!profile || !selectedEmployee) return;
 
     setIsSubmitting(true);
     try {
       await workOrderService.assignWorkOrder(
         workOrder.id,
-        selectedAssignee.id,
-        selectedAssignee.fullName,
+        selectedEmployee.id,
+        selectedEmployee.full_name,
         walletAddress,
         {
           userId: profile.id,
@@ -69,10 +108,12 @@ export const AssignWorkOrderDialog: React.FC<AssignWorkOrderDialogProps> = ({
 
       toast({
         title: "Work Order Assigned",
-        description: `Assigned to ${selectedAssignee.fullName}.`,
+        description: `Assigned to ${selectedEmployee.full_name}.`,
       });
 
       onOpenChange(false);
+      setAssigneeId("");
+      setWalletAddress("");
       onSuccess?.();
     } catch (error) {
       toast({
@@ -93,25 +134,51 @@ export const AssignWorkOrderDialog: React.FC<AssignWorkOrderDialogProps> = ({
         <DialogHeader>
           <DialogTitle>Assign Work Order</DialogTitle>
           <DialogDescription>
-            Assign "{workOrder.title}" to a contractor or service provider.
+            Assign "{workOrder.title}" to a technician or staff member.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="assignee">Assignee</Label>
-            <Select value={assigneeId} onValueChange={handleAssigneeChange}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select assignee..." />
-              </SelectTrigger>
-              <SelectContent>
-              {mockInvestors.map((investor) => (
-                  <SelectItem key={investor.id} value={investor.id}>
-                    {investor.fullName}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label htmlFor="assignee">Assignee (Technician)</Label>
+            {loading ? (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Loading employees...
+              </div>
+            ) : (
+              <Select value={assigneeId} onValueChange={handleAssigneeChange}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a technician..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {employees.length === 0 ? (
+                    <div className="py-2 px-2 text-sm text-muted-foreground">
+                      No employees found
+                    </div>
+                  ) : (
+                    employees.map((employee) => (
+                      <SelectItem key={employee.id} value={employee.id}>
+                        <div className="flex flex-col">
+                          <span>{employee.full_name}</span>
+                          {employee.job_title && (
+                            <span className="text-xs text-muted-foreground">
+                              {employee.job_title}
+                            </span>
+                          )}
+                        </div>
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            )}
+            {selectedEmployee && (
+              <p className="text-xs text-muted-foreground">
+                {selectedEmployee.email}
+                {selectedEmployee.department && ` • ${selectedEmployee.department}`}
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -123,6 +190,9 @@ export const AssignWorkOrderDialog: React.FC<AssignWorkOrderDialogProps> = ({
               placeholder="rXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
               className="font-mono text-sm"
             />
+            <p className="text-xs text-muted-foreground">
+              The wallet address for receiving payment upon completion.
+            </p>
           </div>
         </div>
 

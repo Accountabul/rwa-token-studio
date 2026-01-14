@@ -9,6 +9,8 @@ import {
   User,
   DollarSign,
   FileText,
+  Send,
+  ClipboardCheck,
 } from "lucide-react";
 import { WorkOrder } from "@/types/workOrder";
 import { Role } from "@/types/tokenization";
@@ -21,6 +23,8 @@ import { WorkOrderTimeline } from "./WorkOrderTimeline";
 import { AssignWorkOrderDialog } from "./AssignWorkOrderDialog";
 import { CompleteWorkOrderDialog } from "./CompleteWorkOrderDialog";
 import { PayWorkOrderDialog } from "./PayWorkOrderDialog";
+import { ReviewWorkOrderDialog } from "./ReviewWorkOrderDialog";
+import { SubmitForReviewDialog } from "./SubmitForReviewDialog";
 import { ExplorerLinkBadge } from "@/components/tokens/ExplorerLinkBadge";
 import { WORK_ORDER_PERMISSIONS } from "@/permissions/matrix";
 import { cn } from "@/lib/utils";
@@ -53,14 +57,17 @@ export const WorkOrderDetails: React.FC<WorkOrderDetailsProps> = ({
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [completeDialogOpen, setCompleteDialogOpen] = useState(false);
   const [payDialogOpen, setPayDialogOpen] = useState(false);
+  const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
+  const [submitForReviewDialogOpen, setSubmitForReviewDialogOpen] = useState(false);
 
   const canUpdate = WORK_ORDER_PERMISSIONS.actions.UPDATE?.includes(role) ?? false;
   const canApprove = WORK_ORDER_PERMISSIONS.actions.APPROVE?.includes(role) ?? false;
+  const isTechnician = role === "TECHNICIAN";
 
-  const canAssign =
-    canUpdate && ["DRAFT", "ACTIVE"].includes(workOrder.status);
-  const canComplete =
-    canUpdate && workOrder.status === "IN_PROGRESS";
+  const canAssign = canUpdate && !isTechnician && ["DRAFT", "ACTIVE"].includes(workOrder.status);
+  const canSubmitForReview = canUpdate && workOrder.status === "IN_PROGRESS";
+  const canReview = canApprove && workOrder.status === "UNDER_REVIEW";
+  const canComplete = canUpdate && !isTechnician && workOrder.status === "IN_PROGRESS";
   const canPay = canApprove && workOrder.status === "COMPLETED";
 
   return (
@@ -100,6 +107,25 @@ export const WorkOrderDetails: React.FC<WorkOrderDetailsProps> = ({
             >
               <UserPlus className="w-4 h-4" />
               {workOrder.assigneeUserId ? "Reassign" : "Assign"}
+            </Button>
+          )}
+          {canSubmitForReview && (
+            <Button
+              variant="outline"
+              onClick={() => setSubmitForReviewDialogOpen(true)}
+              className="gap-2"
+            >
+              <Send className="w-4 h-4" />
+              Submit for Review
+            </Button>
+          )}
+          {canReview && (
+            <Button
+              onClick={() => setReviewDialogOpen(true)}
+              className="gap-2 bg-purple-600 hover:bg-purple-700"
+            >
+              <ClipboardCheck className="w-4 h-4" />
+              Review
             </Button>
           )}
           {canComplete && (
@@ -274,6 +300,18 @@ export const WorkOrderDetails: React.FC<WorkOrderDetailsProps> = ({
       <AssignWorkOrderDialog
         open={assignDialogOpen}
         onOpenChange={setAssignDialogOpen}
+        workOrder={workOrder}
+        onSuccess={onRefresh}
+      />
+      <SubmitForReviewDialog
+        open={submitForReviewDialogOpen}
+        onOpenChange={setSubmitForReviewDialogOpen}
+        workOrder={workOrder}
+        onSuccess={onRefresh}
+      />
+      <ReviewWorkOrderDialog
+        open={reviewDialogOpen}
+        onOpenChange={setReviewDialogOpen}
         workOrder={workOrder}
         onSuccess={onRefresh}
       />

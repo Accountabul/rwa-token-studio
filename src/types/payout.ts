@@ -495,4 +495,14 @@ export const PAYOUT_ROLE_PERMISSIONS: Record<Role, PayoutPermissions> = {
     canViewApprovalQueue: false,
     canCreatePayee: false,
   },
+  // Field Operations - no payout access
+  TECHNICIAN: {
+    canCreateRequest: false,
+    canApproveRequest: false,
+    canRejectRequest: false,
+    canMarkPaid: false,
+    canVoidRequest: false,
+    canViewApprovalQueue: false,
+    canCreatePayee: false,
+  },
 };
