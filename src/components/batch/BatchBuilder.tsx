@@ -1,6 +1,7 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Role } from "@/types/tokenization";
+import { IssuingWallet } from "@/types/token";
 import {
   BatchAtomicityMode,
   BatchableTxType,
@@ -26,6 +27,13 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Accordion,
   AccordionContent,
   AccordionItem,
@@ -35,10 +43,17 @@ import {
   ArrowLeft, Plus, Trash2, GripVertical, ArrowUpDown, Send, Search,
   Coins, Link, FileText, Lock, Unlock, Image, Shield, Clock, Layers,
   UserCog, ArrowRightLeft, Droplets, GitBranch, Ticket, Code, X,
-  Ban, Key, Users, ShieldCheck, CreditCard, ImagePlus, ImageMinus, Tag, CheckSquare
+  Ban, Key, Users, ShieldCheck, CreditCard, ImagePlus, ImageMinus, Tag, CheckSquare,
+  AlertTriangle, Wallet
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import TransactionConfigForm from "./TransactionConfigForm";
+import { BatchSigningFlow } from "./BatchSigningFlow";
+import { KeyStorageTypeBadge } from "@/components/custody/KeyStorageTypeBadge";
+import { SigningPolicyPreview } from "@/components/custody/SigningPolicyPreview";
+import { requiresMigration } from "@/types/custody";
+import { mockWallets } from "@/data/mockWallets";
 
 interface BatchBuilderProps {
   role: Role;
@@ -111,6 +126,22 @@ const BatchBuilder = ({ role }: BatchBuilderProps) => {
   const [transactions, setTransactions] = useState<BatchTransaction[]>([]);
   const [selectedTxIndex, setSelectedTxIndex] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  
+  // New state for wallet selection and signing flow
+  const [wallets, setWallets] = useState<IssuingWallet[]>([]);
+  const [selectedWalletId, setSelectedWalletId] = useState<string>("");
+  const [showSigningFlow, setShowSigningFlow] = useState(false);
+
+  // Load wallets on mount
+  useEffect(() => {
+    // Filter to active wallets that can sign
+    const activeWallets = mockWallets.filter(
+      (w) => w.status === "ACTIVE" && (w.role === "ISSUER" || w.role === "TREASURY" || w.role === "OPS")
+    );
+    setWallets(activeWallets);
+  }, []);
+
+  const selectedWallet = wallets.find((w) => w.id === selectedWalletId);
 
   // Filter transaction types by search
   const filteredCategories = useMemo(() => {
@@ -205,11 +236,24 @@ const BatchBuilder = ({ role }: BatchBuilderProps) => {
       return;
     }
 
-    toast({
-      title: "Batch submitted",
-      description: `${name} with ${transactions.length} transactions`
-    });
-    navigate("/batch");
+    if (!selectedWallet) {
+      toast({
+        title: "Select a wallet",
+        description: "Please select a signing wallet for this batch",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Open the signing flow dialog
+    setShowSigningFlow(true);
+  };
+
+  const handleSigningComplete = (results: Array<{ tx: BatchTransaction; response: any }>) => {
+    const successCount = results.filter((r) => r.response.success).length;
+    if (successCount === transactions.length) {
+      navigate("/batch");
+    }
   };
 
   const handleSaveDraft = () => {
@@ -419,6 +463,60 @@ const BatchBuilder = ({ role }: BatchBuilderProps) => {
                   placeholder="Brief description of this batch"
                   rows={2}
                 />
+              </div>
+
+              {/* Wallet Selection */}
+              <div className="space-y-2 border-t pt-4">
+                <Label>Signing Wallet *</Label>
+                <Select value={selectedWalletId} onValueChange={setSelectedWalletId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a wallet..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {wallets.map((w) => (
+                      <SelectItem key={w.id} value={w.id}>
+                        <div className="flex items-center gap-2">
+                          <Wallet className="h-3 w-3" />
+                          <span>{w.name}</span>
+                          <Badge variant="outline" className="text-[10px] ml-1">
+                            {w.network}
+                          </Badge>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                {selectedWallet && (
+                  <div className="space-y-2 mt-2">
+                    <div className="flex items-center gap-2">
+                      <KeyStorageTypeBadge type={selectedWallet.keyStorageType} size="sm" />
+                      <Badge variant="outline" className="text-xs capitalize">
+                        {selectedWallet.role}
+                      </Badge>
+                    </div>
+
+                    {requiresMigration(selectedWallet.keyStorageType) && (
+                      <Alert className="bg-amber-500/10 border-amber-500/20">
+                        <AlertTriangle className="h-4 w-4 text-amber-600" />
+                        <AlertDescription className="text-xs text-amber-700">
+                          {selectedWallet.network === "mainnet"
+                            ? "Legacy wallets cannot sign mainnet transactions."
+                            : "Consider migrating to vault storage for enhanced security."}
+                        </AlertDescription>
+                      </Alert>
+                    )}
+
+                    {transactions.length > 0 && (
+                      <SigningPolicyPreview
+                        walletRole={selectedWallet.role}
+                        network={selectedWallet.network}
+                        txType={transactions[0].txType}
+                        compact
+                      />
+                    )}
+                  </div>
+                )}
               </div>
 
               {selectedTxIndex !== null && transactions[selectedTxIndex] && (
