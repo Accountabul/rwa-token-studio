@@ -29,6 +29,8 @@ import BatchTransactions from "./pages/BatchTransactions";
 import BatchBuilderPage from "./pages/BatchBuilderPage";
 import BatchDetailsPage from "./pages/BatchDetailsPage";
 import ReportsLogs from "./pages/ReportsLogs";
+import WorkOrders from "./pages/WorkOrders";
+import WorkOrderDetailsPage from "./pages/WorkOrderDetailsPage";
 import AdminUsers from "./pages/AdminUsers";
 import AdminUserDetail from "./pages/AdminUserDetail";
 import AdminRoles from "./pages/AdminRoles";
@@ -213,6 +215,22 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <ReportsLogs />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/work-orders"
+              element={
+                <ProtectedRoute>
+                  <WorkOrders />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/work-orders/:workOrderId"
+              element={
+                <ProtectedRoute>
+                  <WorkOrderDetailsPage />
                 </ProtectedRoute>
               }
             />

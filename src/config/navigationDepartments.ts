@@ -76,8 +76,7 @@ export const NAV_DEPARTMENTS: NavDepartment[] = [
     icon: Wrench,
     description: "Site work, inspections, maintenance",
     items: [
-      // Future: Create Work Order, Active/Completed, Vendors, SLA
-      // This department will be hidden until work order items exist
+      { label: "Work Orders", href: "/work-orders", entity: "WORK_ORDER", action: "VIEW_LIST" },
     ]
   },
   {
