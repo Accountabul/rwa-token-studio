@@ -1,14 +1,16 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { format } from "date-fns";
-import { Shield, Wallet, CheckCircle2, Clock, XCircle, Users, Server, Coins, Pencil, Tag, AlertTriangle } from "lucide-react";
+import { Shield, Wallet, CheckCircle2, Clock, XCircle, Users, Server, Coins, Pencil, Tag, AlertTriangle, History, ExternalLink } from "lucide-react";
 import { IssuingWallet, walletPermissionLabel, walletRoleLabel, walletStatusLabel, riskTierLabel } from "@/types/token";
 import { MultiSignConfig } from "@/types/multiSign";
+import { SigningAuditEntry } from "@/types/custody";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ExplorerLinkBadge } from "@/components/tokens/ExplorerLinkBadge";
 import { EditWalletDialog } from "./EditWalletDialog";
 import { KeyStorageTypeBadge } from "@/components/custody/KeyStorageTypeBadge";
+import { signingService } from "@/domain/services/SigningService";
 import { cn } from "@/lib/utils";
 import { requiresMigration } from "@/types/custody";
 
@@ -65,11 +67,25 @@ const riskColors: Record<string, string> = {
 
 export const WalletCard: React.FC<WalletCardProps> = ({ wallet, config, onSelect, isSelected, onRefresh }) => {
   const [editOpen, setEditOpen] = useState(false);
+  const [signingHistory, setSigningHistory] = useState<SigningAuditEntry[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
   const StatusIcon = permissionStatusIcons[wallet.permissionDexStatus];
+
+  // Fetch signing history when expanded
+  useEffect(() => {
+    if (showHistory && signingHistory.length === 0) {
+      signingService.getSigningHistory(wallet.id, 5).then(setSigningHistory);
+    }
+  }, [showHistory, wallet.id, signingHistory.length]);
 
   const handleEditClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     setEditOpen(true);
+  };
+
+  const handleHistoryClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowHistory(!showHistory);
   };
 
   return (
@@ -213,6 +229,65 @@ export const WalletCard: React.FC<WalletCardProps> = ({ wallet, config, onSelect
               </div>
             </div>
           )}
+
+          {/* Signing History Toggle */}
+          <div className="border-t pt-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full justify-between h-8"
+              onClick={handleHistoryClick}
+            >
+              <div className="flex items-center gap-2">
+                <History className="w-3.5 h-3.5" />
+                <span className="text-xs">Recent Signing Activity</span>
+              </div>
+              <Badge variant="secondary" className="text-[10px]">
+                {showHistory ? "Hide" : "Show"}
+              </Badge>
+            </Button>
+
+            {showHistory && (
+              <div className="mt-2 space-y-1.5">
+                {signingHistory.length === 0 ? (
+                  <p className="text-xs text-muted-foreground text-center py-2">
+                    No signing activity yet
+                  </p>
+                ) : (
+                  signingHistory.map((entry) => (
+                    <div
+                      key={entry.id}
+                      className={cn(
+                        "flex items-center justify-between p-2 rounded-md text-xs",
+                        entry.status === "SIGNED" && "bg-green-500/5 border border-green-500/20",
+                        entry.status === "REJECTED" && "bg-red-500/5 border border-red-500/20",
+                        entry.status === "FAILED" && "bg-red-500/5 border border-red-500/20",
+                        entry.status === "PENDING" && "bg-amber-500/5 border border-amber-500/20"
+                      )}
+                    >
+                      <div className="flex items-center gap-2">
+                        {entry.status === "SIGNED" && <CheckCircle2 className="w-3 h-3 text-green-500" />}
+                        {entry.status === "REJECTED" && <XCircle className="w-3 h-3 text-red-500" />}
+                        {entry.status === "FAILED" && <XCircle className="w-3 h-3 text-red-500" />}
+                        {entry.status === "PENDING" && <Clock className="w-3 h-3 text-amber-500" />}
+                        <span className="font-medium">{entry.txType}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {entry.amount && (
+                          <span className="text-muted-foreground">
+                            {entry.amount} {entry.currency}
+                          </span>
+                        )}
+                        <span className="text-muted-foreground">
+                          {format(new Date(entry.signedAt), "MMM d")}
+                        </span>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
 
           {/* Footer */}
           <div className="flex items-center justify-between text-xs text-muted-foreground pt-1 border-t border-border">
