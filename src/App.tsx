@@ -34,6 +34,7 @@ import WorkOrderDetailsPage from "./pages/WorkOrderDetailsPage";
 import AdminUsers from "./pages/AdminUsers";
 import AdminUserDetail from "./pages/AdminUserDetail";
 import AdminRoles from "./pages/AdminRoles";
+import SigningPolicies from "./pages/SigningPolicies";
 import Notifications from "./pages/Notifications";
 import NotFound from "./pages/NotFound";
 
@@ -255,6 +256,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <AdminRoles />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/signing-policies"
+              element={
+                <ProtectedRoute>
+                  <SigningPolicies />
                 </ProtectedRoute>
               }
             />

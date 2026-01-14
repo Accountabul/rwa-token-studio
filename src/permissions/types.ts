@@ -22,7 +22,8 @@ export type EntityType =
   | "MULTI_SIGN_TX"
   | "BATCH_TRANSACTION"
   | "USER_ROLE"
-  | "NOTIFICATION";
+  | "NOTIFICATION"
+  | "SIGNING_POLICY";
 
 // All actions that can be performed
 export type ActionType =
