@@ -19,6 +19,8 @@ export interface ProvisionWalletParams {
   autoFund: boolean;
   createdBy: string;
   createdByName: string;
+  // Key storage configuration
+  keyStorageType?: KeyStorageType;
   // Extended fields
   description?: string;
   tags?: string[];
@@ -66,6 +68,8 @@ interface ProvisionWalletResponse {
   createdAt: string;
   fundedAt: string | null;
   lastSyncedAt: string;
+  keyStorageType?: KeyStorageType;
+  vaultKeyRef?: string;
 }
 
 export interface UpdateWalletParams {
