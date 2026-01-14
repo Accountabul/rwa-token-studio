@@ -56,7 +56,7 @@ export const NAV_DEPARTMENTS: NavDepartment[] = [
     description: "Keys, control, safety",
     items: [
       { label: "Wallet Management", href: "/wallets", entity: "WALLET", action: "VIEW_LIST" },
-      // Future: Signing Requests, Freezes & Clawbacks
+      { label: "Signing Policies", href: "/admin/signing-policies", entity: "SIGNING_POLICY", action: "VIEW_LIST" },
     ]
   },
   {

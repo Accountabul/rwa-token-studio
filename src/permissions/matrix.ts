@@ -424,6 +424,17 @@ export const NOTIFICATION_PERMISSIONS: EntityPermissionMatrix = {
 // MASTER PERMISSION MATRIX
 // ============================================================================
 
+export const SIGNING_POLICY_PERMISSIONS: EntityPermissionMatrix = {
+  entity: "SIGNING_POLICY",
+  actions: {
+    VIEW_LIST: ["SUPER_ADMIN", "SYSTEM_ADMIN", "CUSTODY_OFFICER", "SECURITY_ENGINEER"],
+    VIEW: ["SUPER_ADMIN", "SYSTEM_ADMIN", "CUSTODY_OFFICER", "SECURITY_ENGINEER"],
+    CREATE: ["SUPER_ADMIN", "SYSTEM_ADMIN", "CUSTODY_OFFICER"],
+    UPDATE: ["SUPER_ADMIN", "SYSTEM_ADMIN", "CUSTODY_OFFICER"],
+    DELETE: ["SUPER_ADMIN", "SYSTEM_ADMIN"],
+  },
+};
+
 export const PERMISSION_MATRIX: Record<EntityType, EntityPermissionMatrix> = {
   PROJECT: PROJECT_PERMISSIONS,
   TOKEN: TOKEN_PERMISSIONS,
@@ -446,6 +457,7 @@ export const PERMISSION_MATRIX: Record<EntityType, EntityPermissionMatrix> = {
   BATCH_TRANSACTION: BATCH_TRANSACTION_PERMISSIONS,
   USER_ROLE: USER_ROLE_PERMISSIONS,
   NOTIFICATION: NOTIFICATION_PERMISSIONS,
+  SIGNING_POLICY: SIGNING_POLICY_PERMISSIONS,
 };
 
 // ============================================================================
