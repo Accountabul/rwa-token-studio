@@ -1,4 +1,5 @@
 import { Role } from "./tokenization";
+import { KeyStorageType } from "./custody";
 
 // Token standards supported on XRPL
 export type TokenStandard = "IOU" | "MPT" | "NFT";
@@ -204,9 +205,10 @@ export interface IssuingWallet {
   permissionDexStatus: WalletPermissionStatus;
   isAuthorized: boolean;
   
-  // Custody tracking
-  encryptedSeedRef?: string;
-  vaultKeyId?: string;
+  // Custody Layer (NEW - Phase 0)
+  keyStorageType: KeyStorageType;
+  vaultKeyRef?: string;
+  legacySeedArchivedAt?: string;
   
   // Provisioning metadata
   createdBy: string;
