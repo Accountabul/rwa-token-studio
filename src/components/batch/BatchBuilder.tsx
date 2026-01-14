@@ -549,13 +549,26 @@ const BatchBuilder = ({ role }: BatchBuilderProps) => {
             {transactions.length} transaction{transactions.length !== 1 ? "s" : ""}
           </Badge>
           {canSubmitBatch(role) && (
-            <Button onClick={handleSubmit} disabled={transactions.length === 0}>
+            <Button onClick={handleSubmit} disabled={transactions.length === 0 || !selectedWallet}>
               <Send className="h-4 w-4 mr-2" />
               Submit Batch
             </Button>
           )}
         </div>
       </div>
+
+      {/* Signing Flow Dialog */}
+      {selectedWallet && (
+        <BatchSigningFlow
+          open={showSigningFlow}
+          onOpenChange={setShowSigningFlow}
+          wallet={selectedWallet}
+          transactions={transactions}
+          batchName={name}
+          atomicityMode={atomicityMode}
+          onComplete={handleSigningComplete}
+        />
+      )}
     </div>
   );
 };
