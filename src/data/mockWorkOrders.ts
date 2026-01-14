@@ -189,6 +189,7 @@ export const getWorkOrderStats = (): WorkOrderStats => {
     draft: mockWorkOrders.filter((wo) => wo.status === "DRAFT").length,
     active: mockWorkOrders.filter((wo) => wo.status === "ACTIVE").length,
     inProgress: mockWorkOrders.filter((wo) => wo.status === "IN_PROGRESS").length,
+    underReview: mockWorkOrders.filter((wo) => wo.status === "UNDER_REVIEW").length,
     completed: mockWorkOrders.filter((wo) => wo.status === "COMPLETED").length,
     paid: paidOrders.length,
     totalValueUsd: mockWorkOrders.reduce((sum, wo) => sum + wo.agreedAmountUsd, 0),

@@ -152,6 +152,7 @@ export class MockWorkOrderRepository implements IWorkOrderRepository {
       draft: orders.filter(wo => wo.status === "DRAFT").length,
       active: orders.filter(wo => wo.status === "ACTIVE").length,
       inProgress: orders.filter(wo => wo.status === "IN_PROGRESS").length,
+      underReview: orders.filter(wo => wo.status === "UNDER_REVIEW").length,
       completed: orders.filter(wo => wo.status === "COMPLETED").length,
       paid: orders.filter(wo => wo.status === "PAID").length,
       totalValueUsd: orders.reduce((sum, wo) => sum + wo.agreedAmountUsd, 0),

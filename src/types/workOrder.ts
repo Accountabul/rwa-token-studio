@@ -3,7 +3,7 @@
  * Work orders represent business operations tracked as NFTs/MPTs on the XRPL
  */
 
-export type WorkOrderStatus = "DRAFT" | "ACTIVE" | "IN_PROGRESS" | "COMPLETED" | "PAID" | "CANCELLED" | "DISPUTED";
+export type WorkOrderStatus = "DRAFT" | "ACTIVE" | "IN_PROGRESS" | "UNDER_REVIEW" | "COMPLETED" | "PAID" | "CANCELLED" | "DISPUTED";
 
 export type WorkOrderTokenType = "NFT" | "MPT";
 
@@ -37,6 +37,10 @@ export interface WorkOrder {
   
   // Status tracking
   status: WorkOrderStatus;
+  reviewedAt?: string;
+  reviewedBy?: string;
+  reviewedByName?: string;
+  reviewNotes?: string;
   completedAt?: string;
   paidAt?: string;
   paymentLedgerEventId?: string;
@@ -72,6 +76,7 @@ export interface WorkOrderStats {
   draft: number;
   active: number;
   inProgress: number;
+  underReview: number;
   completed: number;
   paid: number;
   totalValueUsd: number;
@@ -107,6 +112,10 @@ export interface UpdateWorkOrderParams {
   assigneeWalletAddress?: string;
   agreedAmountUsd?: number;
   status?: WorkOrderStatus;
+  reviewedAt?: string;
+  reviewedBy?: string;
+  reviewedByName?: string;
+  reviewNotes?: string;
   completedAt?: string;
   paidAt?: string;
   paymentLedgerEventId?: string;

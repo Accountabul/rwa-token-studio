@@ -60,6 +60,8 @@ export type AuditAction =
   | "SYNC"
   | "SUSPEND"
   | "ARCHIVE"
+  | "SUBMIT_FOR_REVIEW"
+  | "REVIEW"
   // Auth-specific actions
   | "AUTH_SIGNED_IN"
   | "AUTH_SIGNED_OUT"
@@ -378,6 +380,8 @@ export const rolePermissionsMatrix: Record<Role, RolePermissions> = {
   PLATFORM_ENGINEER: deriveRolePermissions("PLATFORM_ENGINEER"),
   SECURITY_ENGINEER: deriveRolePermissions("SECURITY_ENGINEER"),
   QA_TEST_ENGINEER: deriveRolePermissions("QA_TEST_ENGINEER"),
+  // Field Operations
+  TECHNICIAN: deriveRolePermissions("TECHNICIAN"),
 };
 
 // ============================================

@@ -112,7 +112,83 @@ export class WorkOrderService {
   }
 
   /**
-   * Mark a work order as complete
+   * Submit a work order for review (by technician/assignee)
+   */
+  async submitForReview(
+    workOrderId: string,
+    actor: { userId: string; name: string; role: Role },
+    notes?: string
+  ): Promise<WorkOrder> {
+    const workOrder = await this.repository.updateWorkOrder(workOrderId, {
+      status: "UNDER_REVIEW",
+    });
+
+    // Log audit event
+    await auditService.writeEvent({
+      entityType: "WORK_ORDER",
+      entityId: workOrder.id,
+      entityName: workOrder.title,
+      action: "SUBMIT_FOR_REVIEW",
+      actorUserId: actor.userId,
+      actorName: actor.name,
+      actorRole: actor.role,
+      severity: "INFO",
+      classification: "INTERNAL",
+      linkedBusinessId: workOrder.businessId,
+      linkedWorkOrderId: workOrder.id,
+      linkedInvestorId: workOrder.assigneeUserId,
+      metadata: {
+        notes,
+      },
+    });
+
+    return workOrder;
+  }
+
+  /**
+   * Review and approve a work order (marks as COMPLETED)
+   */
+  async reviewWorkOrder(
+    workOrderId: string,
+    actor: { userId: string; name: string; role: Role },
+    reviewNotes?: string
+  ): Promise<WorkOrder> {
+    const now = new Date().toISOString();
+    const workOrder = await this.repository.updateWorkOrder(workOrderId, {
+      status: "COMPLETED",
+      reviewedAt: now,
+      reviewedBy: actor.userId,
+      reviewedByName: actor.name,
+      reviewNotes,
+      completedAt: now,
+    });
+
+    // Log audit event
+    await auditService.writeEvent({
+      entityType: "WORK_ORDER",
+      entityId: workOrder.id,
+      entityName: workOrder.title,
+      action: "REVIEW",
+      actorUserId: actor.userId,
+      actorName: actor.name,
+      actorRole: actor.role,
+      severity: "INFO",
+      classification: "INTERNAL",
+      linkedBusinessId: workOrder.businessId,
+      linkedWorkOrderId: workOrder.id,
+      linkedInvestorId: workOrder.assigneeUserId,
+      walletAddress: workOrder.assigneeWalletAddress,
+      metadata: {
+        reviewNotes,
+        reviewedAt: now,
+      },
+    });
+
+    return workOrder;
+  }
+
+  /**
+   * Mark a work order as complete (skip review, direct completion)
    */
   async completeWorkOrder(
     workOrderId: string,

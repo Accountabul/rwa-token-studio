@@ -4,6 +4,7 @@ import {
   FileText,
   PlayCircle,
   Clock,
+  ClipboardCheck,
   CheckCircle2,
   Wallet,
   XCircle,
@@ -51,13 +52,24 @@ export const WorkOrderTimeline: React.FC<WorkOrderTimelineProps> = ({
 
     // In Progress
     if (
-      ["IN_PROGRESS", "COMPLETED", "PAID"].includes(workOrder.status) ||
+      ["IN_PROGRESS", "UNDER_REVIEW", "COMPLETED", "PAID"].includes(workOrder.status) ||
       (workOrder.status === "DISPUTED" && workOrder.completedAt)
     ) {
       steps.push({
         status: "IN_PROGRESS",
         label: "In Progress",
         icon: Clock,
+        variant: "default",
+      });
+    }
+
+    // Under Review
+    if (["UNDER_REVIEW", "COMPLETED", "PAID"].includes(workOrder.status)) {
+      steps.push({
+        status: "UNDER_REVIEW",
+        label: "Under Review",
+        icon: ClipboardCheck,
+        timestamp: workOrder.reviewedAt,
         variant: "default",
       });
     }

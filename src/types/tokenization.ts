@@ -25,7 +25,9 @@ export type Role =
   | "BACKEND_ENGINEER"
   | "PLATFORM_ENGINEER"
   | "SECURITY_ENGINEER"
-  | "QA_TEST_ENGINEER";
+  | "QA_TEST_ENGINEER"
+  // Field Operations
+  | "TECHNICIAN";
 
 // Role categories for grouping in UI
 export type RoleCategory = "ADMINISTRATION" | "TOKENIZATION" | "COMPLIANCE" | "FINANCE" | "ENGINEERING";
@@ -167,6 +169,8 @@ export const roleLabel: Record<Role, string> = {
   PLATFORM_ENGINEER: "Platform Engineer",
   SECURITY_ENGINEER: "Security Engineer",
   QA_TEST_ENGINEER: "QA / Test Engineer",
+  // Field Operations
+  TECHNICIAN: "Technician",
 };
 
 // Privileged roles that require SUPER_ADMIN or SYSTEM_ADMIN to assign

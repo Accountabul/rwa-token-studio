@@ -21,6 +21,10 @@ const statusConfig: Record<WorkOrderStatus, { label: string; className: string }
     label: "In Progress",
     className: "bg-amber-500/10 text-amber-600 border-amber-500/20",
   },
+  UNDER_REVIEW: {
+    label: "Under Review",
+    className: "bg-purple-500/10 text-purple-600 border-purple-500/20",
+  },
   COMPLETED: {
     label: "Completed",
     className: "bg-green-500/10 text-green-600 border-green-500/20",
