@@ -13,6 +13,7 @@ export interface RoutingRule {
   notifyAssignee: boolean;      // Notify assignee if present
   notifyWatchers: boolean;      // Notify entity watchers
   notifyOrgAdmins: boolean;     // For critical events
+  notifyAllUsers?: boolean;     // For platform-wide broadcasts (e.g., new token offerings)
 }
 
 export const ROUTING_RULES: RoutingRule[] = [
@@ -85,6 +86,73 @@ export const ROUTING_RULES: RoutingRule[] = [
     departmentRoles: ["TOKENIZATION_MANAGER", "VALUATION_OFFICER"],
     notifyAssignee: true,
     notifyWatchers: true,
+    notifyOrgAdmins: false,
+  },
+  // Phase Transition Events
+  {
+    eventType: "token_project.intake_complete",
+    priority: "normal",
+    departmentRoles: ["VALUATION_OFFICER"],
+    notifyAssignee: true,
+    notifyWatchers: true,
+    notifyOrgAdmins: false,
+  },
+  {
+    eventType: "token_project.metadata_draft",
+    priority: "normal",
+    departmentRoles: ["VALUATION_OFFICER"],
+    notifyAssignee: true,
+    notifyWatchers: true,
+    notifyOrgAdmins: false,
+  },
+  {
+    eventType: "token_project.metadata_approved",
+    priority: "high",
+    departmentRoles: ["COMPLIANCE_OFFICER"],
+    notifyAssignee: true,
+    notifyWatchers: true,
+    notifyOrgAdmins: false,
+  },
+  {
+    eventType: "token_project.compliance_approved",
+    priority: "high",
+    departmentRoles: ["CUSTODY_OFFICER", "RISK_ANALYST"],
+    notifyAssignee: true,
+    notifyWatchers: true,
+    notifyOrgAdmins: false,
+  },
+  {
+    eventType: "token_project.custody_ready",
+    priority: "high",
+    departmentRoles: ["TOKENIZATION_MANAGER", "FINANCE_OFFICER"],
+    notifyAssignee: true,
+    notifyWatchers: true,
+    notifyOrgAdmins: false,
+  },
+  {
+    eventType: "token_project.minted",
+    priority: "critical",
+    departmentRoles: [],
+    notifyAssignee: true,
+    notifyWatchers: true,
+    notifyOrgAdmins: true,
+    notifyAllUsers: true, // Platform-wide broadcast
+  },
+  {
+    eventType: "token_project.new_offering",
+    priority: "critical",
+    departmentRoles: [],
+    notifyAssignee: false,
+    notifyWatchers: false,
+    notifyOrgAdmins: false,
+    notifyAllUsers: true, // Platform-wide broadcast
+  },
+  {
+    eventType: "token_project.approval_required",
+    priority: "high",
+    departmentRoles: [], // Dynamic based on transition rules
+    notifyAssignee: false,
+    notifyWatchers: false,
     notifyOrgAdmins: false,
   },
   {

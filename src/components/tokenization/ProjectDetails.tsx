@@ -4,6 +4,8 @@ import { StatusBadge } from "./StatusBadge";
 import { StatusStepper } from "./StatusStepper";
 import { MetadataForm } from "./MetadataForm";
 import { TokenLifecyclePanel } from "./TokenLifecyclePanel";
+import { PhaseTransitionDialog } from "./PhaseTransitionDialog";
+import { PhaseApprovalHistory } from "./PhaseApprovalHistory";
 import { cn } from "@/lib/utils";
 import { 
   ArrowRight, 
@@ -26,6 +28,7 @@ import {
   Equal,
   Save,
   Trash2,
+  Shield,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -47,6 +50,8 @@ import { calculatePricePerToken, formatPrice, formatValuation } from "@/lib/pric
 interface ProjectDetailsProps {
   project: TokenizationProject;
   role: Role;
+  userId?: string;
+  userName?: string;
   onUpdate: (updates: Partial<TokenizationProject>) => void;
   onSave: () => void;
   onDelete: () => void;
@@ -216,6 +221,8 @@ const TokenFractionalizationSection: React.FC<TokenFractionalizationSectionProps
 export const ProjectDetails: React.FC<ProjectDetailsProps> = ({
   project,
   role,
+  userId = "mock-user-id",
+  userName = "Current User",
   onUpdate,
   onSave,
   onDelete,
@@ -224,6 +231,11 @@ export const ProjectDetails: React.FC<ProjectDetailsProps> = ({
   canDelete,
 }) => {
   const [showRawJson, setShowRawJson] = useState(false);
+  const [showTransitionDialog, setShowTransitionDialog] = useState(false);
+
+  // Get next status in sequence
+  const currentIndex = statusOrder.indexOf(project.status);
+  const nextStatus = currentIndex < statusOrder.length - 1 ? statusOrder[currentIndex + 1] : null;
 
   const handleValidateJson = () => {
     try {
@@ -248,6 +260,23 @@ export const ProjectDetails: React.FC<ProjectDetailsProps> = ({
     } catch {
       toast.error("Cannot simulate mint", {
         description: "Fix XLS-89 metadata first"
+      });
+    }
+  };
+
+  const handleAdvanceClick = () => {
+    setShowTransitionDialog(true);
+  };
+
+  const handleTransitionComplete = (success: boolean, completed: boolean) => {
+    if (success && completed) {
+      toast.success("Phase advanced successfully", {
+        description: "The project has moved to the next phase"
+      });
+      onAdvanceStatus(); // Trigger parent refresh
+    } else if (success && !completed) {
+      toast.info("Approval recorded", {
+        description: "Waiting for additional approvals to complete the transition"
       });
     }
   };
@@ -312,19 +341,21 @@ export const ProjectDetails: React.FC<ProjectDetailsProps> = ({
                 <Save className="w-3.5 h-3.5" />
                 Save
               </button>
-              <button
-                disabled={!canAdvance}
-                onClick={onAdvanceStatus}
-                className={cn(
-                  "inline-flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-semibold border shadow-sm transition-all duration-200",
-                  canAdvance
-                    ? "bg-primary text-primary-foreground border-primary hover:bg-primary/90 shadow-glow"
-                    : "bg-muted text-muted-foreground border-border cursor-not-allowed"
-                )}
-              >
-                <ArrowRight className="w-3.5 h-3.5" />
-                Advance Lifecycle
-              </button>
+              {nextStatus && (
+                <button
+                  disabled={!canAdvance}
+                  onClick={handleAdvanceClick}
+                  className={cn(
+                    "inline-flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-semibold border shadow-sm transition-all duration-200",
+                    canAdvance
+                      ? "bg-primary text-primary-foreground border-primary hover:bg-primary/90 shadow-glow"
+                      : "bg-muted text-muted-foreground border-border cursor-not-allowed"
+                  )}
+                >
+                  <Shield className="w-3.5 h-3.5" />
+                  Advance Phase
+                </button>
+              )}
             </div>
             {canDelete && (
               <button
@@ -336,7 +367,7 @@ export const ProjectDetails: React.FC<ProjectDetailsProps> = ({
               </button>
             )}
             <p className="text-[10px] text-muted-foreground max-w-[180px] text-right">
-              Gated by your role ({role.replace(/_/g, " ").toLowerCase()}) and project phase
+              Phase advancement requires role-based approval
             </p>
           </div>
         </div>
@@ -344,6 +375,10 @@ export const ProjectDetails: React.FC<ProjectDetailsProps> = ({
           <StatusStepper current={project.status} />
         </div>
       </div>
+
+      {/* Phase Approval History */}
+      <PhaseApprovalHistory projectId={project.id} />
+
 
       {/* Two-column layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
@@ -502,6 +537,22 @@ export const ProjectDetails: React.FC<ProjectDetailsProps> = ({
             canTransfer: true,
             canClawback: true,
           }}
+        />
+      )}
+
+      {/* Phase Transition Dialog */}
+      {nextStatus && (
+        <PhaseTransitionDialog
+          open={showTransitionDialog}
+          onOpenChange={setShowTransitionDialog}
+          projectId={project.id}
+          projectName={project.propertyAddress || project.name}
+          fromStatus={project.status}
+          toStatus={nextStatus}
+          userId={userId}
+          userName={userName}
+          userRole={role}
+          onTransitionComplete={handleTransitionComplete}
         />
       )}
     </section>

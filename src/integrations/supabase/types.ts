@@ -550,6 +550,84 @@ export type Database = {
           },
         ]
       }
+      project_phase_approvals: {
+        Row: {
+          approved_at: string | null
+          approved_by: string
+          approved_by_name: string
+          approved_by_role: string
+          from_status: string
+          id: string
+          notes: string | null
+          project_id: string
+          signature_hash: string | null
+          to_status: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by: string
+          approved_by_name: string
+          approved_by_role: string
+          from_status: string
+          id?: string
+          notes?: string | null
+          project_id: string
+          signature_hash?: string | null
+          to_status: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string
+          approved_by_name?: string
+          approved_by_role?: string
+          from_status?: string
+          id?: string
+          notes?: string | null
+          project_id?: string
+          signature_hash?: string | null
+          to_status?: string
+        }
+        Relationships: []
+      }
+      project_phase_transitions: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          from_status: string
+          id: string
+          notify_all_users: boolean | null
+          notify_assignee: boolean | null
+          notify_roles: string[]
+          required_approvals: number | null
+          required_roles: string[]
+          to_status: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          from_status: string
+          id?: string
+          notify_all_users?: boolean | null
+          notify_assignee?: boolean | null
+          notify_roles: string[]
+          required_approvals?: number | null
+          required_roles: string[]
+          to_status: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          from_status?: string
+          id?: string
+          notify_all_users?: boolean | null
+          notify_assignee?: boolean | null
+          notify_roles?: string[]
+          required_approvals?: number | null
+          required_roles?: string[]
+          to_status?: string
+        }
+        Relationships: []
+      }
       role_catalog: {
         Row: {
           backend_access: string[] | null
@@ -844,6 +922,75 @@ export type Database = {
           updated_at?: string | null
           updated_by?: string | null
           wallet_roles?: string[]
+        }
+        Relationships: []
+      }
+      tokenization_projects: {
+        Row: {
+          asset_class: string | null
+          asset_id: string | null
+          asset_subclass: string | null
+          assigned_to: string | null
+          company_name: string | null
+          created_at: string | null
+          created_by: string | null
+          id: string
+          jurisdiction: string | null
+          mpt_config: Json | null
+          name: string
+          owner_name: string | null
+          planned_token_supply: number | null
+          property_address: string | null
+          property_nickname: string | null
+          status: string
+          updated_at: string | null
+          valuation_date: string | null
+          valuation_usd: number | null
+          xls89_metadata: Json | null
+        }
+        Insert: {
+          asset_class?: string | null
+          asset_id?: string | null
+          asset_subclass?: string | null
+          assigned_to?: string | null
+          company_name?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id: string
+          jurisdiction?: string | null
+          mpt_config?: Json | null
+          name: string
+          owner_name?: string | null
+          planned_token_supply?: number | null
+          property_address?: string | null
+          property_nickname?: string | null
+          status?: string
+          updated_at?: string | null
+          valuation_date?: string | null
+          valuation_usd?: number | null
+          xls89_metadata?: Json | null
+        }
+        Update: {
+          asset_class?: string | null
+          asset_id?: string | null
+          asset_subclass?: string | null
+          assigned_to?: string | null
+          company_name?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          jurisdiction?: string | null
+          mpt_config?: Json | null
+          name?: string
+          owner_name?: string | null
+          planned_token_supply?: number | null
+          property_address?: string | null
+          property_nickname?: string | null
+          status?: string
+          updated_at?: string | null
+          valuation_date?: string | null
+          valuation_usd?: number | null
+          xls89_metadata?: Json | null
         }
         Relationships: []
       }
