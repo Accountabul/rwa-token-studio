@@ -17,6 +17,14 @@ export type NotificationEventType =
   // Tokenization
   | "token_project.created"
   | "token_project.status_changed"
+  | "token_project.intake_complete"
+  | "token_project.metadata_draft"
+  | "token_project.metadata_approved"
+  | "token_project.compliance_approved"
+  | "token_project.custody_ready"
+  | "token_project.minted"
+  | "token_project.new_offering"
+  | "token_project.approval_required"
   | "token.minted"
   | "token.frozen"
   | "token.unfrozen"
@@ -165,6 +173,14 @@ export const EVENT_TYPE_META: Partial<Record<NotificationEventType, EventTypeMet
   // Tokenization
   "token_project.created": { label: "Project Created", icon: "FolderPlus", category: "tokenization" },
   "token_project.status_changed": { label: "Project Updated", icon: "RefreshCw", category: "tokenization" },
+  "token_project.intake_complete": { label: "Intake Complete", icon: "FileCheck", category: "tokenization" },
+  "token_project.metadata_draft": { label: "Metadata Draft Started", icon: "FileEdit", category: "tokenization" },
+  "token_project.metadata_approved": { label: "Metadata Approved", icon: "CheckCircle", category: "tokenization" },
+  "token_project.compliance_approved": { label: "Compliance Approved", icon: "ShieldCheck", category: "tokenization" },
+  "token_project.custody_ready": { label: "Custody Ready", icon: "Lock", category: "tokenization" },
+  "token_project.minted": { label: "Token Minted", icon: "Coins", category: "tokenization" },
+  "token_project.new_offering": { label: "New Token Offering", icon: "Sparkles", category: "tokenization" },
+  "token_project.approval_required": { label: "Approval Required", icon: "AlertCircle", category: "tokenization" },
   "token.minted": { label: "Token Minted", icon: "Coins", category: "tokenization" },
   "batch_tx.submitted": { label: "Batch Submitted", icon: "Layers", category: "tokenization" },
   "batch_tx.failed": { label: "Batch Failed", icon: "AlertTriangle", category: "tokenization" },
